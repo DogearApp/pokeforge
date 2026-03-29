@@ -1974,13 +1974,19 @@ function runAI(){
   // === 4. Speed tier analysis ===
   out.push('');out.push(`<strong>Speed Tier Analysis</strong>`);
   const speedEntries=team.map(p=>({name:p.displayName,spe:actualSpe(p)})).sort((a,b)=>b.spe-a.spe);
-  const THREATS=[
-    {name:'Regieleki',spe:200},{name:'Calyrex-Shadow',spe:222},{name:'Dragapult',spe:213},
-    {name:'Flutter Mane',spe:187},{name:'Chien-Pao',spe:187},{name:'Iron Bundle',spe:188},
-    {name:'Garchomp',spe:154},{name:'Urshifu',spe:142},{name:'Rillaboom',spe:137},
-    {name:'Incineroar',spe:112},{name:'Amoonguss',spe:50}
+  const ALL_THREATS=[
+    {name:'Regieleki',api:'regieleki',spe:200},{name:'Calyrex-Shadow',api:'calyrex-shadow',spe:222},
+    {name:'Dragapult',api:'dragapult',spe:213},{name:'Flutter Mane',api:'flutter-mane',spe:187},
+    {name:'Chien-Pao',api:'chien-pao',spe:187},{name:'Iron Bundle',api:'iron-bundle',spe:188},
+    {name:'Garchomp',api:'garchomp',spe:154},{name:'Urshifu',api:'urshifu',spe:142},
+    {name:'Rillaboom',api:'rillaboom',spe:137},{name:'Incineroar',api:'incineroar',spe:112},
+    {name:'Amoonguss',api:'amoonguss',spe:50},{name:'Weavile',api:'weavile',spe:125},
+    {name:'Noivern',api:'noivern',spe:123},{name:'Talonflame',api:'talonflame',spe:126},
+    {name:'Meowscarada',api:'meowscarada',spe:123},{name:'Greninja',api:'greninja',spe:122},
+    {name:'Hydreigon',api:'hydreigon',spe:98},{name:'Kingambit',api:'kingambit',spe:50},
+    {name:'Hatterene',api:'hatterene',spe:29},{name:'Torkoal',api:'torkoal',spe:20}
   ];
-  // Jolly max speed benchmarks
+  const THREATS=championsMode?ALL_THREATS.filter(t=>CHAMPIONS_POKEMON.has(t.api)):ALL_THREATS;
   const fastest=speedEntries[0];const slowest=speedEntries[speedEntries.length-1];
   const outsped=THREATS.filter(t=>t.spe>fastest.spe);
   const undersped=THREATS.filter(t=>t.spe<slowest.spe);
@@ -2695,11 +2701,13 @@ async function showUsageTierList(){
     const apiName=p.name.toLowerCase().replace(/\s+/g,'-');
     const found=allPokemon.find(ap=>ap.name===apiName||ap.name.startsWith(apiName));
     const spriteUrl=found?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${found.id}.png`:'';
+    const hasMega=MEGA_DATA[apiName]||MEGA_DATA[apiName.split('-')[0]];
+    const megaBadge=hasMega?` <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(245,197,66,0.2);color:var(--gold);border:1px solid rgba(245,197,66,0.3)">MEGA</span>`:'';
     return`<div class="tierlist-row">
       <div class="tierlist-rank">${i+1}</div>
       ${spriteUrl?`<img src="${spriteUrl}" class="tierlist-sprite" loading="lazy">`:'<div></div>'}
       <div>
-        <div class="tierlist-name">${p.name}</div>
+        <div class="tierlist-name">${p.name}${megaBadge}</div>
         <div class="tierlist-bar"><div class="tierlist-bar-fill" style="width:${barW}%"></div></div>
       </div>
       <div class="tierlist-usage">${pctStr}</div>
