@@ -142,7 +142,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 @media(max-width:700px){.ev-sliders{grid-template-columns:repeat(3,1fr)}}
 .ev-sl{text-align:center}
 .ev-sl-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-.ev-sl-val{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:2px}
+.ev-sl-num{width:56px;padding:3px 4px;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;color:var(--accent);background:var(--bg);border:1px solid var(--border);border-radius:5px;text-align:center;outline:none;margin-bottom:2px;-moz-appearance:textfield}
+.ev-sl-num:focus{border-color:var(--accent)}
+.ev-sl-num::-webkit-outer-spin-button,.ev-sl-num::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .ev-sl input[type=range]{width:100%;height:4px;-webkit-appearance:none;appearance:none;background:var(--bg4);border-radius:2px;outline:none;cursor:pointer}
 .ev-sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg2)}
 .ev-sl input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg2)}
@@ -1134,7 +1136,7 @@ function renderEVSliders(){
     const col=STAT_COLS[k];
     return `<div class="ev-sl">
       <div class="ev-sl-label" style="color:${col}">${STAT_NAMES[k]}</div>
-      <div class="ev-sl-val" id="evval-${k}">${p.evs[k]||0}</div>
+      <input type="number" class="ev-sl-num" min="0" max="252" step="4" value="${p.evs[k]||0}" id="evnum-${k}" oninput="setEV('${k}',this.value)"/>
       <input type="range" min="0" max="252" step="4" value="${p.evs[k]||0}" id="evrange-${k}" style="accent-color:${col}" oninput="setEV('${k}',this.value)"/>
       <div class="ev-sl-computed" id="evcomp-${k}">Stat: ${comp}</div>
       <div class="ev-sl-iv"><input type="number" min="0" max="31" value="${p.ivs[k]!==undefined?p.ivs[k]:31}" id="eviv-${k}" title="IV" oninput="setIV('${k}',this.value)"/></div>
@@ -1146,7 +1148,8 @@ function updateEVDisplay(){
   if(editIdx===null)return;const p=team[editIdx];const nm=NM[p.nature]||{};
   STAT_KEYS.forEach(k=>{
     const nat=nm[k]||1;const comp=calcStat(p.stats[k],p.evs[k]||0,p.ivs[k]!==undefined?p.ivs[k]:31,nat,k==='hp');
-    const valEl=document.getElementById('evval-'+k);if(valEl)valEl.textContent=p.evs[k]||0;
+    const numEl=document.getElementById('evnum-'+k);if(numEl&&document.activeElement!==numEl)numEl.value=p.evs[k]||0;
+    const rangeEl=document.getElementById('evrange-'+k);if(rangeEl&&document.activeElement!==rangeEl)rangeEl.value=p.evs[k]||0;
     const compEl=document.getElementById('evcomp-'+k);if(compEl)compEl.textContent='Stat: '+comp;
   });
   updateEVTotal();
