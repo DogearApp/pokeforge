@@ -1612,17 +1612,17 @@ async function fetchAbilityDesc(name){
 }
 const FIELD_EFFECTS={
   // Terrain-setting abilities
-  'electric-surge':'⚡ Electric Terrain: Boosts Electric moves 30%, prevents Sleep for grounded Pokémon.',
-  'grassy-surge':'🌿 Grassy Terrain: Boosts Grass moves 30%, heals grounded Pokémon 1/16 HP each turn, halves Earthquake/Bulldoze damage.',
-  'psychic-surge':'🔮 Psychic Terrain: Boosts Psychic moves 30%, blocks priority moves against grounded Pokémon.',
-  'misty-surge':'🌫 Misty Terrain: Halves Dragon damage to grounded Pokémon, prevents status conditions.',
+  'electric-surge':'⚡ Electric Terrain (5 turns, 8 with Terrain Extender): Boosts Electric moves 30%, prevents Sleep for grounded Pokémon.',
+  'grassy-surge':'🌿 Grassy Terrain (5 turns, 8 with Terrain Extender): Boosts Grass moves 30%, heals grounded 1/16 HP/turn, halves EQ/Bulldoze.',
+  'psychic-surge':'🔮 Psychic Terrain (5 turns, 8 with Terrain Extender): Boosts Psychic moves 30%, blocks priority vs grounded Pokémon.',
+  'misty-surge':'🌫 Misty Terrain (5 turns, 8 with Terrain Extender): Halves Dragon damage to grounded, prevents status.',
   // Weather-setting abilities
-  'drought':'☀ Sun: Boosts Fire moves 50%, weakens Water moves 50%. Enables Solar Beam/Solar Blade without charge.',
-  'drizzle':'🌧 Rain: Boosts Water moves 50%, weakens Fire moves 50%. Thunder and Hurricane never miss.',
-  'sand-stream':'🏜 Sand: Deals 1/16 HP to non-Rock/Ground/Steel each turn. Boosts Rock-type SpD 50%.',
-  'snow-warning':'❄ Snow: Boosts Ice-type Def 50%. Blizzard never misses.',
-  'orichalcum-pulse':'☀ Sun: Boosts Fire moves 50%, weakens Water moves 50%. Also boosts holder\'s Attack in sun.',
-  'hadron-engine':'⚡ Electric Terrain: Boosts Electric moves 30%, prevents Sleep. Also boosts holder\'s Sp.Atk on terrain.',
+  'drought':'☀ Sun (5 turns, 8 with Heat Rock): Boosts Fire moves 50%, weakens Water 50%. Solar Beam no charge.',
+  'drizzle':'🌧 Rain (5 turns, 8 with Damp Rock): Boosts Water moves 50%, weakens Fire 50%. Thunder/Hurricane never miss.',
+  'sand-stream':'🏜 Sand (5 turns, 8 with Smooth Rock): 1/16 chip to non-Rock/Ground/Steel. Rock SpD +50%.',
+  'snow-warning':'❄ Snow (5 turns, 8 with Icy Rock): Ice Def +50%. Blizzard never misses.',
+  'orichalcum-pulse':'☀ Sun (5 turns, 8 with Heat Rock): Boosts Fire 50%, weakens Water 50%. Also boosts holder\'s Atk 33% in sun.',
+  'hadron-engine':'⚡ Electric Terrain (5 turns, 8 with Terrain Extender): Boosts Electric 30%, prevents Sleep. Also boosts holder\'s SpA 33% on terrain.',
   // Terrain/weather moves
   'electric-terrain':'⚡ Boosts Electric moves 30% and prevents Sleep for grounded Pokémon for 5 turns.',
   'grassy-terrain':'🌿 Boosts Grass moves 30%, heals grounded 1/16 HP/turn, halves EQ/Bulldoze for 5 turns.',
