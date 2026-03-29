@@ -847,16 +847,20 @@ function renderWeakness(){
     .sort((a,b)=>(typeData[b].resist.length+typeData[b].immune.length)-(typeData[a].resist.length+typeData[a].immune.length));
   if(resistTypes.length){
     html+=`<div class="cov-section"><div class="cov-title">Resistances & Immunities</div>`;
+    html+=`<div class="weak-grid">`;
+    html+=`<div></div><div></div><div class="weak-grid-header" style="color:var(--green)">Resist</div><div class="weak-grid-header" style="color:var(--accent)">Immune</div>`;
+    const maxR=Math.max(...resistTypes.map(t=>typeData[t].resist.length+typeData[t].immune.length*2));
     resistTypes.forEach(t=>{
-      const d=typeData[t];
-      const sprites=[...d.immune.map(p=>({p,imm:true})),...d.resist.map(p=>({p,imm:false}))];
-      html+=`<div class="resist-row">
-        <span class="wlabel" style="background:${TCOL[t]}">${t}</span>
-        <div class="w-mons">${sprites.map(s=>`<img src="${s.p.sprite}" class="w-mon-sprite" title="${s.p.displayName}${s.imm?' (immune)':' (resist)'}" style="${s.imm?'opacity:1':'opacity:.7'}">`).join('')}</div>
-        ${d.immune.length?`<span class="w-tag" style="background:rgba(108,142,255,0.15);color:var(--accent)">${d.immune.length} immune</span>`:''}
-      </div>`;
+      const d=typeData[t];const score=d.resist.length+d.immune.length*2;
+      const pct=Math.round(score/maxR*100);
+      const spritesResist=d.resist.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName}">`).join('')||'<span style="color:var(--muted2);font-size:11px">—</span>';
+      const spritesImmune=d.immune.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName}">`).join('')||'<span style="color:var(--muted2);font-size:11px">—</span>';
+      html+=`<span class="wlabel" style="background:${TCOL[t]}">${t}</span>`;
+      html+=`<div class="wbar-wrap"><div class="wbg"><div class="wbar" style="width:${pct}%;background:var(--green)"></div></div></div>`;
+      html+=`<div class="w-col">${spritesResist}</div>`;
+      html+=`<div class="w-col">${spritesImmune}</div>`;
     });
-    html+=`</div>`;
+    html+=`</div></div>`;
   }
 
   document.getElementById('wlist').innerHTML=html;
