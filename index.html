@@ -1354,16 +1354,28 @@ async function fetchAbilityDesc(name){
     abilityCache[key]=desc;return desc;
   }catch(e){return '';}
 }
+const ITEM_DESC_FALLBACK={
+  'covert-cloak':'Protects the holder from the secondary effects of moves from other Pokémon.',
+  'clear-amulet':'Protects the holder from having its stats lowered by other Pokémon.',
+  'loaded-dice':'Raises the chance of multi-strike moves hitting more times.',
+  'mirror-herb':'Copies an opponent\'s stat boosts once, then is consumed.',
+  'punching-glove':'Boosts the power of punching moves by 10% and prevents contact.',
+  'booster-energy':'Activates Protosynthesis or Quark Drive without weather/terrain.',
+  'ability-shield':'Protects the holder from having its Ability changed or suppressed.',
+  'fairy-feather':'Boosts the power of Fairy-type moves by 20%.',
+};
 async function fetchItemDesc(name){
   const key=name.toLowerCase().replace(/\s+/g,'-');
   if(itemCache[key])return itemCache[key];
+  if(ITEM_DESC_FALLBACK[key]){itemCache[key]=ITEM_DESC_FALLBACK[key];return ITEM_DESC_FALLBACK[key];}
   try{const r=await fetch(`https://pokeapi.co/api/v2/item/${key}`);const d=await r.json();
     const en=d.effect_entries.find(e=>e.language.name==='en');
     const short=d.flavor_text_entries.filter(e=>e.language.name==='en').pop();
     let desc=en?.short_effect||short?.flavor_text||'';
     desc=desc.replace(/\$effect_chance%?/g,'').replace(/(\d+)( chance)/g,'$1%$2');
+    if(!desc&&ITEM_DESC_FALLBACK[key])desc=ITEM_DESC_FALLBACK[key];
     itemCache[key]=desc;return desc;
-  }catch(e){return '';}
+  }catch(e){return ITEM_DESC_FALLBACK[key]||'';}
 }
 async function fetchMoveData(name){
   const key=name.toLowerCase().replace(/\s+/g,'-');
