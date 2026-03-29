@@ -178,6 +178,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .ev-sl-iv{margin-top:4px}
 .ev-sl-iv input{width:40px;padding:2px 4px;font-size:11px;font-family:'DM Sans',sans-serif;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);outline:none;text-align:center}
 .ev-sl-iv input:focus{border-color:var(--accent)}
+.ev-spread-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;font-size:11px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;transition:all .15s;margin:2px}
+.ev-spread-btn:hover{border-color:var(--accent);color:var(--accent)}
+.ev-spread-btn .ev-spread-pct{color:var(--accent);font-weight:600}
 
 /* MEGA */
 .mega-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -503,6 +506,7 @@ footer a:hover{color:var(--text)}
             <button class="reset-btn" onclick="resetEVs()">Reset</button>
           </div>
           <div class="ev-sliders" id="ev-sliders"></div>
+          <div id="ev-suggestions" style="margin-top:10px"></div>
         </div>
 
         <!-- Moves section -->
@@ -1437,10 +1441,12 @@ function setupAC(inputId,ddId,getList,onSelect,popularList){
     showList(list,usageMap);
   });
   inp.addEventListener('focus',()=>{
-    if(!inp.value.trim()&&popularList){
+    if(popularList){
       const usageMap=editIdx!==null?getItemUsage(team[editIdx]):{};
-      const sorted=[...popularList].sort((a,b)=>(usageMap[b]||0)-(usageMap[a]||0));
-      showList(sorted,usageMap);
+      const q=inp.value.toLowerCase().trim();
+      let list=q?getList().filter(v=>v.toLowerCase().includes(q)).slice(0,14):popularList;
+      if(!q)list=[...list].sort((a,b)=>(usageMap[b]||0)-(usageMap[a]||0));
+      showList(list,usageMap);
     }
   });
   inp.addEventListener('keydown',e=>{
@@ -1632,6 +1638,37 @@ function renderEVSliders(){
     </div>`;
   }).join('');
   updateEVTotal();
+  renderEVSuggestions();
+}
+function renderEVSuggestions(){
+  const el=document.getElementById('ev-suggestions');
+  if(editIdx===null||!el){return;}
+  const p=team[editIdx];
+  const stats=getPokeStats(p);
+  if(!stats||!stats.spreads){el.innerHTML='';return;}
+
+  const spreads=Object.entries(stats.spreads).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(!spreads.length){el.innerHTML='';return;}
+
+  el.innerHTML=`<div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Popular EV Spreads</div>`+
+    spreads.map(([spread,pctVal])=>{
+      const parts=spread.split(':');
+      const nature=parts[0];
+      const evVals=parts[1]?parts[1].split('/').map(Number):[];
+      const evStr=STAT_KEYS.map((k,i)=>evVals[i]?`${evVals[i]} ${STAT_NAMES[k]}`:null).filter(Boolean).join(' / ')||'No EVs';
+      const data=JSON.stringify({nature,evs:evVals}).replace(/"/g,'&quot;');
+      return`<button class="ev-spread-btn" onclick='applySpread(${JSON.stringify({nature,evs:evVals})})'>
+        <span class="ev-spread-pct">${(pctVal*100).toFixed(1)}%</span>
+        ${nature} — ${evStr}
+      </button>`;
+    }).join('');
+}
+function applySpread(s){
+  if(editIdx===null)return;
+  const p=team[editIdx];
+  p.nature=s.nature;
+  STAT_KEYS.forEach((k,i)=>{p.evs[k]=s.evs[i]||0;});
+  openEdit(editIdx);renderAll();
 }
 function updateEVDisplay(){
   if(editIdx===null)return;const p=team[editIdx];const nm=NM[p.nature]||{};
