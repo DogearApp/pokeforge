@@ -1161,6 +1161,29 @@ async function runAI(){
 
 // --- Init ---
 loadTeamFromStorage();init();renderAll();
+// Pre-fetch move details for saved team moves
+(async()=>{
+  const allMoves=new Set();
+  team.forEach(p=>p.moves.filter(m=>m).forEach(m=>allMoves.add(m)));
+  if(!allMoves.size)return;
+  const BATCH=8;const arr=[...allMoves];
+  for(let i=0;i<arr.length;i+=BATCH){
+    await Promise.all(arr.slice(i,i+BATCH).map(name=>{
+      const key=name.toLowerCase().replace(/\s+/g,'-');
+      if(moveCache[key])return Promise.resolve();
+      return fetch(`https://pokeapi.co/api/v2/move/${key}`).then(r=>r.json()).then(d=>{
+        const en=d.effect_entries.find(e=>e.language.name==='en');
+        const short=d.flavor_text_entries.filter(e=>e.language.name==='en').pop();
+        const desc=(en?.short_effect||short?.flavor_text||'').replace(/\$effect_chance%?/g,d.effect_chance||'');
+        const type=d.type.name.charAt(0).toUpperCase()+d.type.name.slice(1);
+        moveCache[key]={desc,type,cat:d.damage_class.name,power:d.power,accuracy:d.accuracy,pp:d.pp};
+      }).catch(()=>{});
+    }));
+  }
+  // Re-render now that move data is loaded
+  if(editIdx!==null)renderMoveSlots();
+  renderAll();
+})();
 setupAC('e-item','ac-item',()=>ITEMS,()=>{saveEdit();showItemDesc();});
 </script>
 </body>
