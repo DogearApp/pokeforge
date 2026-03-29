@@ -481,7 +481,7 @@ footer a:hover{color:var(--text)}
           </div>
           <div class="build-field">
             <label>Item</label>
-            <div class="ac-wrap"><input id="e-item" placeholder="e.g. Choice Specs" autocomplete="off"/><button class="clear-btn" id="clear-item" onclick="clearInput('e-item','clear-item');saveEdit();showItemDesc()">✕</button><div class="ac-dd" id="ac-item"></div></div>
+            <select id="e-item" onchange="onItemChange()"></select>
             <div class="bf-desc" id="desc-item"></div>
           </div>
           <div class="build-field">
@@ -1264,8 +1264,7 @@ function openEdit(i){
   const sp=document.getElementById('edit-sprite');
   if(p.sprite){sp.src=p.sprite;sp.style.display='block';}else{sp.style.display='none';}
   document.getElementById('edit-types').innerHTML=p.types.map(t=>`<span class="tbadge" style="background:${TCOL[t]}">${t}</span>`).join('');
-  document.getElementById('e-item').value=p.item||'';
-  document.getElementById('e-item').readOnly=!!p.isMega;
+  renderItemSelect(p);
   renderAbilityWithUsage(p);
   renderNatureWithUsage(p);
   document.getElementById('tera-opts').innerHTML=TYPES.map(t=>`<span class="tera-opt${p.tera===t?' sel':''}" style="background:${TCOL[t]}" onclick="setTera('${t}')">${t}</span>`).join('');
@@ -1362,6 +1361,31 @@ function showNatureDesc(){
   document.getElementById('desc-nature').innerHTML=getNatureDesc(document.getElementById('e-nature').value);
 }
 function onAbilityChange(){saveEdit();showAbilityDesc();}
+function onItemChange(){
+  if(editIdx===null)return;
+  team[editIdx].item=document.getElementById('e-item').value;
+  saveEdit();showItemDesc();
+}
+function renderItemSelect(p){
+  const el=document.getElementById('e-item');
+  const usage=getItemUsage(p);
+  // Build sorted item list: items with usage first, then all others
+  const withUsage=Object.entries(usage).sort((a,b)=>b[1]-a[1]).map(([name,pct])=>({name,pct}));
+  const usageNames=new Set(withUsage.map(i=>i.name));
+  const rest=ITEMS.filter(i=>!usageNames.has(i)).sort();
+
+  let html='<option value="">— None —</option>';
+  if(withUsage.length){
+    html+='<optgroup label="Popular for this Pokémon">';
+    withUsage.forEach(i=>{html+=`<option value="${i.name}"${i.name===p.item?' selected':''}>${i.name} (${(i.pct*100).toFixed(1)}%)</option>`;});
+    html+='</optgroup>';
+  }
+  html+='<optgroup label="All Items">';
+  rest.forEach(i=>{html+=`<option value="${i}"${i===p.item?' selected':''}>${i}</option>`;});
+  html+='</optgroup>';
+  el.innerHTML=html;
+  el.value=p.item||'';
+}
 
 function toggleNatureDD(){
   const dd=document.getElementById('nature-dd');
@@ -2681,7 +2705,7 @@ if(window.location.search.includes('team=')){
   if(editIdx!==null)renderMoveSlots();
   renderAll();
 })();
-setupAC('e-item','ac-item',()=>ITEMS,()=>{saveEdit();showItemDesc();},POPULAR_ITEMS);
+// Item is now a <select>, no autocomplete needed
 </script>
 </body>
 </html>
