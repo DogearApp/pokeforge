@@ -616,7 +616,7 @@ async function init(){
   try{
     const r=await fetch('https://pokeapi.co/api/v2/pokemon?limit=1302&offset=0');
     const d=await r.json();
-    allPokemon=d.results.map(p=>({name:p.name}));
+    allPokemon=d.results.map(p=>{const id=p.url.split('/').filter(Boolean).pop();return{name:p.name,id};});
     document.getElementById('psearch').placeholder=`Search all ${allPokemon.length} Pokémon…`;
   }catch(e){document.getElementById('psearch').placeholder='Search Pokémon…';}
 }
@@ -652,7 +652,7 @@ searchEl.addEventListener('input',()=>{
     if(!q){ddEl.style.display='none';return;}
     const m=allPokemon.filter(p=>p.name.includes(q)).slice(0,14);
     if(!m.length){ddEl.style.display='none';return;}
-    ddEl.innerHTML=m.map(p=>`<div class="ddi" onclick="addPoke('${p.name}')">${fmt(p.name)}</div>`).join('');
+    ddEl.innerHTML=m.map(p=>`<div class="ddi" onclick="addPoke('${p.name}')"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" width="32" height="32" style="image-rendering:pixelated" loading="lazy"/>${fmt(p.name)}</div>`).join('');
     ddEl.style.display='block';
   },100);
 });
