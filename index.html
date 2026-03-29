@@ -166,6 +166,13 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .field-row label{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);min-width:58px}
 .field-row input,.field-row select{flex:1;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none;transition:border-color .2s}
 .field-row input:focus,.field-row select:focus{border-color:var(--accent)}
+.ac-wrap{position:relative;flex:1}
+.ac-wrap input{width:100%;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none;transition:border-color .2s}
+.ac-wrap input:focus{border-color:var(--accent)}
+.ac-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);z-index:300;max-height:180px;overflow-y:auto;box-shadow:0 12px 32px rgba(0,0,0,.5);display:none}
+.ac-dd .ac-item{padding:7px 12px;font-size:13px;cursor:pointer;color:var(--text);transition:background .15s}
+.ac-dd .ac-item:hover,.ac-dd .ac-item.hl{background:var(--bg3)}
+.ac-dd .ac-item .ac-hint{font-size:11px;color:var(--muted);margin-left:6px}
 .field-row select option{background:var(--bg2)}
 .moves-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 8px}
 .tera-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
@@ -326,7 +333,7 @@ footer a:hover{color:var(--text)}
       <div class="edit-body" id="et-build">
         <div class="field-row"><label>Nickname</label><input id="e-nick" placeholder="Optional nickname" oninput="saveEdit()"/></div>
         <div class="field-row"><label>Ability</label><select id="e-ability" onchange="saveEdit()"><option>—</option></select></div>
-        <div class="field-row"><label>Item</label><input id="e-item" placeholder="e.g. Choice Specs" oninput="saveEdit()"/></div>
+        <div class="field-row"><label>Item</label><div class="ac-wrap"><input id="e-item" placeholder="e.g. Choice Specs" autocomplete="off"/><div class="ac-dd" id="ac-item"></div></div></div>
         <div class="field-row"><label>Nature</label>
           <select id="e-nature" onchange="saveEdit()">
             <option>Hardy</option><option>Lonely</option><option>Brave</option><option>Adamant</option><option>Naughty</option>
@@ -339,10 +346,10 @@ footer a:hover{color:var(--text)}
         <div class="tera-label">Tera Type</div>
         <div class="tera-grid" id="tera-opts"></div>
         <div class="moves-label">Moves</div>
-        <div class="field-row"><label>Move 1</label><input id="m1" oninput="saveEdit()"/></div>
-        <div class="field-row"><label>Move 2</label><input id="m2" oninput="saveEdit()"/></div>
-        <div class="field-row"><label>Move 3</label><input id="m3" oninput="saveEdit()"/></div>
-        <div class="field-row"><label>Move 4</label><input id="m4" oninput="saveEdit()"/></div>
+        <div class="field-row"><label>Move 1</label><div class="ac-wrap"><input id="m1" placeholder="Search moves…" autocomplete="off"/><div class="ac-dd" id="ac-m1"></div></div></div>
+        <div class="field-row"><label>Move 2</label><div class="ac-wrap"><input id="m2" placeholder="Search moves…" autocomplete="off"/><div class="ac-dd" id="ac-m2"></div></div></div>
+        <div class="field-row"><label>Move 3</label><div class="ac-wrap"><input id="m3" placeholder="Search moves…" autocomplete="off"/><div class="ac-dd" id="ac-m3"></div></div></div>
+        <div class="field-row"><label>Move 4</label><div class="ac-wrap"><input id="m4" placeholder="Search moves…" autocomplete="off"/><div class="ac-dd" id="ac-m4"></div></div></div>
       </div>
 
       <div class="edit-body" id="et-evs" style="display:none">
@@ -421,16 +428,21 @@ const MEGA_DATA={
   diancie:[{suffix:'mega',stone:'Diancite',label:'Mega Diancie'}]
 };
 
-let allPokemon=[],team=[],editIdx=null,pokeCache={};
+let allPokemon=[],allItems=[],team=[],editIdx=null,pokeCache={};
 
 function fmt(n){return n.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join('-')}
 
 async function init(){
   try{
-    const r=await fetch('https://pokeapi.co/api/v2/pokemon?limit=1302&offset=0');
-    const d=await r.json();
-    allPokemon=d.results.map(p=>({name:p.name}));
+    const [pr,ir]=await Promise.all([
+      fetch('https://pokeapi.co/api/v2/pokemon?limit=1302&offset=0'),
+      fetch('https://pokeapi.co/api/v2/item?limit=2000&offset=0')
+    ]);
+    const pd=await pr.json();
+    allPokemon=pd.results.map(p=>({name:p.name}));
     document.getElementById('psearch').placeholder=`Search all ${allPokemon.length} Pokémon…`;
+    const id=await ir.json();
+    allItems=id.results.map(i=>fmt(i.name));
   }catch(e){document.getElementById('psearch').placeholder='Search Pokémon…';}
 }
 
@@ -442,7 +454,8 @@ async function fetchPoke(name){
     const types=d.types.map(t=>t.type.name.charAt(0).toUpperCase()+t.type.name.slice(1));
     const abilities=d.abilities.map(a=>fmt(a.ability.name));
     const stats={};d.stats.forEach(s=>{const k=({hp:'hp','attack':'atk','defense':'def','special-attack':'spa','special-defense':'spd','speed':'spe'})[s.stat.name];if(k)stats[k]=s.base_stat;});
-    const data={name:d.name,displayName:fmt(d.name),types,abilities,stats,sprite:d.sprites.front_default};
+    const moves=d.moves.map(m=>fmt(m.move.name));
+    const data={name:d.name,displayName:fmt(d.name),types,abilities,stats,sprite:d.sprites.front_default,movePool:moves};
     pokeCache[name]=data;return data;
   }catch(e){return null;}
 }
@@ -467,7 +480,7 @@ searchEl.addEventListener('input',()=>{
     ddEl.style.display='block';
   },100);
 });
-document.addEventListener('click',e=>{if(!document.getElementById('sw').contains(e.target))ddEl.style.display='none';});
+document.addEventListener('click',e=>{if(!document.getElementById('sw').contains(e.target))ddEl.style.display='none';document.querySelectorAll('.ac-dd').forEach(d=>{if(!d.parentElement.contains(e.target))d.style.display='none';});});
 
 async function addPoke(name){
   if(team.length>=6)return;
@@ -476,7 +489,7 @@ async function addPoke(name){
   const data=await fetchPoke(name);
   searchEl.placeholder=`Search all ${allPokemon.length} Pokémon…`;
   if(!data)return;
-  team.push({...data,nick:'',item:'',nature:'Jolly',tera:data.types[0],ability:data.abilities[0]||'',moves:['','','',''],evs:{hp:0,atk:0,def:0,spa:0,spd:0,spe:0},ivs:{hp:31,atk:31,def:31,spa:31,spd:31,spe:31},isMega:false,megaForm:null,basePoke:null});
+  team.push({...data,nick:'',item:'',nature:'Jolly',tera:data.types[0],ability:data.abilities[0]||'',moves:['','','',''],evs:{hp:0,atk:0,def:0,spa:0,spd:0,spe:0},ivs:{hp:31,atk:31,def:31,spa:31,spd:31,spe:31},isMega:false,megaForm:null,basePoke:null,movePool:data.movePool||[]});
   renderAll();
 }
 
@@ -670,6 +683,43 @@ async function runAI(){
   }catch(e){document.getElementById('ai-out').innerHTML='<div class="ai-out" style="color:var(--red)">Connection error. Please try again.</div>';}
 }
 
+// Autocomplete system
+function setupAC(inputId,ddId,getList,onSelect){
+  const inp=document.getElementById(inputId),dd=document.getElementById(ddId);
+  let hlIdx=-1;
+  inp.addEventListener('input',()=>{
+    const q=inp.value.toLowerCase().trim();
+    if(!q){dd.style.display='none';saveEdit();return;}
+    const list=getList().filter(v=>v.toLowerCase().includes(q)).slice(0,12);
+    if(!list.length){dd.style.display='none';saveEdit();return;}
+    hlIdx=-1;
+    dd.innerHTML=list.map((v,i)=>`<div class="ac-item" data-idx="${i}">${v}</div>`).join('');
+    dd.style.display='block';
+    dd.querySelectorAll('.ac-item').forEach(el=>{
+      el.addEventListener('mousedown',e=>{e.preventDefault();inp.value=el.textContent;dd.style.display='none';if(onSelect)onSelect(el.textContent);else saveEdit();});
+    });
+  });
+  inp.addEventListener('keydown',e=>{
+    const items=dd.querySelectorAll('.ac-item');
+    if(!items.length||dd.style.display==='none')return;
+    if(e.key==='ArrowDown'){e.preventDefault();hlIdx=Math.min(hlIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('hl',i===hlIdx));}
+    else if(e.key==='ArrowUp'){e.preventDefault();hlIdx=Math.max(hlIdx-1,0);items.forEach((el,i)=>el.classList.toggle('hl',i===hlIdx));}
+    else if(e.key==='Enter'&&hlIdx>=0){e.preventDefault();inp.value=items[hlIdx].textContent;dd.style.display='none';if(onSelect)onSelect(items[hlIdx].textContent);else saveEdit();}
+    else if(e.key==='Escape'){dd.style.display='none';}
+  });
+  inp.addEventListener('blur',()=>{setTimeout(()=>{dd.style.display='none';saveEdit();},150);});
+}
+
+function initAutocompletes(){
+  setupAC('e-item','ac-item',()=>allItems);
+  ['m1','m2','m3','m4'].forEach(id=>{
+    setupAC(id,'ac-'+id,()=>{
+      if(editIdx===null)return[];
+      return team[editIdx].movePool||[];
+    });
+  });
+}
+
 function showMegaControls(p){
   const ctrl=document.getElementById('mega-controls');
   const btn=document.getElementById('mega-btn');
@@ -718,7 +768,7 @@ async function toggleMega(formSuffix){
   openEdit(editIdx);renderAll();
 }
 
-init();renderAll();
+init();renderAll();initAutocompletes();
 </script>
 </body>
 </html>
