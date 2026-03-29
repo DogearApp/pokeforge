@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PokeForge — VGC Team Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0a0c10;
+  --bg2: #12151c;
+  --bg3: #1a1e28;
+  --bg4: #222736;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #f0f2f7;
+  --muted: #7a8099;
+  --muted2: #4a5068;
+  --accent: #6c8eff;
+  --accent2: #a78bfa;
+  --gold: #f5c542;
+  --red: #ff5f5f;
+  --orange: #ff9d4d;
+  --green: #4ade80;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:58px}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.03em;color:var(--text)}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;align-items:center;gap:1.5rem}
+.nav-links a{color:var(--muted);font-size:13px;font-weight:500;text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.nav-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle}
+
+/* HERO */
+.hero{padding:5rem 2rem 3.5rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,142,255,0.12) 0%, transparent 70%);pointer-events:none}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(108,142,255,0.1);border:1px solid rgba(108,142,255,0.25);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:500;color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:1.5rem}
+.hero-eyebrow::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(2.4rem,6vw,4rem);font-weight:800;letter-spacing:-.04em;line-height:1.05;margin-bottom:1.2rem}
+.hero h1 em{font-style:normal;color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text}
+.hero p{font-size:1.05rem;color:var(--muted);max-width:520px;margin:0 auto 2rem;font-weight:300;line-height:1.7}
+.hero-pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem}
+.pill{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 13px;font-size:12px;color:var(--muted);font-weight:400}
+.pill strong{color:var(--text);font-weight:500}
+
+/* APP CONTAINER */
+.app-wrap{max-width:1100px;margin:0 auto;padding:0 1.5rem 4rem}
+
+/* SEARCH */
+.search-section{margin-bottom:1.5rem}
+.search-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.search-box{position:relative}
+.search-box input{width:100%;padding:13px 18px 13px 46px;font-size:15px;font-family:'DM Sans',sans-serif;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
+.search-box input::placeholder{color:var(--muted2)}
+.search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,142,255,0.12)}
+.search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none}
+.dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);z-index:200;max-height:260px;overflow-y:auto;box-shadow:0 16px 40px rgba(0,0,0,.5);display:none}
+.ddi{padding:10px 16px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--text);transition:background .15s}
+.ddi:hover{background:var(--bg3)}
+.ddi-types{display:flex;gap:4px}
+
+/* GRID */
+.main-grid{display:grid;grid-template-columns:1fr 340px;gap:1.5rem;align-items:start}
+@media(max-width:800px){.main-grid{grid-template-columns:1fr}}
+
+/* TEAM CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.card-header{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.team-count-badge{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:500;color:var(--muted)}
+.slots-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.slot{background:var(--bg2);padding:14px;min-height:110px;cursor:pointer;position:relative;transition:background .15s}
+.slot:hover{background:var(--bg3)}
+.slot.active{background:var(--bg3);box-shadow:inset 2px 0 0 var(--accent)}
+.slot.empty{display:flex;align-items:center;justify-content:center;opacity:.5}
+.slot.empty:hover{opacity:.8}
+.slot-empty-inner{display:flex;flex-direction:column;align-items:center;gap:6px}
+.slot-empty-icon{width:30px;height:30px;border:1.5px dashed var(--muted2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted2)}
+.slot-empty-text{font-size:12px;color:var(--muted2)}
+.slot-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.slot-sprite{width:40px;height:40px;image-rendering:pixelated}
+.slot-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text)}
+.slot-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.slot-types{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px}
+.tbadge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;color:#fff;letter-spacing:.04em;text-transform:uppercase}
+.slot-moves{display:flex;flex-wrap:wrap;gap:3px}
+.mvbadge{font-size:10px;background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:2px 7px;color:var(--muted)}
+.slot-warn{font-size:10px;color:var(--red);margin-top:5px;font-weight:500}
+.slot-spe{font-size:10px;color:var(--accent);font-weight:500;margin-top:3px}
+.xbtn{position:absolute;top:10px;right:10px;background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted2);line-height:1;padding:2px;border-radius:4px;transition:color .15s,background .15s}
+.xbtn:hover{color:var(--red);background:rgba(255,95,95,0.1)}
+
+/* ANALYSIS PANEL */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg3)}
+.tab{flex:1;padding:10px 4px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;color:var(--muted);text-align:center;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-body{padding:1.25rem}
+
+/* WEAKNESS BARS */
+.wrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.wlabel{font-size:9px;font-weight:700;padding:3px 7px;border-radius:6px;color:#fff;min-width:62px;text-align:center;letter-spacing:.03em;text-transform:uppercase}
+.wbg{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.wbar{height:100%;border-radius:3px;transition:width .4s ease}
+.wnum{font-size:12px;font-weight:600;min-width:16px;text-align:right;color:var(--muted)}
+
+/* STATS */
+.stat-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.stat-bar-label{font-size:11px;color:var(--muted);min-width:30px;font-weight:500}
+.stat-bar-bg{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:3px}
+.stat-bar-val{font-size:11px;font-weight:600;min-width:28px;text-align:right;color:var(--muted)}
+.stat-computed{font-size:11px;font-weight:600;min-width:28px;text-align:right;color:var(--accent)}
+
+/* SPEED TIERS */
+.speed-search input{width:100%;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none;margin-bottom:8px}
+.speed-search input:focus{border-color:var(--accent)}
+.speed-ctx{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.tier-list{max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.tier-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:var(--bg3);transition:background .15s}
+.tier-row.mine{background:rgba(108,142,255,0.12);border:1px solid rgba(108,142,255,0.25)}
+.tier-name{font-size:13px;flex:1;font-weight:400}
+.tier-row.mine .tier-name{font-weight:600;color:var(--accent)}
+.tier-pill{font-size:9px;font-weight:700;letter-spacing:.04em;padding:2px 6px;border-radius:5px;text-transform:uppercase}
+.tier-pill.mine{background:rgba(108,142,255,0.2);color:var(--accent)}
+.tier-pill.ref{background:var(--bg4);color:var(--muted2)}
+.tier-speed{font-size:13px;font-weight:700;color:var(--text);min-width:32px;text-align:right}
+
+/* EXPORT */
+.showdown-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-family:monospace;font-size:11.5px;color:var(--muted);white-space:pre-wrap;line-height:1.8;max-height:300px;overflow-y:auto;margin-bottom:10px}
+.copy-btn{width:100%;padding:10px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;letter-spacing:.02em;transition:opacity .2s,transform .1s}
+.copy-btn:hover{opacity:.9}
+.copy-btn:active{transform:scale(.98)}
+
+/* AI */
+.ai-btn{width:100%;padding:11px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;letter-spacing:.02em;margin-bottom:10px;transition:opacity .2s,transform .1s}
+.ai-btn:hover{opacity:.9}
+.ai-btn:active{transform:scale(.98)}
+.ai-out{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-size:13px;line-height:1.7;color:var(--text);max-height:360px;overflow-y:auto}
+.ai-thinking{color:var(--muted);font-style:italic}
+
+/* EDIT PANEL */
+.edit-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:16px;margin-top:1.5rem;overflow:hidden}
+.edit-head{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.edit-mon-info{display:flex;align-items:center;gap:10px}
+.edit-sprite{width:48px;height:48px;image-rendering:pixelated}
+.edit-mon-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text)}
+.edit-mon-types{display:flex;gap:4px;margin-top:4px}
+.close-btn{background:var(--bg4);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:15px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;transition:color .15s,background .15s}
+.close-btn:hover{color:var(--red);background:rgba(255,95,95,0.1)}
+.etabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg3)}
+.etab{padding:10px 16px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s}
+.etab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.edit-body{padding:1.25rem}
+.field-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.field-row label{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);min-width:58px}
+.field-row input,.field-row select{flex:1;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none;transition:border-color .2s}
+.field-row input:focus,.field-row select:focus{border-color:var(--accent)}
+.field-row select option{background:var(--bg2)}
+.moves-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 8px}
+.tera-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.tera-grid{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px}
+.tera-opt{font-size:9px;font-weight:700;padding:3px 8px;border-radius:7px;color:#fff;cursor:pointer;opacity:.35;transition:opacity .15s,outline .1s;letter-spacing:.04em;text-transform:uppercase}
+.tera-opt.sel{opacity:1;outline:2px solid rgba(255,255,255,.5);outline-offset:1px}
+
+/* EV GRID */
+.ev-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ev-total{font-size:13px;color:var(--muted)}
+.ev-total strong{color:var(--text)}
+.ev-total .over{color:var(--red)}
+.reset-btn{padding:5px 12px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;transition:color .15s}
+.reset-btn:hover{color:var(--text)}
+.ev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.ev-cell{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px}
+.ev-cell-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ev-stat-name{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ev-computed{font-size:13px;font-weight:700;color:var(--accent)}
+.ev-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.ev-row-label{font-size:10px;font-weight:600;color:var(--muted2);min-width:16px}
+.ev-row input{flex:1;padding:4px 7px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;text-align:center}
+.ev-row input:focus{border-color:var(--accent)}
+.ev-note{font-size:11px;color:var(--muted2);line-height:1.5}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem;text-align:center;color:var(--muted2);font-size:12px}
+footer a{color:var(--muted);text-decoration:none}
+footer a:hover{color:var(--text)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Poke<span>Forge</span></div>
+  <div class="nav-links">
+    <a href="#builder">Builder</a>
+    <a href="https://www.pokemon.com/us/pokemon-vg-championships" target="_blank">VGC Rules</a>
+    <a href="https://pokemonshowdown.com" target="_blank">Showdown</a>
+    <span style="font-size:12px;color:var(--muted)">Free <span class="nav-badge">BETA</span></span>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">VGC Competitive Tool</div>
+  <h1>Build your <em>perfect</em><br/>doubles team</h1>
+  <p>Full coverage analysis, EV spreads, speed tiers, and AI-powered team suggestions — all in one place.</p>
+  <div class="hero-pills">
+    <div class="pill"><strong>1,300+</strong> Pokémon</div>
+    <div class="pill"><strong>Real</strong> type chart</div>
+    <div class="pill"><strong>Lv. 50</strong> stat calc</div>
+    <div class="pill"><strong>Showdown</strong> export</div>
+    <div class="pill"><strong>AI</strong> analysis</div>
+  </div>
+</div>
+
+<div class="app-wrap" id="builder">
+
+  <div class="search-section">
+    <div class="search-label">Add a Pokémon</div>
+    <div class="search-box" id="sw">
+      <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="psearch" placeholder="Loading Pokédex…" autocomplete="off"/>
+      <div class="dropdown" id="pdd"></div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <!-- TEAM -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Your Team</div>
+          <div class="team-count-badge"><span id="team-count">0</span> / 6 Pokémon</div>
+        </div>
+        <div class="slots-grid" id="slots"></div>
+      </div>
+    </div>
+
+    <!-- ANALYSIS -->
+    <div>
+      <div class="panel">
+        <div class="tabs">
+          <div class="tab on" onclick="tab('cov')">Coverage</div>
+          <div class="tab" onclick="tab('speed')">Speed</div>
+          <div class="tab" onclick="tab('stats')">Stats</div>
+          <div class="tab" onclick="tab('export')">Export</div>
+          <div class="tab" onclick="tab('ai')">AI</div>
+        </div>
+
+        <div class="tab-body" id="t-cov">
+          <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Defensive weaknesses</div>
+          <div id="wlist"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see coverage analysis.</span></div>
+        </div>
+
+        <div class="tab-body" id="t-speed" style="display:none">
+          <div class="speed-search"><input id="speed-search" placeholder="Filter by name…" oninput="renderSpeedTiers()"/></div>
+          <div class="speed-ctx" id="speed-ctx">Add Pokémon to compare speed tiers.</div>
+          <div class="tier-list" id="tier-list"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see speed tiers.</span></div>
+        </div>
+
+        <div class="tab-body" id="t-stats" style="display:none">
+          <div id="statview"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see stats.</span></div>
+        </div>
+
+        <div class="tab-body" id="t-export" style="display:none">
+          <div class="showdown-box" id="sdbox">Add Pokémon to generate paste.</div>
+          <button class="copy-btn" onclick="copyPaste()">Copy to Clipboard</button>
+        </div>
+
+        <div class="tab-body" id="t-ai" style="display:none">
+          <button class="ai-btn" onclick="runAI()">✦ Analyze Team &amp; Suggest Improvements</button>
+          <div id="ai-out"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT PANEL -->
+  <div id="edit-panel" style="display:none">
+    <div class="edit-wrap">
+      <div class="edit-head">
+        <div class="edit-mon-info">
+          <img id="edit-sprite" class="edit-sprite" style="display:none"/>
+          <div>
+            <div class="edit-mon-name" id="etitle">Edit Pokémon</div>
+            <div class="edit-mon-types" id="edit-types"></div>
+          </div>
+        </div>
+        <button class="close-btn" onclick="closeEdit()">✕</button>
+      </div>
+      <div class="etabs">
+        <div class="etab on" onclick="etab('build')">Build</div>
+        <div class="etab" onclick="etab('evs')">EVs / IVs</div>
+      </div>
+
+      <div class="edit-body" id="et-build">
+        <div class="field-row"><label>Nickname</label><input id="e-nick" placeholder="Optional nickname" oninput="saveEdit()"/></div>
+        <div class="field-row"><label>Ability</label><select id="e-ability" onchange="saveEdit()"><option>—</option></select></div>
+        <div class="field-row"><label>Item</label><input id="e-item" placeholder="e.g. Choice Specs" oninput="saveEdit()"/></div>
+        <div class="field-row"><label>Nature</label>
+          <select id="e-nature" onchange="saveEdit()">
+            <option>Hardy</option><option>Lonely</option><option>Brave</option><option>Adamant</option><option>Naughty</option>
+            <option>Bold</option><option>Docile</option><option>Relaxed</option><option>Impish</option><option>Lax</option>
+            <option>Timid</option><option>Hasty</option><option>Serious</option><option>Jolly</option><option>Naive</option>
+            <option>Modest</option><option>Mild</option><option>Quiet</option><option>Bashful</option><option>Rash</option>
+            <option>Calm</option><option>Gentle</option><option>Sassy</option><option>Careful</option><option>Quirky</option>
+          </select>
+        </div>
+        <div class="tera-label">Tera Type</div>
+        <div class="tera-grid" id="tera-opts"></div>
+        <div class="moves-label">Moves</div>
+        <div class="field-row"><label>Move 1</label><input id="m1" oninput="saveEdit()"/></div>
+        <div class="field-row"><label>Move 2</label><input id="m2" oninput="saveEdit()"/></div>
+        <div class="field-row"><label>Move 3</label><input id="m3" oninput="saveEdit()"/></div>
+        <div class="field-row"><label>Move 4</label><input id="m4" oninput="saveEdit()"/></div>
+      </div>
+
+      <div class="edit-body" id="et-evs" style="display:none">
+        <div class="ev-header">
+          <div class="ev-total">EVs used: <strong><span id="ev-used">0</span></strong><span style="color:var(--muted2)">/508</span></div>
+          <button class="reset-btn" onclick="resetEVs()">Reset all</button>
+        </div>
+        <div class="ev-grid" id="ev-grid"></div>
+        <div class="ev-note">Blue numbers = computed stat at Lv. 50 with nature. IVs default to 31.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>PokeForge — Built for VGC competitors. Powered by <a href="https://pokeapi.co" target="_blank">PokéAPI</a>. Not affiliated with Nintendo or The Pokémon Company.</p>
+  <p style="margin-top:6px">Data sourced from <a href="https://bulbapedia.bulbagarden.net" target="_blank">Bulbapedia</a> via PokéAPI.</p>
+</footer>
+
+<script>
+const TC={Normal:{},Fire:{Grass:2,Ice:2,Bug:2,Steel:2,Fire:.5,Water:.5,Rock:.5,Dragon:.5},Water:{Fire:2,Ground:2,Rock:2,Water:.5,Grass:.5,Dragon:.5},Electric:{Water:2,Flying:2,Electric:.5,Grass:.5,Dragon:.5,Ground:0},Grass:{Water:2,Ground:2,Rock:2,Fire:.5,Grass:.5,Poison:.5,Flying:.5,Bug:.5,Dragon:.5,Steel:.5},Ice:{Grass:2,Ground:2,Flying:2,Dragon:2,Fire:.5,Water:.5,Ice:.5,Steel:.5},Fighting:{Normal:2,Rock:2,Steel:2,Ice:2,Dark:2,Poison:.5,Bug:.5,Psychic:.5,Flying:.5,Fairy:.5,Ghost:0},Poison:{Grass:2,Fairy:2,Poison:.5,Ground:.5,Rock:.5,Ghost:.5,Steel:0},Ground:{Fire:2,Electric:2,Poison:2,Rock:2,Steel:2,Grass:.5,Bug:.5,Flying:0},Flying:{Grass:2,Fighting:2,Bug:2,Electric:.5,Rock:.5,Steel:.5,Ground:0},Psychic:{Fighting:2,Poison:2,Psychic:.5,Steel:.5,Dark:0},Bug:{Grass:2,Psychic:2,Dark:2,Fire:.5,Fighting:.5,Flying:.5,Ghost:.5,Steel:.5,Fairy:.5},Rock:{Fire:2,Ice:2,Flying:2,Bug:2,Fighting:.5,Ground:.5,Steel:.5},Ghost:{Ghost:2,Psychic:2,Normal:0,Fighting:0,Poison:.5,Bug:.5},Dragon:{Dragon:2,Steel:.5,Fairy:0},Dark:{Ghost:2,Psychic:2,Fighting:.5,Dark:.5,Fairy:.5},Steel:{Ice:2,Rock:2,Fairy:2,Fire:.5,Water:.5,Electric:.5,Steel:.5,Poison:0},Fairy:{Fighting:2,Dragon:2,Dark:2,Fire:.5,Poison:.5,Steel:.5}};
+const TYPES=['Normal','Fire','Water','Electric','Grass','Ice','Fighting','Poison','Ground','Flying','Psychic','Bug','Rock','Ghost','Dragon','Dark','Steel','Fairy'];
+const TCOL={Normal:'#A8A878',Fire:'#F08030',Water:'#6890F0',Electric:'#F8D030',Grass:'#78C850',Ice:'#98D8D8',Fighting:'#C03028',Poison:'#A040A0',Ground:'#E0C068',Flying:'#A890F0',Psychic:'#F85888',Bug:'#A8B820',Rock:'#B8A038',Ghost:'#705898',Dragon:'#7038F8',Dark:'#705848',Steel:'#B8B8D0',Fairy:'#EE99AC'};
+const STAT_KEYS=['hp','atk','def','spa','spd','spe'];
+const STAT_NAMES={hp:'HP',atk:'Atk',def:'Def',spa:'SpA',spd:'SpD',spe:'Spe'};
+const STAT_COLS={hp:'#4ade80',atk:'#F08030',def:'#6890F0',spa:'#F85888',spd:'#98D8D8',spe:'#F8D030'};
+const NM={Hardy:{},Lonely:{atk:1.1,def:.9},Brave:{atk:1.1,spe:.9},Adamant:{atk:1.1,spa:.9},Naughty:{atk:1.1,spd:.9},Bold:{def:1.1,atk:.9},Docile:{},Relaxed:{def:1.1,spe:.9},Impish:{def:1.1,spa:.9},Lax:{def:1.1,spd:.9},Timid:{spe:1.1,atk:.9},Hasty:{spe:1.1,def:.9},Serious:{},Jolly:{spe:1.1,spa:.9},Naive:{spe:1.1,spd:.9},Modest:{spa:1.1,atk:.9},Mild:{spa:1.1,def:.9},Quiet:{spa:1.1,spe:.9},Bashful:{},Rash:{spa:1.1,spd:.9},Calm:{spd:1.1,atk:.9},Gentle:{spd:1.1,def:.9},Sassy:{spd:1.1,spe:.9},Careful:{spd:1.1,spa:.9},Quirky:{}};
+const BENCHMARKS=[{name:'Regieleki',spe:200},{name:'Electrode',spe:150},{name:'Calyrex-S',spe:150},{name:'Dragapult',spe:142},{name:'Zacian',spe:148},{name:'Iron Bundle',spe:136},{name:'Miraidon',spe:135},{name:'Flutter Mane',spe:135},{name:'Chien-Pao',spe:135},{name:'Koraidon',spe:135},{name:'Garchomp',spe:102},{name:'Chi-Yu',spe:100},{name:'Landorus-T',spe:91},{name:'Incineroar',spe:60},{name:'Amoonguss',spe:30},{name:'Torkoal',spe:20}];
+
+let allPokemon=[],team=[],editIdx=null,pokeCache={};
+
+function fmt(n){return n.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join('-')}
+
+async function init(){
+  try{
+    const r=await fetch('https://pokeapi.co/api/v2/pokemon?limit=1302&offset=0');
+    const d=await r.json();
+    allPokemon=d.results.map(p=>({name:p.name}));
+    document.getElementById('psearch').placeholder=`Search all ${allPokemon.length} Pokémon…`;
+  }catch(e){document.getElementById('psearch').placeholder='Search Pokémon…';}
+}
+
+async function fetchPoke(name){
+  if(pokeCache[name])return pokeCache[name];
+  try{
+    const r=await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
+    const d=await r.json();
+    const types=d.types.map(t=>t.type.name.charAt(0).toUpperCase()+t.type.name.slice(1));
+    const abilities=d.abilities.map(a=>fmt(a.ability.name));
+    const stats={};d.stats.forEach(s=>{const k=({hp:'hp','attack':'atk','defense':'def','special-attack':'spa','special-defense':'spd','speed':'spe'})[s.stat.name];if(k)stats[k]=s.base_stat;});
+    const data={name:d.name,displayName:fmt(d.name),types,abilities,stats,sprite:d.sprites.front_default};
+    pokeCache[name]=data;return data;
+  }catch(e){return null;}
+}
+
+function calcStat(base,ev,iv,nat,isHp){
+  iv=Math.min(31,Math.max(0,iv));ev=Math.min(252,Math.max(0,ev));
+  if(isHp)return Math.floor((.01*(2*base+iv+Math.floor(ev/4))*50)+50+10);
+  return Math.floor(Math.floor((.01*(2*base+iv+Math.floor(ev/4))*50)+5)*nat);
+}
+function computedStats(p){const nm=NM[p.nature]||{};const r={};STAT_KEYS.forEach(k=>r[k]=calcStat(p.stats[k],p.evs[k]||0,p.ivs[k]!==undefined?p.ivs[k]:31,nm[k]||1,k==='hp'));return r;}
+function actualSpe(p){const nm=NM[p.nature]||{};return calcStat(p.stats.spe,p.evs.spe||0,p.ivs.spe!==undefined?p.ivs.spe:31,nm.spe||1,false);}
+
+const searchEl=document.getElementById('psearch'),ddEl=document.getElementById('pdd');
+let st;
+searchEl.addEventListener('input',()=>{
+  clearTimeout(st);st=setTimeout(()=>{
+    const q=searchEl.value.toLowerCase().trim();
+    if(!q){ddEl.style.display='none';return;}
+    const m=allPokemon.filter(p=>p.name.includes(q)).slice(0,14);
+    if(!m.length){ddEl.style.display='none';return;}
+    ddEl.innerHTML=m.map(p=>`<div class="ddi" onclick="addPoke('${p.name}')">${fmt(p.name)}</div>`).join('');
+    ddEl.style.display='block';
+  },100);
+});
+document.addEventListener('click',e=>{if(!document.getElementById('sw').contains(e.target))ddEl.style.display='none';});
+
+async function addPoke(name){
+  if(team.length>=6)return;
+  searchEl.value='';ddEl.style.display='none';
+  searchEl.placeholder='Loading…';
+  const data=await fetchPoke(name);
+  searchEl.placeholder=`Search all ${allPokemon.length} Pokémon…`;
+  if(!data)return;
+  team.push({...data,nick:'',item:'',nature:'Jolly',tera:data.types[0],ability:data.abilities[0]||'',moves:['','','',''],evs:{hp:0,atk:0,def:0,spa:0,spd:0,spe:0},ivs:{hp:31,atk:31,def:31,spa:31,spd:31,spe:31}});
+  renderAll();
+}
+
+function removePoke(i,e){e.stopPropagation();team.splice(i,1);if(editIdx===i)closeEdit();else if(editIdx!==null&&editIdx>i)editIdx--;renderAll();}
+function renderAll(){document.getElementById('team-count').textContent=team.length;renderSlots();renderWeakness();renderSpeedTiers();renderStats();renderExport();}
+
+function defWeak(types){
+  let w={};TYPES.forEach(t=>w[t]=1);
+  types.forEach(def=>TYPES.forEach(atk=>{const c=TC[atk]||{};if(c[def]!==undefined)w[atk]*=c[def];}));
+  return w;
+}
+
+function renderSlots(){
+  const el=document.getElementById('slots');el.innerHTML='';
+  const total=Math.min(6,Math.max(team.length+(team.length<6?1:0),4));
+  for(let i=0;i<total;i++){
+    const div=document.createElement('div');
+    if(i<team.length){
+      const p=team[i];const wks=defWeak(p.types);const dbl=TYPES.filter(t=>wks[t]>=4);const spe=actualSpe(p);
+      div.className='slot'+(editIdx===i?' active':'');div.onclick=()=>openEdit(i);
+      div.innerHTML=`<button class="xbtn" onclick="removePoke(${i},event)">✕</button>
+        <div class="slot-header">
+          ${p.sprite?`<img src="${p.sprite}" class="slot-sprite"/>`:''}
+          <div><div class="slot-name">${p.nick||p.displayName}</div><div class="slot-sub">${p.ability}${p.item?' @ '+p.item:''}</div></div>
+        </div>
+        <div class="slot-types">
+          ${p.types.map(t=>`<span class="tbadge" style="background:${TCOL[t]}">${t}</span>`).join('')}
+          <span class="tbadge" style="background:${TCOL[p.tera]}55;border:1px solid ${TCOL[p.tera]};color:${TCOL[p.tera]}">Tera: ${p.tera}</span>
+        </div>
+        ${p.moves.some(m=>m)?`<div class="slot-moves">${p.moves.filter(m=>m).map(m=>`<span class="mvbadge">${m}</span>`).join('')}</div>`:''}
+        <div class="slot-spe">Spe ${spe}${p.nature.match(/Timid|Hasty|Jolly|Naive/)?' (+)':p.nature.match(/Brave|Relaxed|Quiet|Sassy/)?' (-)':''}</div>
+        ${dbl.length?`<div class="slot-warn">⚠ 4× weak: ${dbl.join(', ')}</div>`:''}`;
+    } else if(i===team.length){
+      div.className='slot empty';div.onclick=()=>searchEl.focus();
+      div.innerHTML=`<div class="slot-empty-inner"><div class="slot-empty-icon">+</div><div class="slot-empty-text">Add Pokémon</div></div>`;
+    } else {
+      div.className='slot empty';div.innerHTML=`<div class="slot-empty-inner"><div class="slot-empty-text">Empty slot</div></div>`;
+    }
+    el.appendChild(div);
+  }
+}
+
+function renderWeakness(){
+  if(!team.length){document.getElementById('wlist').innerHTML='<span style="font-size:13px;color:var(--muted)">Add Pokémon to see coverage analysis.</span>';return;}
+  let c={};TYPES.forEach(t=>c[t]=0);
+  team.forEach(p=>{const w=defWeak(p.types);TYPES.forEach(t=>{if(w[t]>1)c[t]+=(w[t]>=4?2:1);});});
+  const sorted=TYPES.slice().sort((a,b)=>c[b]-c[a]).filter(t=>c[t]>0);
+  const maxV=Math.max(...Object.values(c),1);
+  let html='';
+  sorted.forEach(t=>{
+    const n=c[t];const w=Math.round(n/maxV*100);
+    const col=n>=4?'#ff5f5f':n>=2?'#ff9d4d':'#6c8eff';
+    html+=`<div class="wrow"><span class="wlabel" style="background:${TCOL[t]}">${t}</span><div class="wbg"><div class="wbar" style="width:${w}%;background:${col}"></div></div><span class="wnum">${n}</span></div>`;
+  });
+  const none=TYPES.filter(t=>c[t]===0);
+  if(none.length)html+=`<div style="margin-top:10px;font-size:11px;color:var(--muted)">Neutral / resists: ${none.join(', ')}</div>`;
+  document.getElementById('wlist').innerHTML=html;
+}
+
+function renderSpeedTiers(){
+  if(!team.length){document.getElementById('tier-list').innerHTML='<span style="font-size:13px;color:var(--muted)">Add Pokémon to see speed tiers.</span>';document.getElementById('speed-ctx').textContent='Add Pokémon to compare speed tiers.';return;}
+  const filterQ=(document.getElementById('speed-search').value||'').toLowerCase();
+  const teamE=team.map(p=>({name:p.nick||p.displayName,spe:actualSpe(p),mine:true,note:`${p.nature} | ${p.evs.spe||0} EVs`}));
+  const refE=BENCHMARKS.map(b=>({name:b.name,spe:Math.floor(Math.floor((.01*(2*b.spe+31)*50)+5)*1),mine:false}));
+  const seen=new Set();let all=[...teamE,...refE].filter(e=>{if(seen.has(e.name))return false;seen.add(e.name);return true;});
+  if(filterQ)all=all.filter(e=>e.name.toLowerCase().includes(filterQ));
+  all.sort((a,b)=>b.spe-a.spe);
+  const myMin=Math.min(...teamE.map(e=>e.spe)),myMax=Math.max(...teamE.map(e=>e.spe));
+  document.getElementById('speed-ctx').innerHTML=`Your team speed range: <strong style="color:var(--accent)">${myMin}–${myMax}</strong>. Your Pokémon highlighted in blue.`;
+  document.getElementById('tier-list').innerHTML=all.map(e=>`<div class="tier-row${e.mine?' mine':''}">
+    <span class="tier-name">${e.name}</span>
+    <span class="tier-pill ${e.mine?'mine':'ref'}">${e.mine?'yours':'ref'}</span>
+    <span class="tier-speed">${e.spe}</span>
+  </div>`).join('');
+}
+
+function renderStats(){
+  if(!team.length){document.getElementById('statview').innerHTML='<span style="font-size:13px;color:var(--muted)">Add Pokémon to see stats.</span>';return;}
+  let html='';
+  team.forEach(p=>{
+    const cs=computedStats(p);const bst=Object.values(p.stats).reduce((a,b)=>a+b,0);
+    html+=`<div style="margin-bottom:18px"><div style="font-size:13px;font-weight:600;margin-bottom:8px;font-family:'Syne',sans-serif">${p.nick||p.displayName} <span style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif">BST ${bst}</span></div>`;
+    STAT_KEYS.forEach(k=>{
+      const pct=Math.min(100,Math.round(p.stats[k]/255*100));
+      html+=`<div class="stat-bar-row"><span class="stat-bar-label">${STAT_NAMES[k]}</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${pct}%;background:${STAT_COLS[k]}"></div></div><span class="stat-bar-val">${p.stats[k]}</span><span class="stat-computed">${cs[k]}</span></div>`;
+    });html+='</div>';
+  });
+  document.getElementById('statview').innerHTML=html+'<div style="font-size:11px;color:var(--muted2);margin-top:4px">Gray = base stat · Blue = computed Lv.50</div>';
+}
+
+function renderExport(){
+  if(!team.length){document.getElementById('sdbox').textContent='Add Pokémon to generate paste.';return;}
+  const evStr=p=>{const parts=STAT_KEYS.filter(k=>p.evs[k]>0).map(k=>`${p.evs[k]} ${STAT_NAMES[k]}`);return parts.length?parts.join(' / '):'No EVs';};
+  const ivStr=p=>{const nf=STAT_KEYS.filter(k=>(p.ivs[k]||31)!==31).map(k=>`${p.ivs[k]} ${STAT_NAMES[k]}`);return nf.length?nf.join(' / '):null;};
+  const paste=team.map(p=>{
+    let l=[];const nick=p.nick?`${p.nick} (${p.displayName})`:p.displayName;
+    l.push(p.item?`${nick} @ ${p.item}`:nick);
+    if(p.ability)l.push(`Ability: ${p.ability}`);
+    l.push(`Tera Type: ${p.tera}`);l.push(`EVs: ${evStr(p)}`);l.push(`${p.nature} Nature`);
+    const iv=ivStr(p);if(iv)l.push(`IVs: ${iv}`);
+    (p.moves.some(m=>m)?p.moves.filter(m=>m):['','','','']).forEach(m=>l.push(`- ${m||'—'}`));
+    return l.join('\n');
+  }).join('\n\n');
+  document.getElementById('sdbox').textContent=paste;
+}
+
+function copyPaste(){
+  navigator.clipboard.writeText(document.getElementById('sdbox').textContent);
+  const b=document.querySelector('.copy-btn');b.textContent='Copied!';setTimeout(()=>b.textContent='Copy to Clipboard',1800);
+}
+
+function tab(id){
+  ['cov','speed','stats','export','ai'].forEach(t=>{document.getElementById('t-'+t).style.display=t===id?'block':'none';});
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',['cov','speed','stats','export','ai'][i]===id));
+  if(id==='speed')renderSpeedTiers();
+}
+
+function etab(id){
+  ['build','evs'].forEach(t=>{document.getElementById('et-'+t).style.display=t===id?'block':'none';});
+  document.querySelectorAll('.etab').forEach((el,i)=>el.classList.toggle('on',['build','evs'][i]===id));
+  if(id==='evs'&&editIdx!==null)renderEVGrid();
+}
+
+function openEdit(i){
+  editIdx=i;const p=team[i];
+  document.getElementById('etitle').textContent=p.displayName;
+  const sp=document.getElementById('edit-sprite');
+  if(p.sprite){sp.src=p.sprite;sp.style.display='block';}else{sp.style.display='none';}
+  document.getElementById('edit-types').innerHTML=p.types.map(t=>`<span class="tbadge" style="background:${TCOL[t]}">${t}</span>`).join('');
+  document.getElementById('e-nick').value=p.nick||'';
+  document.getElementById('e-item').value=p.item||'';
+  document.getElementById('e-nature').value=p.nature||'Jolly';
+  document.getElementById('e-ability').innerHTML=p.abilities.map(a=>`<option${a===p.ability?' selected':''}>${a}</option>`).join('');
+  document.getElementById('tera-opts').innerHTML=TYPES.map(t=>`<span class="tera-opt${p.tera===t?' sel':''}" style="background:${TCOL[t]}" onclick="setTera('${t}')">${t}</span>`).join('');
+  ['m1','m2','m3','m4'].forEach((id,j)=>document.getElementById(id).value=p.moves[j]||'');
+  document.getElementById('edit-panel').style.display='block';
+  etab('build');renderSlots();
+}
+
+function setTera(t){if(editIdx===null)return;team[editIdx].tera=t;document.querySelectorAll('.tera-opt').forEach(el=>el.classList.toggle('sel',el.textContent===t));saveEdit();}
+function closeEdit(){editIdx=null;document.getElementById('edit-panel').style.display='none';renderSlots();}
+
+function saveEdit(){
+  if(editIdx===null)return;const p=team[editIdx];
+  p.nick=document.getElementById('e-nick').value;p.item=document.getElementById('e-item').value;
+  p.nature=document.getElementById('e-nature').value;p.ability=document.getElementById('e-ability').value;
+  p.moves=['m1','m2','m3','m4'].map(id=>document.getElementById(id).value.trim());
+  renderAll();
+}
+
+function renderEVGrid(){
+  if(editIdx===null)return;const p=team[editIdx];const nm=NM[p.nature]||{};
+  document.getElementById('ev-grid').innerHTML=STAT_KEYS.map(k=>{
+    const nat=nm[k]||1;const comp=calcStat(p.stats[k],p.evs[k]||0,p.ivs[k]!==undefined?p.ivs[k]:31,nat,k==='hp');
+    return `<div class="ev-cell">
+      <div class="ev-cell-header"><span class="ev-stat-name">${STAT_NAMES[k]}</span><span class="ev-computed">${comp}</span></div>
+      <div class="ev-row"><span class="ev-row-label">EV</span><input type="number" min="0" max="252" step="4" value="${p.evs[k]||0}" oninput="setEV('${k}',this.value)"/></div>
+      <div class="ev-row"><span class="ev-row-label">IV</span><input type="number" min="0" max="31" value="${p.ivs[k]!==undefined?p.ivs[k]:31}" oninput="setIV('${k}',this.value)"/></div>
+    </div>`;
+  }).join('');
+  updateEVTotal();
+}
+
+function setEV(k,val){if(editIdx===null)return;team[editIdx].evs[k]=Math.min(252,Math.max(0,parseInt(val)||0));updateEVTotal();renderAll();renderEVGrid();}
+function setIV(k,val){if(editIdx===null)return;team[editIdx].ivs[k]=Math.min(31,Math.max(0,parseInt(val)||0));renderAll();renderEVGrid();}
+function resetEVs(){if(editIdx===null)return;STAT_KEYS.forEach(k=>{team[editIdx].evs[k]=0;team[editIdx].ivs[k]=31;});renderAll();renderEVGrid();}
+function updateEVTotal(){
+  if(editIdx===null)return;
+  const total=STAT_KEYS.reduce((s,k)=>s+(team[editIdx].evs[k]||0),0);
+  const el=document.getElementById('ev-used');el.textContent=total;
+  el.style.color=total>508?'var(--red)':'var(--text)';
+}
+
+async function runAI(){
+  if(!team.length){document.getElementById('ai-out').innerHTML='<div class="ai-out">Add some Pokémon first!</div>';return;}
+  document.getElementById('ai-out').innerHTML='<div class="ai-out ai-thinking">Analyzing your team…</div>';
+  let counts={};TYPES.forEach(t=>counts[t]=0);
+  team.forEach(p=>{const w=defWeak(p.types);TYPES.forEach(t=>{if(w[t]>1)counts[t]+=(w[t]>=4?2:1);});});
+  const topWeak=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5).filter(([,v])=>v>0).map(([t])=>t);
+  const speeds=team.map(p=>`${p.displayName}:${actualSpe(p)}`).join(', ');
+  const teamStr=team.map(p=>`${p.displayName}(${p.types.join('/')}|${p.ability}|${p.item?'@'+p.item:'no item'}|Tera:${p.tera}|${p.nature}|Spe:${actualSpe(p)}${p.moves.some(m=>m)?'|moves:'+p.moves.filter(m=>m).join('/'):''}`).join('; ');
+  const prompt=`You are a competitive VGC (Scarlet/Violet doubles) expert.\n\nTeam: ${teamStr}\nDefensive holes: ${topWeak.join(', ')}\nSpeed tiers: ${speeds}\n\nProvide concise expert analysis:\n1. Team archetype (2 sentences)\n2. Top 3 Pokémon to consider adding/swapping to fix weaknesses (name + 1-sentence reason each)\n3. For each existing member with notable gaps, suggest 1 specific coverage move they could run\n4. Speed tier observation — outspeeding or being outsped by key threats?\n5. One key doubles synergy tip\n\nBe specific with move and Pokémon names. Reference real VGC meta when relevant.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();
+    const txt=(d.content?.[0]?.text||'No response.').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'</p><p style="margin-top:8px">').replace(/\n/g,'<br>');
+    document.getElementById('ai-out').innerHTML=`<div class="ai-out"><p>${txt}</p></div>`;
+  }catch(e){document.getElementById('ai-out').innerHTML='<div class="ai-out" style="color:var(--red)">Connection error. Please try again.</div>';}
+}
+
+init();renderAll();
+</script>
+</body>
+</html>
+HTMLEOF
