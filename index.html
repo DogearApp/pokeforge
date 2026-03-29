@@ -1911,14 +1911,15 @@ function runCalcSide(atk,def,moveName,mods){
   const minDmg=Math.floor(base*mod*0.85),maxDmg=Math.floor(base*mod*1.00);
   const hp=ds.hp,minPct=minDmg/hp*100,maxPct=maxDmg/hp*100;
 
+  // KO calc — how many hits to KO
   let ko;
-  if(!hp||!maxDmg||isNaN(maxPct))ko='—';
-  else if(minPct>=100)ko='Guaranteed OHKO';
-  else if(maxPct>=100)ko='Possible OHKO';
-  else if(minPct>=50)ko='Guaranteed 2HKO';
-  else if(maxPct>=50)ko='Possible 2HKO';
-  else if(maxPct>0){const n=Math.ceil(100/maxPct);ko=(n||1)+'HKO';}
-  else ko='No damage';
+  const hitsToKO=maxDmg>0?Math.ceil(hp/maxDmg):99;
+  const hitsToKOMin=minDmg>0?Math.ceil(hp/minDmg):99;
+  if(hitsToKOMin<=1)ko='Guaranteed OHKO';
+  else if(hitsToKO<=1)ko='Possible OHKO';
+  else if(hitsToKOMin<=2)ko='Guaranteed 2HKO';
+  else if(hitsToKO<=2)ko='Possible 2HKO';
+  else ko=hitsToKO+'HKO';
 
   const tags=[];
   if(stab>1)tags.push('STAB');
