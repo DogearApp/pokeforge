@@ -1543,7 +1543,7 @@ function startMoveFetch(p){
           const short=d.flavor_text_entries.filter(e=>e.language.name==='en').pop();
           const desc=(en?.short_effect||short?.flavor_text||'').replace(/\$effect_chance%?/g,d.effect_chance||'');
           const type=d.type.name.charAt(0).toUpperCase()+d.type.name.slice(1);
-          moveCache[key]={desc,type,cat:d.damage_class.name,power:d.power,accuracy:d.accuracy,pp:d.pp};
+          moveCache[key]={desc,type,cat:d.damage_class.name,power:d.power,accuracy:d.accuracy,pp:d.pp,target:d.target.name};
         }catch(e){}
       }));
       if(!signal.aborted)renderMoveList();
@@ -1581,7 +1581,7 @@ function renderMoveSlots(){
           ${d?`<span class="tbadge tbadge-sm" style="background:${col}">${d.type}</span>`:''}
           <span class="mslot-name">${mv.replace(/-/g,' ')}</span>
         </div>
-        ${d?`<div class="mslot-stats">${catLabel} · Pow: ${d.power||'—'} · Acc: ${d.accuracy||'—'} · PP: ${d.pp||'—'}</div>`:''}
+        ${d?`<div class="mslot-stats">${catLabel} · Pow: ${d.power||'—'} · Acc: ${d.accuracy||'—'}${moveTargetLabel(d.target)?' · '+moveTargetLabel(d.target):''}</div>`:''}
         ${d&&d.desc?`<div class="mslot-desc">${d.desc}</div>`:''}
       </div>`;
     } else {
@@ -1589,6 +1589,17 @@ function renderMoveSlots(){
     }
   }
   document.getElementById('move-slots').innerHTML=html;
+}
+
+function moveTargetLabel(target){
+  if(!target)return'';
+  if(target==='all-other-pokemon')return'<span style="color:var(--orange);font-weight:600">Spread + Hits Ally</span>';
+  if(target==='all-opponents')return'<span style="color:var(--accent);font-weight:600">Spread</span>';
+  if(target==='all-allies')return'<span style="color:var(--green)">All Allies</span>';
+  if(target==='ally')return'<span style="color:var(--green)">Ally</span>';
+  if(target==='users-field'||target==='entire-field')return'<span style="color:var(--muted)">Field</span>';
+  if(target==='user')return'<span style="color:var(--muted)">Self</span>';
+  return'';
 }
 
 function renderMoveList(){
@@ -1650,7 +1661,7 @@ function renderMoveList(){
         <span class="mr-pp">${d?(d.pp||'—'):'·'}</span>
         <span class="mr-use">${useStr}</span>
       </div>
-      ${effect?`<div class="mr-effect">${effect}</div>`:''}
+      ${d?`<div class="mr-effect">${moveTargetLabel(d.target)}${d.target&&moveTargetLabel(d.target)?' · ':''}${effect}</div>`:''}
     </div>`;
   });
   if(!moves.length)html='<div style="padding:20px;text-align:center;color:var(--muted)">No moves match your filters.</div>';
@@ -2749,7 +2760,7 @@ if(window.location.search.includes('team=')){
         const short=d.flavor_text_entries.filter(e=>e.language.name==='en').pop();
         const desc=(en?.short_effect||short?.flavor_text||'').replace(/\$effect_chance%?/g,d.effect_chance||'');
         const type=d.type.name.charAt(0).toUpperCase()+d.type.name.slice(1);
-        moveCache[key]={desc,type,cat:d.damage_class.name,power:d.power,accuracy:d.accuracy,pp:d.pp};
+        moveCache[key]={desc,type,cat:d.damage_class.name,power:d.power,accuracy:d.accuracy,pp:d.pp,target:d.target.name};
       }).catch(()=>{});
     }));
   }
