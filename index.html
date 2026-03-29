@@ -342,13 +342,7 @@ footer a:hover{color:var(--text)}
           </div>
           <div class="build-field">
             <label>Nature</label>
-            <select id="e-nature" onchange="onNatureChange()">
-              <option>Hardy</option><option>Lonely</option><option>Brave</option><option>Adamant</option><option>Naughty</option>
-              <option>Bold</option><option>Docile</option><option>Relaxed</option><option>Impish</option><option>Lax</option>
-              <option>Timid</option><option>Hasty</option><option>Serious</option><option>Jolly</option><option>Naive</option>
-              <option>Modest</option><option>Mild</option><option>Quiet</option><option>Bashful</option><option>Rash</option>
-              <option>Calm</option><option>Gentle</option><option>Sassy</option><option>Careful</option><option>Quirky</option>
-            </select>
+            <select id="e-nature" onchange="onNatureChange()"></select>
             <div class="bf-desc" id="desc-nature"></div>
           </div>
         </div>
@@ -797,7 +791,15 @@ function openEdit(i){
   document.getElementById('edit-types').innerHTML=p.types.map(t=>`<span class="tbadge" style="background:${TCOL[t]}">${t}</span>`).join('');
   document.getElementById('e-item').value=p.item||'';
   document.getElementById('e-item').readOnly=!!p.isMega;
-  document.getElementById('e-nature').value=p.nature||'Jolly';
+  const natureEl=document.getElementById('e-nature');
+  natureEl.innerHTML=Object.keys(NM).map(n=>{
+    const nm=NM[n];const keys=Object.keys(nm);
+    let label=n;
+    if(keys.length){const up=keys.find(k=>nm[k]>1),dn=keys.find(k=>nm[k]<1);label=`${n} (+${STAT_NAMES[up]} / -${STAT_NAMES[dn]})`;}
+    else{label=`${n} (Neutral)`;}
+    return `<option value="${n}"${n===p.nature?' selected':''}>${label}</option>`;
+  }).join('');
+  natureEl.value=p.nature||'Jolly';
   document.getElementById('e-ability').innerHTML=p.abilities.map(a=>`<option${a===p.ability?' selected':''}>${a}</option>`).join('');
   document.getElementById('tera-opts').innerHTML=TYPES.map(t=>`<span class="tera-opt${p.tera===t?' sel':''}" style="background:${TCOL[t]}" onclick="setTera('${t}')">${t}</span>`).join('');
 
