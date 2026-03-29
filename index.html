@@ -308,6 +308,8 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .calc-pill{font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .15s}
 .calc-pill:hover{border-color:var(--border2);color:var(--text)}
 .calc-pill.sel{border-color:var(--accent);color:var(--accent);background:rgba(240,96,48,0.1)}
+.calc-stage-wrap{display:flex;flex-direction:column;align-items:center;gap:2px}
+.calc-stage-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .calc-stage{display:flex;align-items:center;gap:4px}
 .calc-stage button{width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:var(--bg3);color:var(--text);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
 .calc-stage span{font-size:13px;font-weight:700;min-width:24px;text-align:center;color:var(--text)}
@@ -2016,10 +2018,12 @@ function renderCalc(){
   modHtml+=`<span class="calc-pill${calc.crit?' sel':''}" onclick="calc.crit=!calc.crit;renderCalc()">Crit</span>`;
   modHtml+=`<span class="calc-pill${calc.burn?' sel':''}" onclick="calc.burn=!calc.burn;renderCalc()">Burned</span>`;
   modHtml+=`<span class="calc-pill${calc.teraAtk?' sel':''}" onclick="calc.teraAtk=!calc.teraAtk;renderCalc()">Tera</span></div>`;
-  modHtml+=`<div class="calc-mod-group"><span class="calc-mod-label">Atk</span><div class="calc-stage"><button onclick="calc.atkStage=Math.max(-6,calc.atkStage-1);renderCalc()">-</button><span>${calc.atkStage>=0?'+':''}${calc.atkStage}</span><button onclick="calc.atkStage=Math.min(6,calc.atkStage+1);renderCalc()">+</button></div></div>`;
-  modHtml+=`<div class="calc-mod-group"><span class="calc-mod-label">SpA</span><div class="calc-stage"><button onclick="calc.spaStage=Math.max(-6,calc.spaStage-1);renderCalc()">-</button><span>${calc.spaStage>=0?'+':''}${calc.spaStage}</span><button onclick="calc.spaStage=Math.min(6,calc.spaStage+1);renderCalc()">+</button></div></div>`;
-  modHtml+=`<div class="calc-mod-group"><span class="calc-mod-label">Def</span><div class="calc-stage"><button onclick="calc.defStage=Math.max(-6,calc.defStage-1);renderCalc()">-</button><span>${calc.defStage>=0?'+':''}${calc.defStage}</span><button onclick="calc.defStage=Math.min(6,calc.defStage+1);renderCalc()">+</button></div></div>`;
-  modHtml+=`<div class="calc-mod-group"><span class="calc-mod-label">SpD</span><div class="calc-stage"><button onclick="calc.spdStage=Math.max(-6,calc.spdStage-1);renderCalc()">-</button><span>${calc.spdStage>=0?'+':''}${calc.spdStage}</span><button onclick="calc.spdStage=Math.min(6,calc.spdStage+1);renderCalc()">+</button></div></div>`;
+  modHtml+=`<div class="calc-mod-group">
+    <div class="calc-stage-wrap"><div class="calc-stage-label">Atk</div><div class="calc-stage"><button onclick="calc.atkStage=Math.max(-6,calc.atkStage-1);renderCalc()">-</button><span>${calc.atkStage>=0?'+':''}${calc.atkStage}</span><button onclick="calc.atkStage=Math.min(6,calc.atkStage+1);renderCalc()">+</button></div></div>
+    <div class="calc-stage-wrap"><div class="calc-stage-label">SpA</div><div class="calc-stage"><button onclick="calc.spaStage=Math.max(-6,calc.spaStage-1);renderCalc()">-</button><span>${calc.spaStage>=0?'+':''}${calc.spaStage}</span><button onclick="calc.spaStage=Math.min(6,calc.spaStage+1);renderCalc()">+</button></div></div>
+    <div class="calc-stage-wrap"><div class="calc-stage-label">Def</div><div class="calc-stage"><button onclick="calc.defStage=Math.max(-6,calc.defStage-1);renderCalc()">-</button><span>${calc.defStage>=0?'+':''}${calc.defStage}</span><button onclick="calc.defStage=Math.min(6,calc.defStage+1);renderCalc()">+</button></div></div>
+    <div class="calc-stage-wrap"><div class="calc-stage-label">SpD</div><div class="calc-stage"><button onclick="calc.spdStage=Math.max(-6,calc.spdStage-1);renderCalc()">-</button><span>${calc.spdStage>=0?'+':''}${calc.spdStage}</span><button onclick="calc.spdStage=Math.min(6,calc.spdStage+1);renderCalc()">+</button></div></div>
+  </div>`;
   document.getElementById('calc-mods').innerHTML=modHtml;
 
   // Calculate and show result
