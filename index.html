@@ -175,17 +175,18 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .move-search{padding:10px 16px;border-bottom:1px solid var(--border)}
 .move-search input{width:100%;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none;transition:border-color .2s}
 .move-search input:focus{border-color:var(--accent)}
-.move-filters{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
-.mf-btn{font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg4);color:var(--muted);cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.03em}
+.move-filters{display:flex;gap:3px;margin-top:8px;flex-wrap:nowrap;overflow-x:auto}
+.mf-btn{font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;border:1px solid var(--border);background:var(--bg4);color:var(--muted);cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;flex-shrink:0}
 .mf-btn:hover{border-color:var(--border2);color:var(--text)}
 .mf-btn.on{border-color:var(--accent);color:var(--accent);background:rgba(108,142,255,0.1)}
-.mf-type{color:#fff;border-color:transparent}
+.mf-type{color:#fff;border-color:transparent;padding:2px 5px}
 .mf-type.on{outline:2px solid rgba(255,255,255,.5);outline-offset:1px;opacity:1}
 .mf-type:not(.on){opacity:.4}
 
 /* Move list */
 .move-list-wrap{max-height:calc(100vh - 340px);min-height:300px;overflow-y:auto}
 .move-list-header{display:grid;grid-template-columns:62px 28px 1fr 38px 38px 32px;gap:4px;padding:6px 16px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:1}
+.move-list-header span:nth-child(4),.move-list-header span:nth-child(5),.move-list-header span:nth-child(6){text-align:right}
 .move-row-wrap{border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background .12s}
 .move-row-wrap:hover{background:var(--bg3)}
 .move-row-wrap.selected{background:rgba(108,142,255,0.08)}
