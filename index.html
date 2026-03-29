@@ -476,7 +476,7 @@ footer a:hover{color:var(--text)}
           <div class="tab on" onclick="tab('cov')">Coverage</div>
           <div class="tab" onclick="tab('speed')">Speed</div>
           <div class="tab" onclick="tab('stats')">Stats</div>
-          <div class="tab" onclick="tab('export')">Export</div>
+          <div class="tab" onclick="tab('export')">Import/Export</div>
           <div class="tab" onclick="tab('ai')">Analyze</div>
           <div class="tab" onclick="tab('calc')">Calc</div>
         </div>
@@ -493,8 +493,13 @@ footer a:hover{color:var(--text)}
           <div id="statview"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see stats.</span></div>
         </div>
         <div class="tab-body" id="t-export" style="display:none">
+          <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Export</div>
           <div class="showdown-box" id="sdbox">Add Pokémon to generate paste.</div>
           <button class="copy-btn" onclick="copyPaste()">Copy to Clipboard</button>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px">Import</div>
+          <textarea id="import-box" class="showdown-box" style="width:100%;min-height:120px;resize:vertical;cursor:text" placeholder="Paste a Showdown team here..."></textarea>
+          <button class="copy-btn" style="background:var(--accent2);margin-top:8px" onclick="importPaste()">Import Team</button>
+          <div id="import-msg" style="font-size:12px;margin-top:6px"></div>
         </div>
         <div class="tab-body" id="t-ai" style="display:none">
           <button class="ai-btn" onclick="runAI()">✦ Analyze Team</button>
@@ -1844,6 +1849,116 @@ function getMoveUsage(p){
 function getItemUsage(p){
   const stats=getPokeStats(p);
   return stats?.items||{};
+}
+
+// --- Import from Showdown paste ---
+async function importPaste(){
+  const raw=document.getElementById('import-box').value.trim();
+  const msgEl=document.getElementById('import-msg');
+  if(!raw){msgEl.innerHTML='<span style="color:var(--red)">Paste a Showdown team first.</span>';return;}
+
+  msgEl.innerHTML='<span style="color:var(--muted)">Importing...</span>';
+
+  // Split into individual pokemon blocks (separated by blank lines)
+  const blocks=raw.split(/\n\s*\n/).filter(b=>b.trim());
+  if(!blocks.length){msgEl.innerHTML='<span style="color:var(--red)">Could not parse any Pokémon from the paste.</span>';return;}
+
+  let imported=0;
+  for(const block of blocks){
+    if(team.length>=6)break;
+    const p=parseShowdownBlock(block);
+    if(!p)continue;
+
+    // Fetch pokemon data from API
+    const data=await fetchPoke(p.species.toLowerCase().replace(/\s+/g,'-'));
+    if(!data)continue;
+
+    const mon={...data,
+      nick:p.nick||'',
+      item:p.item||'',
+      nature:p.nature||'Hardy',
+      tera:p.tera||data.types[0],
+      ability:p.ability||data.abilities[0]||'',
+      moves:p.moves,
+      evs:{hp:0,atk:0,def:0,spa:0,spd:0,spe:0},
+      ivs:{hp:31,atk:31,def:31,spa:31,spd:31,spe:31},
+      isMega:false,megaForm:null,basePoke:null,
+      movePool:data.movePool||[]
+    };
+    // Apply EVs
+    if(p.evs)Object.entries(p.evs).forEach(([k,v])=>{if(mon.evs.hasOwnProperty(k))mon.evs[k]=v;});
+    if(p.ivs)Object.entries(p.ivs).forEach(([k,v])=>{if(mon.ivs.hasOwnProperty(k))mon.ivs[k]=v;});
+
+    team.push(mon);
+    imported++;
+  }
+
+  if(imported){
+    renderAll();
+    document.getElementById('import-box').value='';
+    msgEl.innerHTML=`<span style="color:var(--green)">Imported ${imported} Pokémon!</span>`;
+  } else {
+    msgEl.innerHTML='<span style="color:var(--red)">Could not import any Pokémon. Check the paste format.</span>';
+  }
+}
+
+function parseShowdownBlock(block){
+  const lines=block.trim().split('\n').map(l=>l.trim()).filter(l=>l);
+  if(!lines.length)return null;
+
+  const result={nick:'',species:'',item:'',ability:'',nature:'Hardy',tera:'',moves:['','','',''],evs:null,ivs:null};
+
+  // First line: "Nickname (Species) @ Item" or "Species @ Item"
+  let first=lines[0];
+  if(first.includes('@')){
+    const [left,right]=first.split('@').map(s=>s.trim());
+    result.item=right;
+    first=left;
+  }
+  // Check for "(Species)" pattern
+  const nickMatch=first.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  if(nickMatch){
+    result.nick=nickMatch[1].trim();
+    result.species=nickMatch[2].trim();
+  } else {
+    result.species=first.trim();
+  }
+  // Handle gender suffix
+  result.species=result.species.replace(/\s*\(M\)\s*$/,'').replace(/\s*\(F\)\s*$/,'').trim();
+
+  const statMap={'HP':'hp','Atk':'atk','Def':'def','SpA':'spa','Sp. Atk':'spa','SpD':'spd','Sp. Def':'spd','Spe':'spe','Speed':'spe'};
+
+  let moveIdx=0;
+  for(let i=1;i<lines.length;i++){
+    const line=lines[i];
+    if(line.startsWith('Ability:')){
+      result.ability=line.replace('Ability:','').trim();
+    } else if(line.startsWith('Tera Type:')){
+      result.tera=line.replace('Tera Type:','').trim();
+    } else if(line.startsWith('EVs:')){
+      result.evs={};
+      line.replace('EVs:','').split('/').forEach(part=>{
+        const m=part.trim().match(/(\d+)\s+(.+)/);
+        if(m&&statMap[m[2].trim()])result.evs[statMap[m[2].trim()]]=parseInt(m[1]);
+      });
+    } else if(line.startsWith('IVs:')){
+      result.ivs={};
+      line.replace('IVs:','').split('/').forEach(part=>{
+        const m=part.trim().match(/(\d+)\s+(.+)/);
+        if(m&&statMap[m[2].trim()])result.ivs[statMap[m[2].trim()]]=parseInt(m[1]);
+      });
+    } else if(line.endsWith('Nature')){
+      result.nature=line.replace('Nature','').trim();
+    } else if(line.startsWith('-')){
+      const moveName=line.replace(/^-\s*/,'').trim();
+      if(moveIdx<4){
+        result.moves[moveIdx]=moveName.replace(/\s+/g,'-');
+        moveIdx++;
+      }
+    }
+  }
+
+  return result.species?result:null;
 }
 
 // --- Damage Calculator (two-sided) ---
