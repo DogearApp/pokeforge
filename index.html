@@ -842,7 +842,7 @@ async function init(){
     const r=await fetch('https://pokeapi.co/api/v2/pokemon?limit=1302&offset=0');
     const d=await r.json();
     allPokemon=d.results.map(p=>{const id=p.url.split('/').filter(Boolean).pop();return{name:p.name,id};});
-    document.getElementById('psearch').placeholder=`Search all ${allPokemon.length} Pokémon…`;
+    updateSearchPlaceholder();
   }catch(e){document.getElementById('psearch').placeholder='Search Pokémon…';}
 }
 
@@ -907,7 +907,7 @@ async function addPoke(name){
   searchEl.value='';ddEl.style.display='none';
   searchEl.placeholder='Loading…';
   const data=await fetchPoke(name);
-  searchEl.placeholder=`Search all ${allPokemon.length} Pokémon…`;
+  updateSearchPlaceholder();
   if(!data)return;
   team.push({...data,nick:'',item:'',nature:'Jolly',tera:data.types[0],ability:data.abilities[0]||'',moves:['','','',''],evs:{hp:0,atk:0,def:0,spa:0,spd:0,spe:0},ivs:{hp:31,atk:31,def:31,spa:31,spd:31,spe:31},isMega:false,megaForm:null,basePoke:null,movePool:data.movePool||[]});
   renderAll();
@@ -2703,6 +2703,13 @@ function updateModeToggle(){
   const el=document.getElementById('mode-toggle');
   if(championsMode){el.className='mode-toggle on';el.textContent='Champions';}
   else{el.className='mode-toggle off';el.textContent='All Pokémon';}
+  updateSearchPlaceholder();
+}
+function updateSearchPlaceholder(){
+  const el=document.getElementById('psearch');
+  if(!el)return;
+  if(championsMode)el.placeholder=`Search ${CHAMPIONS_POKEMON.size} Champions Pokémon…`;
+  else el.placeholder=`Search all ${allPokemon.length} Pokémon…`;
 }
 
 // --- Builder mode ---
