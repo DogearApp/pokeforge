@@ -2103,7 +2103,7 @@ async function toggleMega(formSuffix){
   const apiName=p.name+'-'+form.suffix;
   const megaData=await fetchPoke(apiName);
   if(!megaData){p.basePoke=null;alert('Could not load mega form data.');return;}
-  p.types=megaData.types;p.abilities=megaData.abilities;p.stats=megaData.stats;
+  p.types=megaData.types;p.abilities=megaData.abilities.length?megaData.abilities:p.basePoke.abilities;p.stats=megaData.stats;
   p.sprite=megaData.sprite||p.basePoke.sprite;p.displayName=form.label;
   p.ability=megaData.abilities[0]||p.basePoke.ability;
   if(form.stone)p.item=form.stone;
