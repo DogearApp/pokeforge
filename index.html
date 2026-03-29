@@ -801,7 +801,11 @@ function renderWeakness(){
   const weakTypes=TYPES.filter(t=>typeData[t].weak.length+typeData[t].weak4.length>0)
     .sort((a,b)=>(typeData[b].weak.length+typeData[b].weak4.length*2)-(typeData[a].weak.length+typeData[a].weak4.length*2));
   if(weakTypes.length){
-    html+=`<div class="cov-section"><div class="cov-title">Weaknesses</div>`;
+    html+=`<div class="cov-section"><div class="cov-title">Weaknesses</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:12px">
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:14px;height:14px;border-radius:3px;background:var(--bg4);display:inline-block"></span> 2× weak</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:14px;height:14px;border-radius:3px;background:var(--bg4);outline:2px solid var(--red);outline-offset:-1px;display:inline-block"></span> 4× weak</span>
+      </div>`;
     const maxV=Math.max(...weakTypes.map(t=>typeData[t].weak.length+typeData[t].weak4.length*2));
     weakTypes.forEach(t=>{
       const d=typeData[t];const score=d.weak.length+d.weak4.length*2;
