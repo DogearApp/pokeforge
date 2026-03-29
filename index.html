@@ -290,39 +290,6 @@ footer a:hover{color:var(--text)}
   <!-- WORKSPACE: switches between overview and edit mode -->
   <div id="workspace">
 
-    <!-- OVERVIEW (shown when not editing) -->
-    <div id="overview-panel">
-      <div class="panel">
-        <div class="tabs">
-          <div class="tab on" onclick="tab('cov')">Coverage</div>
-          <div class="tab" onclick="tab('speed')">Speed</div>
-          <div class="tab" onclick="tab('stats')">Stats</div>
-          <div class="tab" onclick="tab('export')">Export</div>
-          <div class="tab" onclick="tab('ai')">AI</div>
-        </div>
-        <div class="tab-body" id="t-cov">
-          <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Defensive weaknesses</div>
-          <div id="wlist"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see coverage analysis.</span></div>
-        </div>
-        <div class="tab-body" id="t-speed" style="display:none">
-          <div class="speed-search"><input id="speed-search" placeholder="Filter by name…" oninput="renderSpeedTiers()"/></div>
-          <div class="speed-ctx" id="speed-ctx">Add Pokémon to compare speed tiers.</div>
-          <div class="tier-list" id="tier-list"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see speed tiers.</span></div>
-        </div>
-        <div class="tab-body" id="t-stats" style="display:none">
-          <div id="statview"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see stats.</span></div>
-        </div>
-        <div class="tab-body" id="t-export" style="display:none">
-          <div class="showdown-box" id="sdbox">Add Pokémon to generate paste.</div>
-          <button class="copy-btn" onclick="copyPaste()">Copy to Clipboard</button>
-        </div>
-        <div class="tab-body" id="t-ai" style="display:none">
-          <button class="ai-btn" onclick="runAI()">✦ Analyze Team &amp; Suggest Improvements</button>
-          <div id="ai-out"></div>
-        </div>
-      </div>
-    </div>
-
     <!-- EDIT MODE (shown when editing a Pokémon) -->
     <div id="edit-mode" style="display:none">
       <div class="edit-layout">
@@ -403,6 +370,39 @@ footer a:hover{color:var(--text)}
           <div class="move-list-wrap" id="move-list"></div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- ANALYSIS (always visible) -->
+    <div style="margin-top:1.5rem">
+      <div class="panel">
+        <div class="tabs">
+          <div class="tab on" onclick="tab('cov')">Coverage</div>
+          <div class="tab" onclick="tab('speed')">Speed</div>
+          <div class="tab" onclick="tab('stats')">Stats</div>
+          <div class="tab" onclick="tab('export')">Export</div>
+          <div class="tab" onclick="tab('ai')">AI</div>
+        </div>
+        <div class="tab-body" id="t-cov">
+          <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Defensive weaknesses</div>
+          <div id="wlist"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see coverage analysis.</span></div>
+        </div>
+        <div class="tab-body" id="t-speed" style="display:none">
+          <div class="speed-search"><input id="speed-search" placeholder="Filter by name…" oninput="renderSpeedTiers()"/></div>
+          <div class="speed-ctx" id="speed-ctx">Add Pokémon to compare speed tiers.</div>
+          <div class="tier-list" id="tier-list"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see speed tiers.</span></div>
+        </div>
+        <div class="tab-body" id="t-stats" style="display:none">
+          <div id="statview"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see stats.</span></div>
+        </div>
+        <div class="tab-body" id="t-export" style="display:none">
+          <div class="showdown-box" id="sdbox">Add Pokémon to generate paste.</div>
+          <button class="copy-btn" onclick="copyPaste()">Copy to Clipboard</button>
+        </div>
+        <div class="tab-body" id="t-ai" style="display:none">
+          <button class="ai-btn" onclick="runAI()">✦ Analyze Team &amp; Suggest Improvements</button>
+          <div id="ai-out"></div>
+        </div>
       </div>
     </div>
 
@@ -715,7 +715,6 @@ function etab(id){
 function openEdit(i){
   editIdx=i;selectedMoveSlot=0;moveFilterType=null;moveFilterCat=null;
   const p=team[i];
-  document.getElementById('overview-panel').style.display='none';
   document.getElementById('edit-mode').style.display='block';
 
   document.getElementById('etitle').textContent=p.displayName;
@@ -743,7 +742,6 @@ function openEdit(i){
 function closeEdit(){
   editIdx=null;
   document.getElementById('edit-mode').style.display='none';
-  document.getElementById('overview-panel').style.display='block';
   if(moveAbort){moveAbort.abort();moveAbort=null;}
   renderTeamBar();
 }
