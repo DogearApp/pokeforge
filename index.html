@@ -39,6 +39,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .nav-links a{color:var(--muted);font-size:13px;font-weight:500;text-decoration:none;transition:color .2s}
 .nav-links a:hover{color:var(--text)}
 .nav-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle}
+.mode-toggle{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .2s;letter-spacing:.02em}
+.mode-toggle.on{background:var(--accent);color:#fff}
+.mode-toggle.off{background:var(--bg4);color:var(--muted);border:1px solid var(--border)}
 
 /* HERO */
 .hero{padding:4rem 2rem 2.5rem;text-align:center;position:relative;overflow:hidden}
@@ -410,14 +413,15 @@ footer a:hover{color:var(--text)}
     <a href="#builder" onclick="enterBuilder()">Builder</a>
     <a href="#" onclick="event.preventDefault();showUsageTierList()">Usage Tier List</a>
     <a href="https://www.pokemon.com/us/pokemon-vg-championships" target="_blank">VGC Rules</a>
+    <span class="mode-toggle" id="mode-toggle" onclick="toggleChampionsMode()">Champions</span>
     <span style="font-size:12px;color:var(--muted)">Free <span class="nav-badge">BETA</span></span>
   </div>
 </nav>
 
 <div class="hero">
-  <div class="hero-eyebrow">VGC Competitive Tool</div>
+  <div class="hero-eyebrow">Pokémon Champions Team Builder</div>
   <h1>Build your <em>perfect</em><br/>doubles team</h1>
-  <p>Full coverage analysis, EV spreads, speed tiers, and team suggestions — all in one place.</p>
+  <p>Built for Pokémon Champions. Coverage analysis, damage calc, EV spreads, speed tiers, and team suggestions — all in one place.</p>
   <div class="hero-pills">
     <div class="pill"><strong>1,300+</strong> Pokémon</div>
     <div class="pill"><strong>Real</strong> type chart</div>
@@ -783,6 +787,34 @@ const POPULAR_ITEMS=[
   'Air Balloon','Focus Band','Throat Spray','Mirror Herb','Loaded Dice',
   'Eject Button','Shed Shell','Heavy Duty Boots','Ability Shield'
 ];
+// Pokemon Champions legal roster (API names)
+const CHAMPIONS_POKEMON=new Set([
+  'venusaur','charizard','blastoise','beedrill','pikachu','raichu','raichu-alola',
+  'clefable','ninetales','ninetales-alola','arcanine','arcanine-hisui','alakazam',
+  'victreebel','slowbro','slowbro-galar','gengar','kangaskhan','starmie','pinsir',
+  'gyarados','ditto','vaporeon','jolteon','flareon','aerodactyl','snorlax','dragonite',
+  'meganium','typhlosion','typhlosion-hisui','feraligatr','ampharos','azumarill',
+  'politoed','espeon','umbreon','slowking','steelix','scizor','heracross','skarmory',
+  'houndoom','tyranitar','pelipper','gardevoir','sableye','aggron','torkoal','altaria',
+  'milotic','absol','metagross','torterra','infernape','empoleon','lopunny','spiritomb',
+  'garchomp','lucario','hippowdon','abomasnow','weavile','rhyperior','leafeon','glaceon',
+  'gliscor','mamoswine','gallade','froslass','rotom','serperior','emboar','samurott',
+  'samurott-hisui','excadrill','audino','conkeldurr','whimsicott','krookodile',
+  'garbodor','zoroark','zoroark-hisui','vanilluxe','emolga','chandelure','stunfisk-galar',
+  'golurk','hydreigon','volcarona','chesnaught','delphox','greninja','diggersby',
+  'talonflame','vivillon','floette','furfrou','meowstic','aegislash','clawitzer',
+  'tyrantrum','aurorus','sylveon','hawlucha','goodra','klefki','trevenant','gourgeist',
+  'noivern','decidueye','decidueye-hisui','incineroar','primarina','toucannon',
+  'crabominable','lycanroc','toxapex','mudsdale','araquanid','tsareena','oranguru',
+  'mimikyu','drampa','kommo-o','corviknight','appletun','sandaconda','polteageist',
+  'hatterene','grimmsnarl','mr-rime','runerigus','alcremie','morpeko','dragapult',
+  'kleavor','ursaluna','basculegion','sneasler','meowscarada','skeledirge','quaquaval',
+  'pawmot','maushold','garganacl','armarouge','ceruledge','scovillain','tinkaton',
+  'palafin','orthworm','glimmora','dondozo','tatsugiri','farigiraf','kingambit',
+  'sinistcha','archaludon','hydrapple'
+]);
+let championsMode=true; // Default to Champions mode
+
 const POPULAR_MOVES=new Set([
   'Protect','Fake-Out','Follow-Me','Helping-Hand','Icy-Wind','Tailwind','Trick-Room',
   'Close-Combat','Earthquake','Rock-Slide','Knock-Off','U-Turn','Volt-Switch','Sucker-Punch',
@@ -857,7 +889,7 @@ searchEl.addEventListener('input',()=>{
   clearTimeout(st);st=setTimeout(()=>{
     const q=searchEl.value.toLowerCase().trim();
     if(!q){ddEl.style.display='none';return;}
-    const m=allPokemon.filter(p=>p.name.includes(q)).slice(0,14);
+    const m=allPokemon.filter(p=>p.name.includes(q)&&(!championsMode||CHAMPIONS_POKEMON.has(p.name))).slice(0,14);
     if(!m.length){ddEl.style.display='none';return;}
     ddEl.innerHTML=m.map(p=>`<div class="ddi" onclick="addPoke('${p.name}')"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" width="32" height="32" style="image-rendering:pixelated" loading="lazy"/>${fmt(p.name)}</div>`).join('');
     ddEl.style.display='block';
@@ -1835,7 +1867,7 @@ function runAI(){
   if(problemTypes.length&&team.length<6){
     out.push('');out.push(`<strong>Recommended Pokémon to Cover Weaknesses</strong>`);
     // Score each VGC mon by how many problem types they resist/are immune to
-    const recs=VGC_POKEMON.filter(v=>!teamNames.has(v.name)).map(v=>{
+    const recs=VGC_POKEMON.filter(v=>!teamNames.has(v.name)&&(!championsMode||CHAMPIONS_POKEMON.has(v.name.toLowerCase().replace(/\s+/g,'-')))).map(v=>{
       let score=0;const covers=[];
       problemTypes.forEach(t=>{
         let mult=1;
@@ -2356,7 +2388,8 @@ function renderThreats(){
   });
 
   // Each threat
-  VGC_THREATS.forEach(threat=>{
+  const threats=championsMode?VGC_THREATS.filter(t=>CHAMPIONS_POKEMON.has(t.name.toLowerCase().replace(/\s+/g,'-'))):VGC_THREATS;
+  threats.forEach(threat=>{
     // Threat name cell
     html+=`<div class="threat-name">
       <div class="threat-name-info">
@@ -2625,7 +2658,7 @@ async function showUsageTierList(){
   // Sort by usage rate
   const sorted=Object.entries(stats.pokemon)
     .map(([name,d])=>({name,usage:d.usage?.weighted||d.usage?.raw||0}))
-    .filter(p=>p.usage>0)
+    .filter(p=>p.usage>0&&(!championsMode||CHAMPIONS_POKEMON.has(p.name.toLowerCase().replace(/\s+/g,'-'))))
     .sort((a,b)=>b.usage-a.usage)
     .slice(0,100);
 
@@ -2661,6 +2694,17 @@ async function addPokeFromTierList(name){
   await addPoke(apiName);
 }
 
+// --- Champions mode ---
+function toggleChampionsMode(){
+  championsMode=!championsMode;
+  updateModeToggle();
+}
+function updateModeToggle(){
+  const el=document.getElementById('mode-toggle');
+  if(championsMode){el.className='mode-toggle on';el.textContent='Champions';}
+  else{el.className='mode-toggle off';el.textContent='All Pokémon';}
+}
+
 // --- Builder mode ---
 function enterBuilder(){
   document.querySelector('.hero').classList.add('hidden');
@@ -2675,6 +2719,7 @@ function exitBuilder(){
 
 // --- Init ---
 loadTeamFromStorage();init();loadUsageStats();renderAll();
+updateModeToggle();
 if(team.length)enterBuilder();
 // Check for shared team in URL
 if(window.location.search.includes('team=')){
