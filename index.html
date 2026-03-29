@@ -501,8 +501,10 @@ footer a:hover{color:var(--text)}
           <div class="tab" onclick="tab('calc')">Calc</div>
         </div>
         <div class="tab-body" id="t-cov">
-          <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Defensive weaknesses</div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Defensive Coverage</div>
           <div id="wlist"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see coverage analysis.</span></div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:20px 0 12px">Offensive Coverage</div>
+          <div id="offlist"><span style="font-size:13px;color:var(--muted)">Add Pokémon with moves to see offensive coverage.</span></div>
         </div>
         <div class="tab-body" id="t-speed" style="display:none">
           <div class="speed-search"><input id="speed-search" placeholder="Filter by name…" oninput="renderSpeedTiers()"/></div>
@@ -1028,6 +1030,100 @@ function renderWeakness(){
   }
 
   document.getElementById('wlist').innerHTML=html;
+  renderOffensiveCoverage();
+}
+
+function renderOffensiveCoverage(){
+  const el=document.getElementById('offlist');
+  const hasMoves=team.some(p=>p.moves.some(m=>m));
+  if(!team.length||!hasMoves){el.innerHTML='<span style="font-size:13px;color:var(--muted)">Add Pokémon with moves to see offensive coverage.</span>';return;}
+
+  // For each attacking type, find which team members have moves of that type
+  // and what types those moves hit super effectively
+  const offData={};
+  TYPES.forEach(atkType=>{offData[atkType]={movers:[],hitsSuper:[]};});
+
+  team.forEach(p=>{
+    // STAB types always count
+    const coveredTypes=new Set(p.types);
+    p.moves.filter(m=>m).forEach(m=>{
+      const key=m.toLowerCase().replace(/\s+/g,'-');
+      const d=moveCache[key];
+      if(d&&d.power&&d.power>0)coveredTypes.add(d.type);
+    });
+    coveredTypes.forEach(t=>{
+      if(!offData[t].movers.find(x=>x.name===p.name))offData[t].movers.push(p);
+    });
+  });
+
+  // For each type, calculate what defending types it hits SE
+  TYPES.forEach(atkType=>{
+    const chart=TC[atkType]||{};
+    TYPES.forEach(defType=>{
+      if(chart[defType]&&chart[defType]>1)offData[atkType].hitsSuper.push(defType);
+    });
+  });
+
+  // Types your team CAN hit SE (has a move or STAB of a type that hits something SE)
+  const coveredAttackTypes=TYPES.filter(t=>offData[t].movers.length>0);
+  const uncoveredAttackTypes=TYPES.filter(t=>offData[t].movers.length===0);
+
+  // Now check: for each DEFENDING type, can anyone on the team hit it SE?
+  const canHitSE={};
+  TYPES.forEach(defType=>{
+    canHitSE[defType]=[];
+    team.forEach(p=>{
+      const atkTypes=new Set(p.types);
+      p.moves.filter(m=>m).forEach(m=>{
+        const key=m.toLowerCase().replace(/\s+/g,'-');
+        const d=moveCache[key];
+        if(d&&d.power&&d.power>0)atkTypes.add(d.type);
+      });
+      for(const at of atkTypes){
+        const chart=TC[at]||{};
+        if(chart[defType]&&chart[defType]>1){canHitSE[defType].push(p);break;}
+      }
+    });
+  });
+
+  const cantHit=TYPES.filter(t=>canHitSE[t].length===0);
+  const weakCov=TYPES.filter(t=>canHitSE[t].length===1&&canHitSE[t].length>0);
+
+  let html='';
+
+  // Gaps warning
+  if(cantHit.length){
+    html+=`<div class="cov-critical" style="background:rgba(255,157,77,0.1);border-color:rgba(255,157,77,0.25);color:var(--orange)">
+      ⚡ Can't hit super effectively: ${cantHit.map(t=>`<span class="wlabel" style="background:${TCOL[t]};display:inline-block;margin:2px">${t}</span>`).join('')}
+      <br><span style="font-size:11px">No team member has a move that hits these types for super effective damage</span>
+    </div>`;
+  }
+  if(weakCov.length){
+    html+=`<div style="background:rgba(245,197,66,0.08);border:1px solid rgba(245,197,66,0.2);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--gold)">
+      Only 1 member covers: ${weakCov.map(t=>`<span class="wlabel" style="background:${TCOL[t]};display:inline-block;margin:2px">${t}</span>`).join('')}
+    </div>`;
+  }
+
+  // Offensive grid: for each defending type, show who can hit it SE
+  html+=`<div class="cov-section"><div class="cov-title">Who Hits What</div>`;
+  html+=`<div class="weak-grid">`;
+  html+=`<div class="weak-grid-header">Def Type</div><div></div><div class="weak-grid-header" style="color:var(--green)">Your SE Hitters</div><div class="weak-grid-header" style="color:var(--muted)">Count</div>`;
+
+  const sortedDef=TYPES.slice().sort((a,b)=>canHitSE[a].length-canHitSE[b].length);
+  const maxH=Math.max(...TYPES.map(t=>canHitSE[t].length),1);
+  sortedDef.forEach(t=>{
+    const hitters=canHitSE[t];
+    const pct=Math.round(hitters.length/maxH*100);
+    const col=hitters.length===0?'var(--red)':hitters.length===1?'var(--orange)':'var(--green)';
+    const sprites=hitters.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName}">`).join('')||'<span style="color:var(--red);font-size:12px;font-weight:600">None</span>';
+    html+=`<span class="wlabel" style="background:${TCOL[t]}">${t}</span>`;
+    html+=`<div class="wbar-wrap"><div class="wbg"><div class="wbar" style="width:${pct}%;background:${col}"></div></div></div>`;
+    html+=`<div class="w-col">${sprites}</div>`;
+    html+=`<div style="text-align:center;font-weight:700;color:${col}">${hitters.length}</div>`;
+  });
+  html+=`</div></div>`;
+
+  el.innerHTML=html;
 }
 
 function renderSpeedTiers(){
