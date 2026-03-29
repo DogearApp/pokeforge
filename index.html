@@ -573,6 +573,15 @@ const ITEMS=[
   'Hawluchite','Zygardite','Crabominite','Drampite','Magearnite','Zeraorite',
   'Falinksite','Scovillainite','Glimmoranite','Baxcalibrite','Golisopite'
 ];
+const POPULAR_ITEMS=[
+  'Choice Scarf','Choice Band','Choice Specs','Life Orb','Focus Sash','Leftovers',
+  'Assault Vest','Eviolite','Safety Goggles','Sitrus Berry','Rocky Helmet',
+  'Booster Energy','Clear Amulet','Covert Cloak','Lum Berry','White Herb',
+  'Weakness Policy','Expert Belt','Muscle Band','Wise Glasses',
+  'Black Sludge','Flame Orb','Toxic Orb','Mental Herb','Power Herb',
+  'Air Balloon','Focus Band','Throat Spray','Mirror Herb','Loaded Dice',
+  'Eject Button','Shed Shell','Heavy Duty Boots','Ability Shield'
+];
 const POPULAR_MOVES=new Set([
   'Protect','Fake-Out','Follow-Me','Helping-Hand','Icy-Wind','Tailwind','Trick-Room',
   'Close-Combat','Earthquake','Rock-Slide','Knock-Off','U-Turn','Volt-Switch','Sucker-Punch',
@@ -885,20 +894,26 @@ function onAbilityChange(){saveEdit();showAbilityDesc();}
 function onNatureChange(){saveEdit();showNatureDesc();}
 
 // --- Item autocomplete ---
-function setupAC(inputId,ddId,getList,onSelect){
+function setupAC(inputId,ddId,getList,onSelect,popularList){
   const inp=document.getElementById(inputId),dd=document.getElementById(ddId);
   let hlIdx=-1;
-  inp.addEventListener('input',()=>{
-    const q=inp.value.toLowerCase().trim();
-    if(!q){dd.style.display='none';saveEdit();return;}
-    const list=getList().filter(v=>v.toLowerCase().includes(q)).slice(0,12);
-    if(!list.length){dd.style.display='none';saveEdit();return;}
+  function showList(list){
     hlIdx=-1;
     dd.innerHTML=list.map((v,i)=>`<div class="ac-item" data-idx="${i}">${v}</div>`).join('');
     dd.style.display='block';
     dd.querySelectorAll('.ac-item').forEach(el=>{
       el.addEventListener('mousedown',e=>{e.preventDefault();inp.value=el.textContent;dd.style.display='none';if(onSelect)onSelect(el.textContent);else saveEdit();});
     });
+  }
+  inp.addEventListener('input',()=>{
+    const q=inp.value.toLowerCase().trim();
+    if(!q){if(popularList){showList(popularList);}else{dd.style.display='none';}saveEdit();return;}
+    const list=getList().filter(v=>v.toLowerCase().includes(q)).slice(0,14);
+    if(!list.length){dd.style.display='none';saveEdit();return;}
+    showList(list);
+  });
+  inp.addEventListener('focus',()=>{
+    if(!inp.value.trim()&&popularList)showList(popularList);
   });
   inp.addEventListener('keydown',e=>{
     const items=dd.querySelectorAll('.ac-item');
@@ -1193,7 +1208,7 @@ loadTeamFromStorage();init();renderAll();
   if(editIdx!==null)renderMoveSlots();
   renderAll();
 })();
-setupAC('e-item','ac-item',()=>ITEMS,()=>{saveEdit();showItemDesc();});
+setupAC('e-item','ac-item',()=>ITEMS,()=>{saveEdit();showItemDesc();},POPULAR_ITEMS);
 </script>
 </body>
 </html>
