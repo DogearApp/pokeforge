@@ -772,7 +772,7 @@ async function fetchMoveData(name){
   try{const r=await fetch(`https://pokeapi.co/api/v2/move/${key}`);const d=await r.json();
     const en=d.effect_entries.find(e=>e.language.name==='en');
     const short=d.flavor_text_entries.filter(e=>e.language.name==='en').pop();
-    const desc=en?.short_effect||short?.flavor_text||'';
+    const desc=(en?.short_effect||short?.flavor_text||'').replace(/\$effect_chance%?/g,d.effect_chance||'');
     const type=d.type.name.charAt(0).toUpperCase()+d.type.name.slice(1);
     const cat=d.damage_class.name;
     moveCache[key]={desc,type,cat,power:d.power,accuracy:d.accuracy,pp:d.pp};
@@ -861,7 +861,7 @@ function startMoveFetch(p){
           const d=await r.json();
           const en=d.effect_entries.find(e=>e.language.name==='en');
           const short=d.flavor_text_entries.filter(e=>e.language.name==='en').pop();
-          const desc=en?.short_effect||short?.flavor_text||'';
+          const desc=(en?.short_effect||short?.flavor_text||'').replace(/\$effect_chance%?/g,d.effect_chance||'');
           const type=d.type.name.charAt(0).toUpperCase()+d.type.name.slice(1);
           moveCache[key]={desc,type,cat:d.damage_class.name,power:d.power,accuracy:d.accuracy,pp:d.pp};
         }catch(e){}
