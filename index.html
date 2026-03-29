@@ -2050,7 +2050,7 @@ function updateEVDisplay(){
   STAT_KEYS.forEach(k=>{
     const nat=nm[k]||1;const comp=calcStat(p.stats[k],p.evs[k]||0,p.ivs[k]!==undefined?p.ivs[k]:31,nat,k==='hp');
     const numEl=document.getElementById('evnum-'+k);if(numEl&&document.activeElement!==numEl)numEl.value=p.evs[k]||0;
-    const rangeEl=document.getElementById('evrange-'+k);if(rangeEl&&document.activeElement!==rangeEl)rangeEl.value=p.evs[k]||0;
+    const rangeEl=document.getElementById('evrange-'+k);if(rangeEl)rangeEl.value=p.evs[k]||0;
     const compEl=document.getElementById('evcomp-'+k);if(compEl)compEl.textContent='Stat: '+comp;
   });
   updateEVTotal();
