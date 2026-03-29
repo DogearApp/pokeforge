@@ -1354,6 +1354,31 @@ async function fetchAbilityDesc(name){
     abilityCache[key]=desc;return desc;
   }catch(e){return '';}
 }
+const FIELD_EFFECTS={
+  // Terrain-setting abilities
+  'electric-surge':'⚡ Electric Terrain: Boosts Electric moves 30%, prevents Sleep for grounded Pokémon.',
+  'grassy-surge':'🌿 Grassy Terrain: Boosts Grass moves 30%, heals grounded Pokémon 1/16 HP each turn, halves Earthquake/Bulldoze damage.',
+  'psychic-surge':'🔮 Psychic Terrain: Boosts Psychic moves 30%, blocks priority moves against grounded Pokémon.',
+  'misty-surge':'🌫 Misty Terrain: Halves Dragon damage to grounded Pokémon, prevents status conditions.',
+  // Weather-setting abilities
+  'drought':'☀ Sun: Boosts Fire moves 50%, weakens Water moves 50%. Enables Solar Beam/Solar Blade without charge.',
+  'drizzle':'🌧 Rain: Boosts Water moves 50%, weakens Fire moves 50%. Thunder and Hurricane never miss.',
+  'sand-stream':'🏜 Sand: Deals 1/16 HP to non-Rock/Ground/Steel each turn. Boosts Rock-type SpD 50%.',
+  'snow-warning':'❄ Snow: Boosts Ice-type Def 50%. Blizzard never misses.',
+  'orichalcum-pulse':'☀ Sun: Boosts Fire moves 50%, weakens Water moves 50%. Also boosts holder\'s Attack in sun.',
+  'hadron-engine':'⚡ Electric Terrain: Boosts Electric moves 30%, prevents Sleep. Also boosts holder\'s Sp.Atk on terrain.',
+  // Terrain/weather moves
+  'electric-terrain':'⚡ Boosts Electric moves 30% and prevents Sleep for grounded Pokémon for 5 turns.',
+  'grassy-terrain':'🌿 Boosts Grass moves 30%, heals grounded 1/16 HP/turn, halves EQ/Bulldoze for 5 turns.',
+  'psychic-terrain':'🔮 Boosts Psychic moves 30% and blocks priority moves against grounded Pokémon for 5 turns.',
+  'misty-terrain':'🌫 Halves Dragon damage to grounded Pokémon and prevents status for 5 turns.',
+  'sunny-day':'☀ Sun for 5 turns: Boosts Fire 50%, weakens Water 50%. Solar Beam no charge.',
+  'rain-dance':'🌧 Rain for 5 turns: Boosts Water 50%, weakens Fire 50%. Thunder/Hurricane never miss.',
+  'sandstorm':'🏜 Sand for 5 turns: 1/16 chip to non-Rock/Ground/Steel. Rock SpD +50%.',
+  'snowscape':'❄ Snow for 5 turns: Ice Def +50%. Blizzard never misses.',
+  'trick-room':'🔄 Trick Room: Slower Pokémon move first for 5 turns.',
+  'tailwind':'💨 Tailwind: Doubles your side\'s Speed for 4 turns.',
+};
 const ITEM_DESC_FALLBACK={
   'covert-cloak':'Protects the holder from the secondary effects of moves from other Pokémon.',
   'clear-amulet':'Protects the holder from having its stats lowered by other Pokémon.',
@@ -1404,7 +1429,9 @@ async function showAbilityDesc(){
   if(!name||name==='—'){el.innerHTML='';return;}
   el.innerHTML='<span style="color:var(--muted2)">Loading…</span>';
   const desc=await fetchAbilityDesc(name);
-  el.innerHTML=desc||'';
+  const key=name.toLowerCase().replace(/\s+/g,'-');
+  const field=FIELD_EFFECTS[key];
+  el.innerHTML=(desc||'')+(field?`<div style="margin-top:4px;padding:4px 8px;background:var(--bg);border-radius:6px;font-size:12px">${field}</div>`:'');
 }
 async function showItemDesc(){
   const el=document.getElementById('desc-item');
@@ -1607,7 +1634,7 @@ function renderMoveSlots(){
           <span class="mslot-name">${mv.replace(/-/g,' ')}</span>
         </div>
         ${d?`<div class="mslot-stats">${catLabel} · Pow: ${d.power||'—'} · Acc: ${d.accuracy||'—'}${moveTargetLabel(d.target)?' · '+moveTargetLabel(d.target):''}</div>`:''}
-        ${d&&d.desc?`<div class="mslot-desc">${d.desc}</div>`:''}
+        ${d&&d.desc?`<div class="mslot-desc">${d.desc}${FIELD_EFFECTS[key]?' · '+FIELD_EFFECTS[key]:''}</div>`:''}
       </div>`;
     } else {
       html+=`<div class="mslot empty${selectedMoveSlot===i?' active':''}" onclick="focusMoveSlot(${i})">Move ${i+1}</div>`;
@@ -1686,7 +1713,7 @@ function renderMoveList(){
         <span class="mr-pp">${d?(d.pp||'—'):'·'}</span>
         <span class="mr-use">${useStr}</span>
       </div>
-      ${d?`<div class="mr-effect">${moveTargetLabel(d.target)}${d.target&&moveTargetLabel(d.target)?' · ':''}${effect}</div>`:''}
+      ${d?`<div class="mr-effect">${moveTargetLabel(d.target)}${d.target&&moveTargetLabel(d.target)?' · ':''}${effect}${FIELD_EFFECTS[m.key]?' · '+FIELD_EFFECTS[m.key]:''}</div>`:''}
     </div>`;
   });
   if(!moves.length)html='<div style="padding:20px;text-align:center;color:var(--muted)">No moves match your filters.</div>';
