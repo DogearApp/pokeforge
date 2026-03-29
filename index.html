@@ -414,6 +414,27 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .tierlist-add{padding:3px 8px;font-size:11px;font-weight:600;border-radius:5px;border:1px solid var(--border);background:var(--bg4);color:var(--muted);cursor:pointer;transition:all .15s}
 .tierlist-add:hover{border-color:var(--accent);color:var(--accent)}
 
+/* META TAB */
+.meta-section{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.meta-section:last-child{border-bottom:none}
+.meta-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.meta-face{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.meta-face-rank{font-size:12px;font-weight:700;color:var(--muted2);min-width:20px;text-align:center}
+.meta-face img{width:32px;height:32px;image-rendering:pixelated}
+.meta-face-info{flex:1;min-width:0}
+.meta-face-name{font-size:13px;font-weight:600}
+.meta-face-detail{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap}
+.meta-face-usage{font-size:12px;font-weight:700;color:var(--accent);min-width:45px;text-align:right}
+.meta-pill{font-size:10px;padding:1px 6px;border-radius:4px;background:var(--bg4);color:var(--muted);border:1px solid var(--border)}
+.meta-core{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin:3px}
+.meta-core img{width:28px;height:28px;image-rendering:pixelated}
+.meta-core-pct{font-size:10px;color:var(--accent);font-weight:600}
+.meta-counter{padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin:4px 0;display:flex;align-items:center;gap:8px}
+.meta-counter img{width:32px;height:32px;image-rendering:pixelated}
+.meta-counter-info{flex:1;font-size:12px}
+.meta-offmeta{border-color:var(--gold);background:rgba(245,197,66,0.05)}
+.meta-gem{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(245,197,66,0.2);color:var(--gold);border:1px solid rgba(245,197,66,0.3)}
+
 /* BUILDER MODE */
 .hero.hidden{display:none}
 .app-wrap.focused{padding-top:1rem}
@@ -617,6 +638,7 @@ footer a:hover{color:var(--text)}
           <div class="tab" onclick="tab('threats')">Threats</div>
           <div class="tab" onclick="tab('ai')">Analyze</div>
           <div class="tab" onclick="tab('calc')">Dmg Calc</div>
+          <div class="tab" onclick="tab('meta')">Meta</div>
           <div class="tab" onclick="tab('export')">Import/Export</div>
         </div>
         <div class="tab-body" id="t-def">
@@ -629,6 +651,9 @@ footer a:hover{color:var(--text)}
           <div class="speed-search"><input id="speed-search" placeholder="Filter by name…" oninput="renderSpeedTiers()"/></div>
           <div class="speed-ctx" id="speed-ctx">Add Pokémon to compare speed tiers.</div>
           <div class="tier-list" id="tier-list"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see speed tiers.</span></div>
+        </div>
+        <div class="tab-body" id="t-meta" style="display:none">
+          <div id="meta-content"><span style="font-size:13px;color:var(--muted)">Click to load meta analysis.</span></div>
         </div>
         <div class="tab-body" id="t-export" style="display:none">
           <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Export</div>
@@ -1478,13 +1503,14 @@ function copyPaste(){
 }
 
 function tab(id){
-  const tabs=['def','off','speed','threats','ai','calc','export'];
+  const tabs=['def','off','speed','threats','ai','calc','meta','export'];
   tabs.forEach(t=>{const el=document.getElementById('t-'+t);if(el)el.style.display=t===id?'block':'none';});
   document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',tabs[i]===id));
   if(id==='speed')renderSpeedTiers();
   if(id==='calc')renderCalc();
   if(id==='off')renderOffensiveCoverage();
   if(id==='threats')renderThreats();
+  if(id==='meta')renderMeta();
 }
 
 // --- Edit panel ---
@@ -2782,6 +2808,184 @@ function renderThreats(){
   });
 
   html+=`</div>`;
+  el.innerHTML=html;
+}
+
+// --- Meta Tab ---
+async function renderMeta(){
+  const el=document.getElementById('meta-content');
+  const stats=await loadUsageStats();
+  if(!stats||!stats.pokemon){el.innerHTML='<span style="color:var(--red)">Could not load usage data.</span>';return;}
+
+  const isChamp=n=>CHAMPIONS_POKEMON.has(n.toLowerCase().replace(/\s+/g,'-'));
+  const sorted=Object.entries(stats.pokemon)
+    .map(([name,d])=>({name,d,usage:d.usage?.weighted||0}))
+    .filter(p=>p.usage>0&&(!championsMode||isChamp(p.name)))
+    .sort((a,b)=>b.usage-a.usage);
+
+  const spriteFor=name=>{const api=name.toLowerCase().replace(/\s+/g,'-');const f=allPokemon.find(ap=>ap.name===api||ap.name.startsWith(api));return f?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${f.id}.png`:'';};
+  const topMoves=d=>Object.entries(d.moves||{}).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([m])=>m);
+  const topItem=d=>{const e=Object.entries(d.items||{}).sort((a,b)=>b[1]-a[1]);return e[0]?e[0][0]:null;};
+  const topAbil=d=>{const e=Object.entries(d.abilities||{}).sort((a,b)=>b[1]-a[1]);return e[0]?e[0][0]:null;};
+
+  let html='';
+
+  // === 1. What You'll Face ===
+  html+=`<div class="meta-section"><div class="meta-title">What You'll Face — Top 15</div>`;
+  sorted.slice(0,15).forEach((p,i)=>{
+    const sp=spriteFor(p.name);
+    const moves=topMoves(p.d);
+    const item=topItem(p.d);
+    const abil=topAbil(p.d);
+    const tera=Object.entries(p.d.teraTypes||{}).sort((a,b)=>b[1]-a[1]);
+    const topTera=tera[0]?tera[0][0]:null;
+    html+=`<div class="meta-face">
+      <div class="meta-face-rank">${i+1}</div>
+      ${sp?`<img src="${sp}">`:''}
+      <div class="meta-face-info">
+        <div class="meta-face-name">${p.name}</div>
+        <div class="meta-face-detail">
+          ${abil?`<span class="meta-pill">${abil}</span>`:''}
+          ${item?`<span class="meta-pill">@ ${item}</span>`:''}
+          ${topTera?`<span class="meta-pill">Tera: ${topTera}</span>`:''}
+          ${moves.map(m=>`<span class="meta-pill">${m}</span>`).join('')}
+        </div>
+      </div>
+      <div class="meta-face-usage">${(p.usage*100).toFixed(1)}%</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  // === 2. Popular Cores ===
+  html+=`<div class="meta-section"><div class="meta-title">Popular Cores</div>`;
+  const top30=sorted.slice(0,30);
+  const cores=[];const seenCores=new Set();
+  top30.forEach(a=>{
+    const teammates=a.d.teammates||{};
+    Object.entries(teammates).forEach(([bName,pct])=>{
+      if(pct<=0)return;
+      const key=[a.name,bName].sort().join('|');
+      if(seenCores.has(key))return;
+      // Check if B is also in top and has A as teammate
+      const bEntry=sorted.find(x=>x.name===bName);
+      if(!bEntry)return;
+      const bTeammates=bEntry.d.teammates||{};
+      const bPct=bTeammates[a.name]||0;
+      if(bPct<=0)return;
+      seenCores.add(key);
+      cores.push({a:a.name,b:bName,score:(pct+bPct)*Math.min(a.usage,bEntry.usage),pctA:pct,pctB:bPct});
+    });
+  });
+  cores.sort((a,b)=>b.score-a.score);
+  cores.slice(0,10).forEach(c=>{
+    html+=`<div class="meta-core">
+      ${spriteFor(c.a)?`<img src="${spriteFor(c.a)}">`:''}
+      <strong style="font-size:12px">${c.a}</strong>
+      <span style="color:var(--muted);font-size:11px">+</span>
+      ${spriteFor(c.b)?`<img src="${spriteFor(c.b)}">`:''}
+      <strong style="font-size:12px">${c.b}</strong>
+      <span class="meta-core-pct">${(Math.max(c.pctA,c.pctB)*100).toFixed(0)}%</span>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  // === 3. Counter Suggestions ===
+  html+=`<div class="meta-section"><div class="meta-title">Counter Suggestions</div>`;
+  const topThreats=sorted.slice(0,10);
+  // Use VGC_THREATS for type data, and VGC_POKEMON for counter candidates
+  const threatTypes={};
+  VGC_THREATS.forEach(t=>{threatTypes[t.name]={types:t.types,stab:t.stab};});
+
+  const candidates=VGC_POKEMON.filter(v=>!championsMode||CHAMPIONS_POKEMON.has(v.name.toLowerCase().replace(/\s+/g,'-')));
+  const candidateUsage={};
+  sorted.forEach(p=>{candidateUsage[p.name]=p.usage;});
+
+  topThreats.forEach(threat=>{
+    const tData=threatTypes[threat.name];
+    if(!tData)return;
+
+    const counters=candidates.map(c=>{
+      // Check if candidate resists threat's STAB
+      let resists=0;
+      tData.stab.forEach(atkType=>{
+        let mult=1;
+        c.types.forEach(defType=>{const ch=TC[atkType]||{};if(ch[defType]!==undefined)mult*=ch[defType];});
+        if(mult<1)resists++;
+      });
+      // Check if candidate hits threat SE
+      let hitsSE=false;
+      c.types.forEach(atkType=>{
+        let eff=1;
+        tData.types.forEach(defType=>{const ch=TC[atkType]||{};if(ch[defType]!==undefined)eff*=ch[defType];});
+        if(eff>1)hitsSE=true;
+      });
+      if(!resists&&!hitsSE)return null;
+      const usage=candidateUsage[c.name]||0;
+      const offMeta=usage<0.05;
+      return{...c,resists,hitsSE,usage,offMeta,score:resists*2+(hitsSE?1:0)+(offMeta?1:0)};
+    }).filter(Boolean).sort((a,b)=>b.score-a.score).slice(0,3);
+
+    if(!counters.length)return;
+    html+=`<div style="margin:8px 0 4px;font-size:13px;font-weight:600">${spriteFor(threat.name)?`<img src="${spriteFor(threat.name)}" width="24" height="24" style="image-rendering:pixelated;vertical-align:middle">`:''}${threat.name} <span style="font-size:11px;color:var(--muted)">(${(threat.usage*100).toFixed(1)}%)</span></div>`;
+    counters.forEach(c=>{
+      const reasons=[];
+      if(c.resists)reasons.push('Resists STAB');
+      if(c.hitsSE)reasons.push('Hits SE with '+c.types.join('/'));
+      html+=`<div class="meta-counter${c.offMeta?' meta-offmeta':''}">
+        ${spriteFor(c.name)?`<img src="${spriteFor(c.name)}">`:''}
+        <div class="meta-counter-info">
+          <strong>${c.name}</strong> ${c.offMeta?'<span class="meta-gem">OFF-META</span>':''}
+          <div style="color:var(--muted);font-size:11px">${c.types.join('/')} · ${reasons.join(' · ')}${c.usage?` · ${(c.usage*100).toFixed(1)}% usage`:''}</div>
+        </div>
+      </div>`;
+    });
+  });
+  html+=`</div>`;
+
+  // === 4. Meta Gaps (Hidden Gems) ===
+  html+=`<div class="meta-section"><div class="meta-title">Hidden Gems — Low Usage, High Potential</div>`;
+  const top15Types={};
+  topThreats.slice(0,15).forEach(t=>{
+    const td=threatTypes[t.name];
+    if(td)td.stab.forEach(s=>{top15Types[s]=(top15Types[s]||0)+1;});
+  });
+
+  const gems=candidates.map(c=>{
+    const usage=candidateUsage[c.name]||0;
+    if(usage>0.08)return null; // not off-meta enough
+    let resistScore=0,seScore=0;
+    Object.entries(top15Types).forEach(([atkType,count])=>{
+      let mult=1;
+      c.types.forEach(defType=>{const ch=TC[atkType]||{};if(ch[defType]!==undefined)mult*=ch[defType];});
+      if(mult<1)resistScore+=count;
+    });
+    topThreats.slice(0,15).forEach(t=>{
+      const td=threatTypes[t.name];if(!td)return;
+      c.types.forEach(atkType=>{
+        let eff=1;td.types.forEach(defType=>{const ch=TC[atkType]||{};if(ch[defType]!==undefined)eff*=ch[defType];});
+        if(eff>1)seScore++;
+      });
+    });
+    const score=resistScore*2+seScore;
+    if(score<4)return null;
+    return{...c,usage,score,resistScore,seScore};
+  }).filter(Boolean).sort((a,b)=>b.score-a.score).slice(0,8);
+
+  if(gems.length){
+    gems.forEach(g=>{
+      html+=`<div class="meta-counter meta-offmeta">
+        ${spriteFor(g.name)?`<img src="${spriteFor(g.name)}">`:''}
+        <div class="meta-counter-info">
+          <strong>${g.name}</strong> <span class="meta-gem">HIDDEN GEM</span>
+          <div style="color:var(--muted);font-size:11px">${g.types.join('/')} · ${g.why} · Resists ${g.resistScore} meta STAB hits · Hits ${g.seScore} top threats SE${g.usage?` · Only ${(g.usage*100).toFixed(1)}% usage`:''}</div>
+        </div>
+      </div>`;
+    });
+  } else {
+    html+=`<div style="color:var(--muted);font-size:12px">No standout hidden gems found for the current meta.</div>`;
+  }
+  html+=`</div>`;
+
   el.innerHTML=html;
 }
 
