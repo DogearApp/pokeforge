@@ -493,26 +493,23 @@ footer a:hover{color:var(--text)}
     <div style="margin-top:1.5rem">
       <div class="panel">
         <div class="tabs">
-          <div class="tab on" onclick="tab('cov')">Coverage</div>
+          <div class="tab on" onclick="tab('def')">Def Coverage</div>
+          <div class="tab" onclick="tab('off')">Off Coverage</div>
           <div class="tab" onclick="tab('speed')">Speed</div>
-          <div class="tab" onclick="tab('stats')">Stats</div>
-          <div class="tab" onclick="tab('export')">Import/Export</div>
           <div class="tab" onclick="tab('ai')">Analyze</div>
-          <div class="tab" onclick="tab('calc')">Calc</div>
+          <div class="tab" onclick="tab('calc')">Dmg Calc</div>
+          <div class="tab" onclick="tab('export')">Import/Export</div>
         </div>
-        <div class="tab-body" id="t-cov">
-          <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Defensive Coverage</div>
-          <div id="wlist"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see coverage analysis.</span></div>
-          <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:20px 0 12px">Offensive Coverage</div>
+        <div class="tab-body" id="t-def">
+          <div id="wlist"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see defensive coverage.</span></div>
+        </div>
+        <div class="tab-body" id="t-off" style="display:none">
           <div id="offlist"><span style="font-size:13px;color:var(--muted)">Add Pokémon with moves to see offensive coverage.</span></div>
         </div>
         <div class="tab-body" id="t-speed" style="display:none">
           <div class="speed-search"><input id="speed-search" placeholder="Filter by name…" oninput="renderSpeedTiers()"/></div>
           <div class="speed-ctx" id="speed-ctx">Add Pokémon to compare speed tiers.</div>
           <div class="tier-list" id="tier-list"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see speed tiers.</span></div>
-        </div>
-        <div class="tab-body" id="t-stats" style="display:none">
-          <div id="statview"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see stats.</span></div>
         </div>
         <div class="tab-body" id="t-export" style="display:none">
           <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Export</div>
@@ -821,7 +818,7 @@ async function addPoke(name){
 }
 
 function removePoke(i,e){e.stopPropagation();team.splice(i,1);if(editIdx===i)closeEdit();else if(editIdx!==null&&editIdx>i){editIdx--;openEdit(editIdx);}renderAll();}
-function renderAll(){renderTeamMgr();renderTeamBar();renderWeakness();renderSpeedTiers();renderStats();renderExport();saveTeamToStorage();}
+function renderAll(){renderTeamMgr();renderTeamBar();renderWeakness();renderOffensiveCoverage();renderSpeedTiers();renderExport();saveTeamToStorage();}
 
 // --- Multi-team storage ---
 let allTeams=[{name:'Team 1',pokemon:[]}];
@@ -1030,7 +1027,6 @@ function renderWeakness(){
   }
 
   document.getElementById('wlist').innerHTML=html;
-  renderOffensiveCoverage();
 }
 
 function renderOffensiveCoverage(){
@@ -1175,10 +1171,12 @@ function copyPaste(){
 }
 
 function tab(id){
-  ['cov','speed','stats','export','ai','calc'].forEach(t=>{document.getElementById('t-'+t).style.display=t===id?'block':'none';});
-  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',['cov','speed','stats','export','ai','calc'][i]===id));
+  const tabs=['def','off','speed','ai','calc','export'];
+  tabs.forEach(t=>{const el=document.getElementById('t-'+t);if(el)el.style.display=t===id?'block':'none';});
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',tabs[i]===id));
   if(id==='speed')renderSpeedTiers();
   if(id==='calc')renderCalc();
+  if(id==='off')renderOffensiveCoverage();
 }
 
 // --- Edit panel ---
