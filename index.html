@@ -343,6 +343,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .ai-out{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-size:13px;line-height:1.7;color:var(--text);max-height:none;overflow-y:visible}
 .ai-thinking{color:var(--muted);font-style:italic}
 
+/* BUILDER MODE */
+.hero.hidden{display:none}
+.app-wrap.focused{padding-top:1rem}
+
 /* FOOTER */
 footer{border-top:1px solid var(--border);padding:2rem;text-align:center;color:var(--muted2);font-size:12px}
 footer a{color:var(--muted);text-decoration:none}
@@ -357,9 +361,9 @@ footer a:hover{color:var(--text)}
 <body>
 
 <nav>
-  <div class="nav-logo">Incin<span>Forge</span></div>
+  <div class="nav-logo" onclick="exitBuilder()" style="cursor:pointer">Incin<span>Forge</span></div>
   <div class="nav-links">
-    <a href="#builder">Builder</a>
+    <a href="#builder" onclick="enterBuilder()">Builder</a>
     <a href="https://www.pokemon.com/us/pokemon-vg-championships" target="_blank">VGC Rules</a>
     <a href="https://pokemonshowdown.com" target="_blank">Showdown</a>
     <span style="font-size:12px;color:var(--muted)">Free <span class="nav-badge">BETA</span></span>
@@ -2263,8 +2267,21 @@ function renderCalc(){
   }
 }
 
+// --- Builder mode ---
+function enterBuilder(){
+  document.querySelector('.hero').classList.add('hidden');
+  document.getElementById('builder').classList.add('focused');
+  document.getElementById('psearch').focus();
+}
+function exitBuilder(){
+  document.querySelector('.hero').classList.remove('hidden');
+  document.getElementById('builder').classList.remove('focused');
+  window.scrollTo(0,0);
+}
+
 // --- Init ---
 loadTeamFromStorage();init();loadUsageStats();renderAll();
+if(team.length)enterBuilder();
 // Check for shared team in URL
 if(window.location.search.includes('team=')){
   // Clear localStorage team so the shared one takes priority
