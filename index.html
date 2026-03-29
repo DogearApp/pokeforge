@@ -526,7 +526,7 @@ footer a:hover{color:var(--text)}
           </div>
           <div class="info-panel" id="move-legend">
             <div class="info-panel-title">Legend</div>
-            <div><strong>PHY</strong> = Physical (uses Attack) · <strong>SPC</strong> = Special (uses Sp.Atk) · <strong>STA</strong> = Status (no damage)</div>
+            <div><strong>PHYS</strong> = Physical (uses Attack) · <strong>SPEC</strong> = Special (uses Sp.Atk) · <strong>STAT</strong> = Status (no damage)</div>
             <div><strong>Pow</strong> = Base Power · <strong>Acc</strong> = Accuracy · <strong>PP</strong> = Power Points · <strong>Use</strong> = VGC usage %</div>
             <div style="margin-top:6px"><span style="color:var(--accent);font-weight:600">Spread</span> = Hits both opponents</div>
             <div><span style="color:var(--orange);font-weight:600">Spread + Hits Ally</span> = Hits opponents AND your partner</div>
@@ -1587,7 +1587,7 @@ function renderMoveSlots(){
       const key=mv.toLowerCase().replace(/\s+/g,'-');
       const d=moveCache[key];
       const col=d?TCOL[d.type]||'var(--muted)':'var(--muted)';
-      const catLabel=d?(d.cat==='physical'?'PHY':d.cat==='special'?'SPC':'STA'):'';
+      const catLabel=d?(d.cat==='physical'?'PHYS':d.cat==='special'?'SPEC':'STAT'):'';
       html+=`<div class="mslot${selectedMoveSlot===i?' active':''}" onclick="focusMoveSlot(${i})">
         <span class="mslot-x" onclick="event.stopPropagation();deselectMove(${i})">✕</span>
         <div class="mslot-top">
@@ -1660,7 +1660,7 @@ function renderMoveList(){
       html+='<div class="move-divider">Other moves</div>';addedDivider=true;
     }
     const d=m.d;
-    const catIcon=d?(d.cat==='physical'?'PHY':d.cat==='special'?'SPC':'STA'):'·';
+    const catIcon=d?(d.cat==='physical'?'PHYS':d.cat==='special'?'SPEC':'STAT'):'·';
     const typeCol=d?TCOL[d.type]||'var(--muted)':'var(--muted2)';
     const effect=d?d.desc.replace(/\n/g,' '):'';
     const useStr=m.usage>0?(m.usage*100).toFixed(1)+'%':'';
@@ -1960,7 +1960,7 @@ function runAI(){
       Object.entries(byType).forEach(([type,recs])=>{
         out.push(`<div style="margin:6px 0"><span class="wlabel" style="background:${TCOL[type]};display:inline-block">${type}</span></div>`);
         recs.slice(0,4).forEach(r=>{
-          const catLabel=r.cat==='physical'?'PHY':r.cat==='special'?'SPC':'STA';
+          const catLabel=r.cat==='physical'?'PHYS':r.cat==='special'?'SPEC':'STAT';
           out.push(`<div style="margin:2px 0 2px 8px;font-size:12px;display:flex;align-items:center;gap:6px">
             ${r.sprite?`<img src="${r.sprite}" width="24" height="24" style="image-rendering:pixelated">`:''}
             <strong>${r.mon}</strong> can learn <strong>${r.move}</strong>
@@ -2599,7 +2599,7 @@ function renderMoveButtons(poke,moveIdx,side){
     const k=m.toLowerCase().replace(/\s+/g,'-');
     const d=moveCache[k];
     const col=d?TCOL[d.type]||'var(--muted)':'var(--muted)';
-    const catL=d?(d.cat==='physical'?'PHY':d.cat==='special'?'SPC':'STA'):'';
+    const catL=d?(d.cat==='physical'?'PHYS':d.cat==='special'?'SPEC':'STAT'):'';
     return`<div class="calc-move-btn${moveIdx===i?' sel':''}" onclick="calc.${side}MoveIdx=${i};renderCalc()">
       ${d?`<span class="tbadge tbadge-sm" style="background:${col}">${d.type}</span>`:''}
       ${m.replace(/-/g,' ')} ${d?`<span style="color:var(--muted);font-size:10px">${d.power||''}</span>`:''}
