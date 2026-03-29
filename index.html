@@ -173,6 +173,15 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .ac-dd .ac-item{padding:7px 12px;font-size:13px;cursor:pointer;color:var(--text);transition:background .15s}
 .ac-dd .ac-item:hover,.ac-dd .ac-item.hl{background:var(--bg3)}
 .ac-dd .ac-item .ac-hint{font-size:11px;color:var(--muted);margin-left:6px}
+.ac-dd .ac-item .ac-sub{display:block;font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+.ac-dd .ac-item .ac-tags{display:flex;gap:4px;margin-top:3px}
+.ac-dd .ac-item .ac-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;color:#fff;letter-spacing:.03em;text-transform:uppercase}
+.field-desc{font-size:11px;color:var(--muted);line-height:1.5;margin:-4px 0 8px 68px;min-height:16px;transition:opacity .2s}
+.field-desc .desc-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;color:#fff;margin-right:4px;letter-spacing:.03em;text-transform:uppercase;vertical-align:middle}
+.field-desc .desc-stats{color:var(--muted2);font-size:10px;margin-left:4px}
+.nature-hint{font-size:11px;color:var(--muted2);margin-left:4px}
+.nature-hint .nat-up{color:var(--green)}
+.nature-hint .nat-down{color:var(--red)}
 .field-row select option{background:var(--bg2)}
 .moves-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 8px}
 .tera-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
@@ -332,10 +341,12 @@ footer a:hover{color:var(--text)}
 
       <div class="edit-body" id="et-build">
         <div class="field-row"><label>Nickname</label><input id="e-nick" placeholder="Optional nickname" oninput="saveEdit()"/></div>
-        <div class="field-row"><label>Ability</label><select id="e-ability" onchange="saveEdit()"><option>—</option></select></div>
+        <div class="field-row"><label>Ability</label><select id="e-ability" onchange="onAbilityChange()"><option>—</option></select></div>
+        <div class="field-desc" id="desc-ability"></div>
         <div class="field-row"><label>Item</label><div class="ac-wrap"><input id="e-item" placeholder="e.g. Choice Specs" autocomplete="off"/><div class="ac-dd" id="ac-item"></div></div></div>
+        <div class="field-desc" id="desc-item"></div>
         <div class="field-row"><label>Nature</label>
-          <select id="e-nature" onchange="saveEdit()">
+          <select id="e-nature" onchange="onNatureChange()">
             <option>Hardy</option><option>Lonely</option><option>Brave</option><option>Adamant</option><option>Naughty</option>
             <option>Bold</option><option>Docile</option><option>Relaxed</option><option>Impish</option><option>Lax</option>
             <option>Timid</option><option>Hasty</option><option>Serious</option><option>Jolly</option><option>Naive</option>
@@ -343,13 +354,18 @@ footer a:hover{color:var(--text)}
             <option>Calm</option><option>Gentle</option><option>Sassy</option><option>Careful</option><option>Quirky</option>
           </select>
         </div>
+        <div class="field-desc" id="desc-nature"></div>
         <div class="tera-label">Tera Type</div>
         <div class="tera-grid" id="tera-opts"></div>
         <div class="moves-label">Moves</div>
         <div class="field-row"><label>Move 1</label><div class="ac-wrap"><input id="m1" placeholder="Search moves…" autocomplete="off"/><div class="ac-dd" id="ac-m1"></div></div></div>
+        <div class="field-desc" id="desc-m1"></div>
         <div class="field-row"><label>Move 2</label><div class="ac-wrap"><input id="m2" placeholder="Search moves…" autocomplete="off"/><div class="ac-dd" id="ac-m2"></div></div></div>
+        <div class="field-desc" id="desc-m2"></div>
         <div class="field-row"><label>Move 3</label><div class="ac-wrap"><input id="m3" placeholder="Search moves…" autocomplete="off"/><div class="ac-dd" id="ac-m3"></div></div></div>
+        <div class="field-desc" id="desc-m3"></div>
         <div class="field-row"><label>Move 4</label><div class="ac-wrap"><input id="m4" placeholder="Search moves…" autocomplete="off"/><div class="ac-dd" id="ac-m4"></div></div></div>
+        <div class="field-desc" id="desc-m4"></div>
       </div>
 
       <div class="edit-body" id="et-evs" style="display:none">
@@ -428,7 +444,7 @@ const MEGA_DATA={
   diancie:[{suffix:'mega',stone:'Diancite',label:'Mega Diancie'}]
 };
 
-let allPokemon=[],allItems=[],team=[],editIdx=null,pokeCache={};
+let allPokemon=[],allItems=[],team=[],editIdx=null,pokeCache={},abilityCache={},itemCache={},moveCache={};
 
 function fmt(n){return n.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join('-')}
 
@@ -628,7 +644,7 @@ function openEdit(i){
   document.getElementById('tera-opts').innerHTML=TYPES.map(t=>`<span class="tera-opt${p.tera===t?' sel':''}" style="background:${TCOL[t]}" onclick="setTera('${t}')">${t}</span>`).join('');
   ['m1','m2','m3','m4'].forEach((id,j)=>document.getElementById(id).value=p.moves[j]||'');
   document.getElementById('edit-panel').style.display='block';
-  showMegaControls(p);etab('build');renderSlots();
+  showMegaControls(p);etab('build');renderSlots();refreshAllDescs();
 }
 
 function setTera(t){if(editIdx===null)return;team[editIdx].tera=t;document.querySelectorAll('.tera-opt').forEach(el=>el.classList.toggle('sel',el.textContent===t));saveEdit();}
@@ -683,6 +699,94 @@ async function runAI(){
   }catch(e){document.getElementById('ai-out').innerHTML='<div class="ai-out" style="color:var(--red)">Connection error. Please try again.</div>';}
 }
 
+// Detail fetchers
+async function fetchAbilityDesc(name){
+  const key=name.toLowerCase().replace(/\s+/g,'-');
+  if(abilityCache[key])return abilityCache[key];
+  try{const r=await fetch(`https://pokeapi.co/api/v2/ability/${key}`);const d=await r.json();
+    const en=d.effect_entries.find(e=>e.language.name==='en');
+    const short=d.flavor_text_entries.filter(e=>e.language.name==='en').pop();
+    const desc=en?.short_effect||short?.flavor_text||'';
+    abilityCache[key]=desc;return desc;
+  }catch(e){return '';}
+}
+
+async function fetchItemDesc(name){
+  const key=name.toLowerCase().replace(/\s+/g,'-');
+  if(itemCache[key])return itemCache[key];
+  try{const r=await fetch(`https://pokeapi.co/api/v2/item/${key}`);const d=await r.json();
+    const en=d.effect_entries.find(e=>e.language.name==='en');
+    const short=d.flavor_text_entries.filter(e=>e.language.name==='en').pop();
+    const desc=en?.short_effect||short?.flavor_text||'';
+    itemCache[key]=desc;return desc;
+  }catch(e){return '';}
+}
+
+async function fetchMoveDesc(name){
+  const key=name.toLowerCase().replace(/\s+/g,'-');
+  if(moveCache[key])return moveCache[key];
+  try{const r=await fetch(`https://pokeapi.co/api/v2/move/${key}`);const d=await r.json();
+    const en=d.effect_entries.find(e=>e.language.name==='en');
+    const short=d.flavor_text_entries.filter(e=>e.language.name==='en').pop();
+    const desc=en?.short_effect||short?.flavor_text||'';
+    const type=d.type.name.charAt(0).toUpperCase()+d.type.name.slice(1);
+    const cat=d.damage_class.name;
+    moveCache[key]={desc,type,cat,power:d.power,accuracy:d.accuracy,pp:d.pp};
+    return moveCache[key];
+  }catch(e){return null;}
+}
+
+function getNatureDesc(name){
+  const nm=NM[name]||{};const keys=Object.keys(nm);
+  if(!keys.length)return'<span style="color:var(--muted2)">Neutral — no stat changes</span>';
+  const up=keys.find(k=>nm[k]>1),down=keys.find(k=>nm[k]<1);
+  return `<span class="nat-up">+${STAT_NAMES[up]}</span> / <span class="nat-down">−${STAT_NAMES[down]}</span>`;
+}
+
+async function showAbilityDesc(){
+  const el=document.getElementById('desc-ability');
+  const name=document.getElementById('e-ability').value;
+  if(!name||name==='—'){el.innerHTML='';return;}
+  el.innerHTML='<span style="color:var(--muted2)">Loading…</span>';
+  const desc=await fetchAbilityDesc(name);
+  el.innerHTML=desc?desc:'';
+}
+
+async function showItemDesc(){
+  const el=document.getElementById('desc-item');
+  const name=document.getElementById('e-item').value.trim();
+  if(!name){el.innerHTML='';return;}
+  el.innerHTML='<span style="color:var(--muted2)">Loading…</span>';
+  const desc=await fetchItemDesc(name);
+  el.innerHTML=desc?desc:'';
+}
+
+function showNatureDesc(){
+  const el=document.getElementById('desc-nature');
+  const name=document.getElementById('e-nature').value;
+  el.innerHTML=getNatureDesc(name);
+}
+
+async function showMoveDesc(slotId){
+  const el=document.getElementById('desc-'+slotId);
+  const name=document.getElementById(slotId).value.trim();
+  if(!name){el.innerHTML='';return;}
+  el.innerHTML='<span style="color:var(--muted2)">Loading…</span>';
+  const data=await fetchMoveDesc(name);
+  if(!data){el.innerHTML='';return;}
+  const col=TCOL[data.type]||'var(--muted)';
+  const catIcon=data.cat==='physical'?'💥':data.cat==='special'?'✦':'◈';
+  el.innerHTML=`<span class="desc-tag" style="background:${col}">${data.type}</span>${catIcon} ${data.cat.charAt(0).toUpperCase()+data.cat.slice(1)}<span class="desc-stats"> · Pow: ${data.power||'—'} · Acc: ${data.accuracy||'—'} · PP: ${data.pp||'—'}</span><br>${data.desc}`;
+}
+
+async function refreshAllDescs(){
+  showAbilityDesc();showItemDesc();showNatureDesc();
+  ['m1','m2','m3','m4'].forEach(id=>showMoveDesc(id));
+}
+
+function onAbilityChange(){saveEdit();showAbilityDesc();}
+function onNatureChange(){saveEdit();showNatureDesc();}
+
 // Autocomplete system
 function setupAC(inputId,ddId,getList,onSelect){
   const inp=document.getElementById(inputId),dd=document.getElementById(ddId);
@@ -711,12 +815,12 @@ function setupAC(inputId,ddId,getList,onSelect){
 }
 
 function initAutocompletes(){
-  setupAC('e-item','ac-item',()=>allItems);
+  setupAC('e-item','ac-item',()=>allItems,()=>{saveEdit();showItemDesc();});
   ['m1','m2','m3','m4'].forEach(id=>{
     setupAC(id,'ac-'+id,()=>{
       if(editIdx===null)return[];
       return team[editIdx].movePool||[];
-    });
+    },()=>{saveEdit();showMoveDesc(id);});
   });
 }
 
