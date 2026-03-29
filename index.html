@@ -1832,7 +1832,7 @@ function getItemUsage(p){
 }
 
 // --- Damage Calculator ---
-let calc={atkIdx:0,defIdx:1,moveIdx:0,weather:'none',terrain:'none',spread:true,crit:false,burn:false,teraAtk:false,atkStage:0,defStage:0};
+let calc={atkIdx:0,defIdx:1,moveIdx:0,weather:'none',terrain:'none',spread:true,crit:false,burn:false,teraAtk:false,atkStage:0,spaStage:0,defStage:0,spdStage:0};
 
 function applyStage(stat,stage){
   stage=Math.max(-6,Math.min(6,stage));
@@ -1858,9 +1858,9 @@ function calcDamage(){
   let A=md.cat==='physical'?as.atk:as.spa;
   let D=md.cat==='physical'?ds.def:ds.spd;
 
-  // Stat stages
-  A=applyStage(A,calc.atkStage);
-  D=applyStage(D,calc.defStage);
+  // Stat stages — use the correct one based on move category
+  A=applyStage(A,md.cat==='physical'?calc.atkStage:calc.spaStage);
+  D=applyStage(D,md.cat==='physical'?calc.defStage:calc.spdStage);
 
   // Ability mods
   if(['Huge-Power','Pure-Power'].includes(atk.ability)&&md.cat==='physical')A=Math.floor(A*2);
@@ -1945,8 +1945,10 @@ function calcDamage(){
   if(calc.burn&&burn<1)tags.push('Burned');
   if(calc.teraAtk)tags.push('Tera '+atk.tera);
   if(calc.terrain!=='none')tags.push(calc.terrain.charAt(0).toUpperCase()+calc.terrain.slice(1)+' Terrain');
-  if(calc.atkStage!==0)tags.push((calc.atkStage>0?'+':'')+calc.atkStage+' '+(md.cat==='physical'?'Atk':'SpA'));
-  if(calc.defStage!==0)tags.push((calc.defStage>0?'+':'')+calc.defStage+' '+(md.cat==='physical'?'Def':'SpD'));
+  const usedAtkStage=md.cat==='physical'?calc.atkStage:calc.spaStage;
+  const usedDefStage=md.cat==='physical'?calc.defStage:calc.spdStage;
+  if(usedAtkStage!==0)tags.push((usedAtkStage>0?'+':'')+usedAtkStage+' '+(md.cat==='physical'?'Atk':'SpA'));
+  if(usedDefStage!==0)tags.push((usedDefStage>0?'+':'')+usedDefStage+' '+(md.cat==='physical'?'Def':'SpD'));
 
   return{minDmg,maxDmg,hp,minPct,maxPct,ko,typeEff,tags,moveName:moveName.replace(/-/g,' '),type:md.type,cat:md.cat,power};
 }
@@ -2015,7 +2017,9 @@ function renderCalc(){
   modHtml+=`<span class="calc-pill${calc.burn?' sel':''}" onclick="calc.burn=!calc.burn;renderCalc()">Burned</span>`;
   modHtml+=`<span class="calc-pill${calc.teraAtk?' sel':''}" onclick="calc.teraAtk=!calc.teraAtk;renderCalc()">Tera</span></div>`;
   modHtml+=`<div class="calc-mod-group"><span class="calc-mod-label">Atk</span><div class="calc-stage"><button onclick="calc.atkStage=Math.max(-6,calc.atkStage-1);renderCalc()">-</button><span>${calc.atkStage>=0?'+':''}${calc.atkStage}</span><button onclick="calc.atkStage=Math.min(6,calc.atkStage+1);renderCalc()">+</button></div></div>`;
+  modHtml+=`<div class="calc-mod-group"><span class="calc-mod-label">SpA</span><div class="calc-stage"><button onclick="calc.spaStage=Math.max(-6,calc.spaStage-1);renderCalc()">-</button><span>${calc.spaStage>=0?'+':''}${calc.spaStage}</span><button onclick="calc.spaStage=Math.min(6,calc.spaStage+1);renderCalc()">+</button></div></div>`;
   modHtml+=`<div class="calc-mod-group"><span class="calc-mod-label">Def</span><div class="calc-stage"><button onclick="calc.defStage=Math.max(-6,calc.defStage-1);renderCalc()">-</button><span>${calc.defStage>=0?'+':''}${calc.defStage}</span><button onclick="calc.defStage=Math.min(6,calc.defStage+1);renderCalc()">+</button></div></div>`;
+  modHtml+=`<div class="calc-mod-group"><span class="calc-mod-label">SpD</span><div class="calc-stage"><button onclick="calc.spdStage=Math.max(-6,calc.spdStage-1);renderCalc()">-</button><span>${calc.spdStage>=0?'+':''}${calc.spdStage}</span><button onclick="calc.spdStage=Math.min(6,calc.spdStage+1);renderCalc()">+</button></div></div>`;
   document.getElementById('calc-mods').innerHTML=modHtml;
 
   // Calculate and show result
