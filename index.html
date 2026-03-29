@@ -244,17 +244,15 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .cov-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .cov-critical{background:rgba(255,95,95,0.1);border:1px solid rgba(255,95,95,0.25);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--red);font-weight:500}
 .cov-unresisted{background:rgba(255,157,77,0.1);border:1px solid rgba(255,157,77,0.25);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--orange);font-weight:500}
-.wrow{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.wlabel{font-size:9px;font-weight:700;padding:3px 7px;border-radius:6px;color:#fff;min-width:62px;text-align:center;letter-spacing:.03em;text-transform:uppercase;flex-shrink:0}
-.wbar-wrap{flex:1;min-width:60px}
+.weak-grid{display:grid;grid-template-columns:62px 1fr auto auto;gap:6px 10px;align-items:center}
+.weak-grid-header{font-size:10px;font-weight:700;text-align:center;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.wlabel{font-size:9px;font-weight:700;padding:3px 7px;border-radius:6px;color:#fff;text-align:center;letter-spacing:.03em;text-transform:uppercase}
+.wbar-wrap{min-width:40px}
 .wbg{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
 .wbar{height:100%;border-radius:3px;transition:width .4s ease}
-.wnum{font-size:12px;font-weight:600;min-width:16px;text-align:right;color:var(--muted);flex-shrink:0}
-.w-cols{display:flex;gap:8px;flex-shrink:0}
-.w-col{display:flex;align-items:center;gap:2px;min-width:40px}
-.w-col-label{font-size:9px;font-weight:700;color:var(--muted2);writing-mode:horizontal-tb;min-width:20px;text-align:center}
-.w-mons{display:flex;gap:2px;flex-shrink:0}
+.w-col{display:flex;gap:2px;min-width:80px;justify-content:center}
 .w-mon-sprite{width:36px;height:36px;image-rendering:pixelated;border-radius:4px}
+.w-mons{display:flex;gap:2px}
 .w-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:2px}
 /* Coverage grid */
 .cov-grid{display:grid;gap:1px;background:var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px}
@@ -826,23 +824,22 @@ function renderWeakness(){
     .sort((a,b)=>(typeData[b].weak.length+typeData[b].weak4.length*2)-(typeData[a].weak.length+typeData[a].weak4.length*2));
   if(weakTypes.length){
     html+=`<div class="cov-section"><div class="cov-title">Weaknesses</div>`;
+    html+=`<div class="weak-grid">`;
+    // Headers
+    html+=`<div></div><div></div><div class="weak-grid-header" style="color:var(--orange)">2× Weak</div><div class="weak-grid-header" style="color:var(--red)">4× Weak</div>`;
     const maxV=Math.max(...weakTypes.map(t=>typeData[t].weak.length+typeData[t].weak4.length*2));
     weakTypes.forEach(t=>{
       const d=typeData[t];const score=d.weak.length+d.weak4.length*2;
       const pct=Math.round(score/maxV*100);
       const col=score>=4?'#ff5f5f':score>=2?'#ff9d4d':'#6c8eff';
-      const sprites2x=d.weak.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName} (2×)">`).join('');
-      const sprites4x=d.weak4.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName} (4×)">`).join('');
-      html+=`<div class="wrow">
-        <span class="wlabel" style="background:${TCOL[t]}">${t}</span>
-        <div class="wbar-wrap"><div class="wbg"><div class="wbar" style="width:${pct}%;background:${col}"></div></div></div>
-        <div class="w-cols">
-          <div class="w-col"><span class="w-col-label" style="color:var(--orange)">2×</span>${sprites2x||'—'}</div>
-          <div class="w-col"><span class="w-col-label" style="color:var(--red)">4×</span>${sprites4x||'—'}</div>
-        </div>
-      </div>`;
+      const sprites2x=d.weak.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName}">`).join('')||'<span style="color:var(--muted2);font-size:11px">—</span>';
+      const sprites4x=d.weak4.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName}">`).join('')||'<span style="color:var(--muted2);font-size:11px">—</span>';
+      html+=`<span class="wlabel" style="background:${TCOL[t]}">${t}</span>`;
+      html+=`<div class="wbar-wrap"><div class="wbg"><div class="wbar" style="width:${pct}%;background:${col}"></div></div></div>`;
+      html+=`<div class="w-col">${sprites2x}</div>`;
+      html+=`<div class="w-col">${sprites4x}</div>`;
     });
-    html+=`</div>`;
+    html+=`</div></div>`;
   }
 
   // Resistances
