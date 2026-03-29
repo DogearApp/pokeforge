@@ -586,7 +586,20 @@ async function addPoke(name){
 }
 
 function removePoke(i,e){e.stopPropagation();team.splice(i,1);if(editIdx===i)closeEdit();else if(editIdx!==null&&editIdx>i){editIdx--;openEdit(editIdx);}renderAll();}
-function renderAll(){document.getElementById('team-count');renderTeamBar();renderWeakness();renderSpeedTiers();renderStats();renderExport();}
+function renderAll(){renderTeamBar();renderWeakness();renderSpeedTiers();renderStats();renderExport();saveTeamToStorage();}
+
+function saveTeamToStorage(){
+  try{localStorage.setItem('pokeforge-team',JSON.stringify(team));}catch(e){}
+}
+function loadTeamFromStorage(){
+  try{
+    const raw=localStorage.getItem('pokeforge-team');
+    if(!raw)return;
+    const saved=JSON.parse(raw);
+    if(!Array.isArray(saved)||!saved.length)return;
+    team=saved;
+  }catch(e){}
+}
 
 function defWeak(types){
   let w={};TYPES.forEach(t=>w[t]=1);
@@ -1079,7 +1092,7 @@ async function runAI(){
 }
 
 // --- Init ---
-init();renderAll();
+loadTeamFromStorage();init();renderAll();
 setupAC('e-item','ac-item',()=>ITEMS,()=>{saveEdit();showItemDesc();});
 </script>
 </body>
