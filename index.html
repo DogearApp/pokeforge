@@ -112,11 +112,11 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .field-row input,.field-row select{flex:1;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none;transition:border-color .2s}
 .field-row input:focus,.field-row select:focus{border-color:var(--accent)}
 .field-row select option{background:var(--bg2)}
-.field-desc{font-size:11px;color:var(--muted);line-height:1.5;margin:-4px 0 8px 68px;min-height:14px}
-.field-desc .desc-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;color:#fff;margin-right:4px;letter-spacing:.03em;text-transform:uppercase;vertical-align:middle}
-.field-desc .desc-stats{color:var(--muted2);font-size:10px;margin-left:4px}
-.nature-hint .nat-up{color:var(--green)}
-.nature-hint .nat-down{color:var(--red)}
+.field-desc{font-size:13px;color:#b0b8d0;line-height:1.5;margin:-2px 0 10px 68px;min-height:14px}
+.field-desc .desc-tag{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;color:#fff;margin-right:5px;letter-spacing:.03em;text-transform:uppercase;vertical-align:middle}
+.field-desc .desc-stats{color:#9aa0b8;font-size:12px;margin-left:4px}
+.nature-hint .nat-up{color:var(--green);font-weight:600}
+.nature-hint .nat-down{color:var(--red);font-weight:600}
 .ac-wrap{position:relative;flex:1}
 .ac-wrap input{width:100%;padding:8px 12px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none;transition:border-color .2s}
 .ac-wrap input:focus{border-color:var(--accent)}
@@ -177,7 +177,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .mr-cat{font-size:13px;text-align:center;line-height:1}
 .mr-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mr-pow,.mr-acc,.mr-pp{font-size:12px;text-align:right;color:var(--muted);font-weight:500}
-.mr-effect{padding:0 16px 7px 90px;font-size:11px;color:var(--muted2);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mr-effect{padding:0 16px 7px 90px;font-size:12px;color:#9aa0b8;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .move-divider{padding:6px 16px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);background:var(--bg);border-bottom:1px solid var(--border)}
 
 /* EV GRID */
@@ -782,7 +782,7 @@ async function fetchMoveData(name){
 
 function getNatureDesc(name){
   const nm=NM[name]||{};const keys=Object.keys(nm);
-  if(!keys.length)return'<span style="color:var(--muted2)">Neutral — no stat changes</span>';
+  if(!keys.length)return'<span style="color:#9aa0b8">Neutral — no stat changes</span>';
   const up=keys.find(k=>nm[k]>1),down=keys.find(k=>nm[k]<1);
   return `<span class="nat-up">+${STAT_NAMES[up]}</span> / <span class="nat-down">−${STAT_NAMES[down]}</span>`;
 }
