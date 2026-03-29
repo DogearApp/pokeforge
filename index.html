@@ -1917,7 +1917,7 @@ function runCalcSide(atk,def,moveName,mods){
   else if(minPct>=50)ko='Guaranteed 2HKO';
   else if(maxPct>=50)ko='Possible 2HKO';
   else if(minPct>=34)ko='3HKO';
-  else ko=Math.ceil(100/maxPct)+'HKO';
+  else{const n=Math.ceil(100/maxPct);ko=(n<1?1:n)+'HKO';}
 
   const tags=[];
   if(stab>1)tags.push('STAB');
