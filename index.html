@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>IncinForge — VGC Team Builder</title>
+<title>InciniForge — VGC Team Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
@@ -405,7 +405,7 @@ footer a:hover{color:var(--text)}
 <body>
 
 <nav>
-  <div class="nav-logo" onclick="exitBuilder()" style="cursor:pointer">Incin<span>Forge</span></div>
+  <div class="nav-logo" onclick="exitBuilder()" style="cursor:pointer">Incini<span>Forge</span></div>
   <div class="nav-links">
     <a href="#builder" onclick="enterBuilder()">Builder</a>
     <a href="#" onclick="event.preventDefault();showUsageTierList()">Usage Tier List</a>
@@ -633,7 +633,7 @@ footer a:hover{color:var(--text)}
 </div>
 
 <footer>
-  <p>IncinForge — Built for VGC competitors. Powered by <a href="https://pokeapi.co" target="_blank">PokéAPI</a>. Not affiliated with Nintendo or The Pokémon Company.</p>
+  <p>InciniForge — Built for VGC competitors. Powered by <a href="https://pokeapi.co" target="_blank">PokéAPI</a>. Not affiliated with Nintendo or The Pokémon Company.</p>
   <p style="margin-top:6px">Data sourced from <a href="https://bulbapedia.bulbagarden.net" target="_blank">Bulbapedia</a> via PokéAPI.</p>
 </footer>
 
@@ -891,13 +891,13 @@ let activeTeamIdx=0;
 
 function saveAllTeams(){
   allTeams[activeTeamIdx].pokemon=team;
-  try{localStorage.setItem('incinforge-teams',JSON.stringify({teams:allTeams,active:activeTeamIdx}));}catch(e){}
+  try{localStorage.setItem('inciniforge-teams',JSON.stringify({teams:allTeams,active:activeTeamIdx}));}catch(e){}
 }
 function saveTeamToStorage(){saveAllTeams();}
 
 function loadTeamFromStorage(){
   try{
-    const raw=localStorage.getItem('incinforge-teams');
+    const raw=localStorage.getItem('inciniforge-teams')||localStorage.getItem('incinforge-teams');
     if(raw){
       const d=JSON.parse(raw);
       if(d.teams&&d.teams.length){allTeams=d.teams;activeTeamIdx=d.active||0;team=allTeams[activeTeamIdx].pokemon||[];return;}
