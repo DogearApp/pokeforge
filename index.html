@@ -453,7 +453,7 @@ footer a:hover{color:var(--text)}
           <button class="copy-btn" onclick="copyPaste()">Copy to Clipboard</button>
         </div>
         <div class="tab-body" id="t-ai" style="display:none">
-          <button class="ai-btn" onclick="runAI()">✦ Analyze Team &amp; Suggest Improvements</button>
+          <button class="ai-btn" onclick="runAI()">✦ Analyze Team</button>
           <div id="ai-out"></div>
         </div>
       </div>
@@ -1314,21 +1314,210 @@ async function toggleMega(formSuffix){
 }
 
 // --- AI ---
-async function runAI(){
+function runAI(){
   if(!team.length){document.getElementById('ai-out').innerHTML='<div class="ai-out">Add some Pokémon first!</div>';return;}
-  document.getElementById('ai-out').innerHTML='<div class="ai-out ai-thinking">Analyzing your team…</div>';
-  let counts={};TYPES.forEach(t=>counts[t]=0);
-  team.forEach(p=>{const w=defWeak(p.types);TYPES.forEach(t=>{if(w[t]>1)counts[t]+=(w[t]>=4?2:1);});});
-  const topWeak=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5).filter(([,v])=>v>0).map(([t])=>t);
-  const speeds=team.map(p=>`${p.displayName}:${actualSpe(p)}`).join(', ');
-  const teamStr=team.map(p=>`${p.displayName}(${p.types.join('/')}|${p.ability}|${p.item?'@'+p.item:'no item'}|Tera:${p.tera}|${p.nature}|Spe:${actualSpe(p)}${p.moves.some(m=>m)?'|moves:'+p.moves.filter(m=>m).join('/'):''}`).join('; ');
-  const prompt=`You are a competitive VGC (Scarlet/Violet doubles) expert.\n\nTeam: ${teamStr}\nDefensive holes: ${topWeak.join(', ')}\nSpeed tiers: ${speeds}\n\nProvide concise expert analysis:\n1. Team archetype (2 sentences)\n2. Top 3 Pokémon to consider adding/swapping to fix weaknesses (name + 1-sentence reason each)\n3. For each existing member with notable gaps, suggest 1 specific coverage move they could run\n4. Speed tier observation — outspeeding or being outsped by key threats?\n5. One key doubles synergy tip\n\nBe specific with move and Pokémon names. Reference real VGC meta when relevant.`;
-  try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
-    const d=await r.json();
-    const txt=(d.content?.[0]?.text||'No response.').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'</p><p style="margin-top:8px">').replace(/\n/g,'<br>');
-    document.getElementById('ai-out').innerHTML=`<div class="ai-out"><p>${txt}</p></div>`;
-  }catch(e){document.getElementById('ai-out').innerHTML='<div class="ai-out" style="color:var(--red)">Connection error. Please try again.</div>';}
+  const out=[];
+
+  // === 1. Team archetype detection ===
+  const allTypes=new Set();team.forEach(p=>p.types.forEach(t=>allTypes.add(t)));
+  const speeds=team.map(p=>actualSpe(p));
+  const avgSpe=Math.round(speeds.reduce((a,b)=>a+b,0)/speeds.length);
+  const fastCount=speeds.filter(s=>s>=120).length;
+  const slowCount=speeds.filter(s=>s<=60).length;
+  const bulkyCount=team.filter(p=>{const s=p.stats;return(s.hp+s.def+s.spd)/3>=85;}).length;
+  const offCount=team.filter(p=>Math.max(p.stats.atk,p.stats.spa)>=110).length;
+  const hasWeather=team.some(p=>['Drought','Drizzle','Sand-Stream','Snow-Warning','Orichalcum-Pulse','Hadron-Engine'].includes(p.ability));
+  const hasTrickRoom=team.some(p=>p.moves.includes('Trick-Room'));
+  const hasTailwind=team.some(p=>p.moves.includes('Tailwind'));
+  const hasIntim=team.some(p=>p.ability==='Intimidate');
+  const hasRedirect=team.some(p=>p.moves.some(m=>['Follow-Me','Rage-Powder'].includes(m)));
+  const hasFakeOut=team.some(p=>p.moves.includes('Fake-Out'));
+  const hasProtect=team.filter(p=>p.moves.includes('Protect')).length;
+
+  let archetype='';
+  if(hasTrickRoom&&slowCount>=2)archetype='Trick Room';
+  else if(hasWeather){
+    const wa=team.find(p=>['Drought','Orichalcum-Pulse'].includes(p.ability));
+    const wd=team.find(p=>['Drizzle'].includes(p.ability));
+    const ws=team.find(p=>['Sand-Stream'].includes(p.ability));
+    const wh=team.find(p=>['Snow-Warning'].includes(p.ability));
+    if(wa)archetype='Sun';else if(wd)archetype='Rain';else if(ws)archetype='Sand';else if(wh)archetype='Snow';else archetype='Weather';
+  }
+  else if(fastCount>=3&&offCount>=3)archetype='Hyper Offense';
+  else if(bulkyCount>=4)archetype='Bulky Balance';
+  else if(hasTailwind)archetype='Tailwind Offense';
+  else if(offCount>=3)archetype='Offensive Balance';
+  else archetype='Balance';
+
+  out.push(`<strong>Team Archetype: ${archetype}</strong>`);
+  out.push(`Average speed tier: ${avgSpe}. ${fastCount} fast threats, ${slowCount} slow/bulky members, ${offCount} strong attackers.`);
+
+  // === 2. Defensive weakness analysis ===
+  const typeData={};
+  TYPES.forEach(t=>{typeData[t]={weak:[],weak4:[],resist:[],immune:[]};});
+  team.forEach(p=>{
+    const w=defWeak(p.types);
+    TYPES.forEach(t=>{
+      if(w[t]>=4)typeData[t].weak4.push(p);
+      else if(w[t]>1)typeData[t].weak.push(p);
+      else if(w[t]===0)typeData[t].immune.push(p);
+      else if(w[t]<1)typeData[t].resist.push(p);
+    });
+  });
+
+  const critical=TYPES.filter(t=>typeData[t].weak.length+typeData[t].weak4.length>=3);
+  const unresisted=TYPES.filter(t=>typeData[t].resist.length===0&&typeData[t].immune.length===0);
+
+  if(critical.length){
+    out.push('');out.push(`<strong style="color:var(--red)">⚠ Critical Weaknesses</strong>`);
+    critical.forEach(t=>{
+      const names=[...typeData[t].weak4.map(p=>p.displayName+' (4×)'),...typeData[t].weak.map(p=>p.displayName)];
+      out.push(`<strong>${t}</strong> hits ${names.length} members: ${names.join(', ')}. Consider adding a ${t}-resist or immunity.`);
+    });
+  }
+
+  if(unresisted.length){
+    out.push('');out.push(`<strong style="color:var(--orange)">⚡ Unresisted Types</strong>`);
+    out.push(`Nobody on your team resists: <strong>${unresisted.join(', ')}</strong>. Opponents with these STAB types can freely attack into your team.`);
+  }
+
+  // === 3. Offensive coverage analysis ===
+  const offensiveCoverage=new Set();
+  team.forEach(p=>{
+    p.moves.filter(m=>m).forEach(m=>{
+      const key=m.toLowerCase().replace(/\s+/g,'-');
+      const d=moveCache[key];
+      if(d&&d.power&&d.power>0)offensiveCoverage.add(d.type);
+    });
+    // Also count STAB types
+    p.types.forEach(t=>offensiveCoverage.add(t));
+  });
+  const missingOffense=TYPES.filter(t=>!offensiveCoverage.has(t));
+  if(missingOffense.length&&team.some(p=>p.moves.some(m=>m))){
+    out.push('');out.push(`<strong>Offensive Coverage Gaps</strong>`);
+    out.push(`Your team has no super-effective coverage for: <strong>${missingOffense.join(', ')}</strong> types. Consider adding moves of these types to handle threats.`);
+  }
+
+  // === 4. Speed tier analysis ===
+  out.push('');out.push(`<strong>Speed Tier Analysis</strong>`);
+  const speedEntries=team.map(p=>({name:p.displayName,spe:actualSpe(p)})).sort((a,b)=>b.spe-a.spe);
+  const THREATS=[
+    {name:'Regieleki',spe:200},{name:'Calyrex-Shadow',spe:222},{name:'Dragapult',spe:213},
+    {name:'Flutter Mane',spe:187},{name:'Chien-Pao',spe:187},{name:'Iron Bundle',spe:188},
+    {name:'Garchomp',spe:154},{name:'Urshifu',spe:142},{name:'Rillaboom',spe:137},
+    {name:'Incineroar',spe:112},{name:'Amoonguss',spe:50}
+  ];
+  // Jolly max speed benchmarks
+  const fastest=speedEntries[0];const slowest=speedEntries[speedEntries.length-1];
+  const outsped=THREATS.filter(t=>t.spe>fastest.spe);
+  const undersped=THREATS.filter(t=>t.spe<slowest.spe);
+
+  out.push(`Fastest: <strong>${fastest.name}</strong> (${fastest.spe}) · Slowest: <strong>${slowest.name}</strong> (${slowest.spe})`);
+  if(outsped.length){
+    out.push(`Common threats that outspeed your fastest: ${outsped.map(t=>`${t.name} (${t.spe})`).join(', ')}.${!hasTailwind&&!hasTrickRoom?' Consider Tailwind or Choice Scarf to compensate.':''}`);
+  }
+  if(hasTailwind)out.push(`✓ Tailwind available — in Tailwind your fastest hits <strong>${fastest.spe*2}</strong>.`);
+  if(hasTrickRoom)out.push(`✓ Trick Room available — ${slowest.name} (${slowest.spe}) moves first under TR.`);
+
+  // === 5. Item/build checks ===
+  out.push('');out.push(`<strong>Build Notes</strong>`);
+  const items=team.map(p=>p.item).filter(i=>i);
+  const dupeItems={};items.forEach(i=>{dupeItems[i]=(dupeItems[i]||0)+1;});
+  const dupes=Object.entries(dupeItems).filter(([,c])=>c>1);
+  if(dupes.length){
+    dupes.forEach(([item,count])=>out.push(`<span style="color:var(--orange)">⚠ ${count} Pokémon holding ${item}</span> — items are unique in VGC, only one per team.`));
+  }
+  const noItem=team.filter(p=>!p.item);
+  if(noItem.length)out.push(`${noItem.map(p=>p.displayName).join(', ')} ${noItem.length===1?'has':'have'} no item set.`);
+  const noMoves=team.filter(p=>!p.moves.some(m=>m));
+  if(noMoves.length)out.push(`${noMoves.map(p=>p.displayName).join(', ')} ${noMoves.length===1?'has':'have'} no moves set.`);
+  if(hasProtect<2&&team.length>=4)out.push(`Only ${hasProtect} Pokémon have Protect. In VGC doubles, Protect is essential on most members — consider adding it to more.`);
+
+  // === 6. Doubles synergy checks ===
+  out.push('');out.push(`<strong>Doubles Synergy</strong>`);
+  const synergies=[];const warnings=[];
+
+  if(hasFakeOut)synergies.push('✓ <strong>Fake Out</strong> available for turn 1 disruption');
+  if(hasRedirect)synergies.push('✓ <strong>Redirection</strong> (Follow Me / Rage Powder) to protect partners');
+  if(hasIntim)synergies.push('✓ <strong>Intimidate</strong> for Attack control');
+  if(team.some(p=>p.moves.includes('Helping-Hand')))synergies.push('✓ <strong>Helping Hand</strong> for damage boost support');
+  if(team.some(p=>p.moves.includes('Icy-Wind')||p.moves.includes('Electroweb')))synergies.push('✓ <strong>Speed control</strong> via Icy Wind / Electroweb');
+  if(team.some(p=>['Wide-Guard','Quick-Guard'].some(m=>p.moves.includes(m))))synergies.push('✓ <strong>Wide/Quick Guard</strong> for spread move protection');
+
+  // EQ/Surf + partner immunity
+  const hasEQ=team.some(p=>p.moves.includes('Earthquake'));
+  const hasSurf=team.some(p=>p.moves.includes('Surf')||p.moves.includes('Muddy-Water'));
+  const hasFlying=team.some(p=>p.types.includes('Flying')||p.ability==='Levitate');
+  const hasWaterAbsorb=team.some(p=>['Water-Absorb','Storm-Drain','Dry-Skin'].includes(p.ability));
+  if(hasEQ&&hasFlying)synergies.push('✓ Earthquake + Flying/Levitate partner — safe spread damage');
+  if(hasEQ&&!hasFlying)warnings.push('⚠ Earthquake user but no Flying-type or Levitate partner — will hit your own team');
+  if(hasSurf&&hasWaterAbsorb)synergies.push('✓ Water spread + Water-immune ability partner');
+
+  // Check for speed control
+  if(!hasTailwind&&!hasTrickRoom&&!team.some(p=>p.moves.some(m=>['Icy-Wind','Electroweb','Scary-Face','Thunder-Wave'].includes(m)))){
+    warnings.push('⚠ No speed control (Tailwind, Trick Room, Icy Wind, Thunder Wave). Your opponent can dictate the pace.');
+  }
+
+  if(!hasFakeOut&&!hasRedirect){
+    warnings.push('⚠ No Fake Out or redirection. Your team may struggle to safely set up or protect key attackers.');
+  }
+
+  if(synergies.length)out.push(...synergies);
+  if(warnings.length)out.push(...warnings);
+
+  if(!synergies.length&&!warnings.length)out.push('Add moves to your team for more detailed synergy analysis.');
+
+  // === 7. Per-Pokemon suggestions ===
+  const suggestions=[];
+  team.forEach(p=>{
+    const notes=[];
+    const hasMoves=p.moves.some(m=>m);
+    const moveTypes=new Set();
+    p.moves.filter(m=>m).forEach(m=>{const d=moveCache[m.toLowerCase().replace(/\s+/g,'-')];if(d)moveTypes.add(d.type);});
+
+    // Check STAB coverage
+    if(hasMoves){
+      p.types.forEach(t=>{
+        if(!moveTypes.has(t))notes.push(`Missing <strong>${t}</strong> STAB move`);
+      });
+    }
+
+    // Check for Protect
+    if(hasMoves&&!p.moves.includes('Protect')&&p.item!=='Assault Vest'){
+      notes.push('Consider <strong>Protect</strong> — essential in VGC doubles');
+    }
+
+    // Nature mismatch check
+    const nm=NM[p.nature]||{};
+    const isPhysical=p.stats.atk>p.stats.spa;
+    const upStat=Object.keys(nm).find(k=>nm[k]>1);
+    const dnStat=Object.keys(nm).find(k=>nm[k]<1);
+    if(upStat==='spa'&&isPhysical&&p.stats.atk>=80)notes.push(`Nature boosts SpA but ${p.displayName} has higher Atk (${p.stats.atk}) — consider a physical nature`);
+    if(upStat==='atk'&&!isPhysical&&p.stats.spa>=80)notes.push(`Nature boosts Atk but ${p.displayName} has higher SpA (${p.stats.spa}) — consider a special nature`);
+
+    // EV check
+    const totalEV=STAT_KEYS.reduce((s,k)=>s+(p.evs[k]||0),0);
+    if(totalEV===0&&hasMoves)notes.push('No EVs invested — make sure to distribute EVs');
+    if(totalEV>508)notes.push(`<span style="color:var(--red)">EV total (${totalEV}) exceeds 508 limit</span>`);
+
+    if(notes.length)suggestions.push({name:p.displayName,sprite:p.sprite,notes});
+  });
+
+  if(suggestions.length){
+    out.push('');out.push(`<strong>Per-Pokémon Suggestions</strong>`);
+    suggestions.forEach(s=>{
+      out.push(`<div style="margin:6px 0;padding:8px;background:var(--bg);border-radius:8px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          ${s.sprite?`<img src="${s.sprite}" width="28" height="28" style="image-rendering:pixelated">`:''}
+          <strong>${s.name}</strong>
+        </div>
+        ${s.notes.map(n=>`<div style="font-size:12px;margin-left:34px;margin-bottom:2px">• ${n}</div>`).join('')}
+      </div>`);
+    });
+  }
+
+  // === Render ===
+  document.getElementById('ai-out').innerHTML=`<div class="ai-out">${out.map(l=>l?`<div style="margin-bottom:4px">${l}</div>`:'<div style="height:8px"></div>').join('')}</div>`;
 }
 
 // --- Init ---
