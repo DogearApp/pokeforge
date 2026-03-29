@@ -97,10 +97,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .edit-sprite{width:48px;height:48px;image-rendering:pixelated}
 .edit-mon-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text)}
 .edit-mon-types{display:flex;gap:4px;margin-top:4px}
-.autofill-btn{padding:6px 14px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:opacity .2s,transform .1s;flex-shrink:0;letter-spacing:.02em}
-.autofill-btn:hover{opacity:.85}
-.autofill-btn:active{transform:scale(.97)}
-.autofill-btn.loading{opacity:.5;pointer-events:none}
+.usage-pct{font-size:10px;color:var(--accent);font-weight:600;margin-left:auto;flex-shrink:0}
 .close-btn{background:var(--bg4);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:15px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .15s,background .15s}
 .close-btn:hover{color:var(--red);background:rgba(255,95,95,0.1)}
 
@@ -201,13 +198,14 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 
 /* Move list */
 .move-list-wrap{max-height:calc(100vh - 340px);min-height:300px;overflow-y:auto}
-.move-list-header{display:grid;grid-template-columns:62px 28px 1fr 38px 38px 32px;gap:4px;padding:6px 16px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:1}
-.move-list-header span:nth-child(4),.move-list-header span:nth-child(5),.move-list-header span:nth-child(6){text-align:right}
+.move-list-header{display:grid;grid-template-columns:62px 28px 1fr 38px 38px 32px 42px;gap:4px;padding:6px 16px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:1}
+.move-list-header span:nth-child(4),.move-list-header span:nth-child(5),.move-list-header span:nth-child(6),.move-list-header span:nth-child(7){text-align:right}
+.mr-use{font-size:10px;text-align:right;color:var(--accent);font-weight:600}
 .move-row-wrap{border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background .12s}
 .move-row-wrap:hover{background:var(--bg3)}
 .move-row-wrap.selected{background:rgba(108,142,255,0.08)}
 .move-row-wrap.popular{border-left:2px solid var(--accent)}
-.move-row{display:grid;grid-template-columns:62px 28px 1fr 38px 38px 32px;gap:4px;padding:7px 16px 2px;align-items:center}
+.move-row{display:grid;grid-template-columns:62px 28px 1fr 38px 38px 32px 42px;gap:4px;padding:7px 16px 2px;align-items:center}
 .mr-type{font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px;color:#fff;text-align:center;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
 .mr-cat{font-size:9px;font-weight:700;text-align:center;line-height:1;color:var(--muted);letter-spacing:.03em}
 .mr-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -364,7 +362,6 @@ footer a:hover{color:var(--text)}
             <button class="mega-toggle" id="mega-btn" onclick="toggleMega()">⬡ Mega</button>
             <div class="mega-select" id="mega-select" style="display:none"></div>
           </div>
-          <button class="autofill-btn" id="autofill-btn" onclick="autoFillSet()">⚡ Auto-Fill</button>
           <button class="close-btn" onclick="closeEdit()">✕</button>
         </div>
 
@@ -422,7 +419,7 @@ footer a:hover{color:var(--text)}
 
           <!-- Column headers -->
           <div class="move-list-header">
-            <span>Type</span><span></span><span>Move</span><span>Pow</span><span>Acc</span><span>PP</span>
+            <span>Type</span><span></span><span>Move</span><span>Pow</span><span>Acc</span><span>PP</span><span>Use</span>
           </div>
 
           <!-- Scrollable move list -->
@@ -912,9 +909,8 @@ function openEdit(i){
   document.getElementById('edit-types').innerHTML=p.types.map(t=>`<span class="tbadge" style="background:${TCOL[t]}">${t}</span>`).join('');
   document.getElementById('e-item').value=p.item||'';
   document.getElementById('e-item').readOnly=!!p.isMega;
-  updateNatureBtn(p.nature||'Jolly');
-  renderNatureDD(p.nature||'Jolly');
-  document.getElementById('e-ability').innerHTML=p.abilities.map(a=>`<option${a===p.ability?' selected':''}>${a}</option>`).join('');
+  renderAbilityWithUsage(p);
+  renderNatureWithUsage(p);
   document.getElementById('tera-opts').innerHTML=TYPES.map(t=>`<span class="tera-opt${p.tera===t?' sel':''}" style="background:${TCOL[t]}" onclick="setTera('${t}')">${t}</span>`).join('');
 
   showMegaControls(p);renderTeamBar();renderEVSliders();
@@ -1014,9 +1010,14 @@ function toggleNatureDD(){
   const dd=document.getElementById('nature-dd');
   dd.classList.toggle('open');
 }
-function renderNatureDD(current){
+function renderNatureDD(current,usageMap){
   const dd=document.getElementById('nature-dd');
-  dd.innerHTML=Object.keys(NM).map(n=>{
+  // Sort natures by usage if available
+  let natures=Object.keys(NM);
+  if(usageMap&&Object.keys(usageMap).length){
+    natures.sort((a,b)=>(usageMap[b]||0)-(usageMap[a]||0));
+  }
+  dd.innerHTML=natures.map(n=>{
     const nm=NM[n];const keys=Object.keys(nm);
     let statHtml='';
     if(keys.length){
@@ -1025,7 +1026,9 @@ function renderNatureDD(current){
     } else {
       statHtml='<span class="no-stat">Neutral</span>';
     }
-    return `<div class="nature-opt${n===current?' active':''}" onclick="selectNature('${n}')">${n} ${statHtml}</div>`;
+    const usage=usageMap?.[n];
+    const usageHtml=usage?`<span class="usage-pct">${(usage*100).toFixed(1)}%</span>`:'';
+    return `<div class="nature-opt${n===current?' active':''}" onclick="selectNature('${n}')" style="display:flex;align-items:center;gap:6px">${n} ${statHtml}${usageHtml}</div>`;
   }).join('');
 }
 function selectNature(n){
@@ -1049,23 +1052,42 @@ function updateNatureBtn(n){
 function setupAC(inputId,ddId,getList,onSelect,popularList){
   const inp=document.getElementById(inputId),dd=document.getElementById(ddId);
   let hlIdx=-1;
-  function showList(list){
+  function showList(list,usageMap){
     hlIdx=-1;
-    dd.innerHTML=list.map((v,i)=>`<div class="ac-item" data-idx="${i}">${v}</div>`).join('');
+    dd.innerHTML=list.map((v,i)=>{
+      const usage=usageMap?.[v];
+      const pctStr=usage?`<span class="usage-pct">${(usage*100).toFixed(1)}%</span>`:'';
+      return `<div class="ac-item" data-idx="${i}" data-value="${v}" style="display:flex;align-items:center;gap:6px">${v}${pctStr}</div>`;
+    }).join('');
     dd.style.display='block';
     dd.querySelectorAll('.ac-item').forEach(el=>{
-      el.addEventListener('mousedown',e=>{e.preventDefault();inp.value=el.textContent;dd.style.display='none';if(onSelect)onSelect(el.textContent);else saveEdit();});
+      el.addEventListener('mousedown',e=>{e.preventDefault();inp.value=el.dataset.value;dd.style.display='none';if(onSelect)onSelect(el.dataset.value);else saveEdit();});
     });
   }
   inp.addEventListener('input',()=>{
     const q=inp.value.toLowerCase().trim();
-    if(!q){if(popularList){showList(popularList);}else{dd.style.display='none';}saveEdit();return;}
-    const list=getList().filter(v=>v.toLowerCase().includes(q)).slice(0,14);
+    const usageMap=editIdx!==null?getItemUsage(team[editIdx]):{};
+    if(!q){
+      if(popularList){
+        // Sort popular list by usage for this pokemon
+        const sorted=[...popularList].sort((a,b)=>(usageMap[b]||0)-(usageMap[a]||0));
+        showList(sorted,usageMap);
+      }else{dd.style.display='none';}
+      saveEdit();return;
+    }
+    let list=getList().filter(v=>v.toLowerCase().includes(q));
+    // Sort matches by usage
+    if(Object.keys(usageMap).length)list.sort((a,b)=>(usageMap[b]||0)-(usageMap[a]||0));
+    list=list.slice(0,14);
     if(!list.length){dd.style.display='none';saveEdit();return;}
-    showList(list);
+    showList(list,usageMap);
   });
   inp.addEventListener('focus',()=>{
-    if(!inp.value.trim()&&popularList)showList(popularList);
+    if(!inp.value.trim()&&popularList){
+      const usageMap=editIdx!==null?getItemUsage(team[editIdx]):{};
+      const sorted=[...popularList].sort((a,b)=>(usageMap[b]||0)-(usageMap[a]||0));
+      showList(sorted,usageMap);
+    }
   });
   inp.addEventListener('keydown',e=>{
     const items=dd.querySelectorAll('.ac-item');
@@ -1160,11 +1182,17 @@ function renderMoveList(){
   const q=(document.getElementById('move-search-input').value||'').toLowerCase();
   const selectedSet=new Set(p.moves.filter(m=>m));
 
+  // Get usage stats for this pokemon
+  const moveUsage=getMoveUsage(p);
+
   // Build list, exclude already-selected moves
   let moves=pool.filter(name=>!selectedSet.has(name)).map(name=>{
     const key=name.toLowerCase().replace(/\s+/g,'-');
     const d=moveCache[key]||null;
-    return {name,key,d,isPopular:POPULAR_MOVES.has(name)};
+    // Match usage by move name (Smogon uses display names with spaces)
+    const usageName=name.replace(/-/g,' ');
+    const usage=moveUsage[usageName]||moveUsage[name]||0;
+    return {name,key,d,isPopular:POPULAR_MOVES.has(name),usage};
   });
 
   // Filter
@@ -1172,8 +1200,10 @@ function renderMoveList(){
   if(moveFilterType)moves=moves.filter(m=>m.d&&m.d.type===moveFilterType);
   if(moveFilterCat)moves=moves.filter(m=>m.d&&m.d.cat===moveFilterCat.toLowerCase());
 
-  // Sort
+  // Sort: by usage first if available, then popular, then loaded, then alpha
+  const hasUsage=moves.some(m=>m.usage>0);
   moves.sort((a,b)=>{
+    if(hasUsage&&(a.usage||b.usage))return(b.usage||0)-(a.usage||0);
     if(a.isPopular!==b.isPopular)return a.isPopular?-1:1;
     if(a.d&&!b.d)return -1;if(!a.d&&b.d)return 1;
     return a.name.localeCompare(b.name);
@@ -1183,22 +1213,18 @@ function renderMoveList(){
   const hasPopular=moves.some(m=>m.isPopular);
 
   let html='';
-  let addedPopularDivider=false,addedOtherDivider=false;
+  let addedDivider=false;
   moves.forEach((m,idx)=>{
-    if(!addedPopularDivider&&m.isPopular){
-      html+='<div class="move-divider">Popular</div>';addedPopularDivider=true;
-    }
-    if(!addedOtherDivider&&!m.isPopular){
-      if(true){
-        html+=`<div class="move-divider">${addedPopularDivider?'Other moves':'All moves'}</div>`;
-      }
-      addedOtherDivider=true;
+    // Add divider between used moves and rarely used
+    if(hasUsage&&!addedDivider&&m.usage<0.01&&idx>0){
+      html+='<div class="move-divider">Other moves</div>';addedDivider=true;
     }
     const d=m.d;
     const catIcon=d?(d.cat==='physical'?'PHY':d.cat==='special'?'SPC':'STA'):'·';
     const typeCol=d?TCOL[d.type]||'var(--muted)':'var(--muted2)';
     const effect=d?d.desc.replace(/\n/g,' '):'';
-    html+=`<div class="move-row-wrap${m.isPopular?' popular':''}" onclick="selectMove('${m.name}')">
+    const useStr=m.usage>0?(m.usage*100).toFixed(1)+'%':'';
+    html+=`<div class="move-row-wrap${m.usage>=0.1?' popular':''}" onclick="selectMove('${m.name}')">
       <div class="move-row">
         <span class="mr-type" style="background:${typeCol}">${d?d.type:'…'}</span>
         <span class="mr-cat">${catIcon}</span>
@@ -1206,6 +1232,7 @@ function renderMoveList(){
         <span class="mr-pow">${d?(d.power||'—'):'·'}</span>
         <span class="mr-acc">${d?(d.accuracy||'—'):'·'}</span>
         <span class="mr-pp">${d?(d.pp||'—'):'·'}</span>
+        <span class="mr-use">${useStr}</span>
       </div>
       ${effect?`<div class="mr-effect">${effect}</div>`:''}
     </div>`;
@@ -1656,109 +1683,71 @@ const VGC_POKEMON=[
   {name:'Excadrill',types:['Ground','Steel'],role:'Attacker',why:'Sand Rush doubles speed in sand'},
 ];
 
-// --- Auto-fill from Smogon ---
-let smogonSets=null;
-async function loadSmogonSets(){
-  if(smogonSets)return smogonSets;
+// --- VGC Usage Stats from Smogon ---
+let usageStats=null;
+async function loadUsageStats(){
+  if(usageStats)return usageStats;
   try{
-    const r=await fetch('https://pkmn.github.io/smogon/data/sets/gen9.json');
-    smogonSets=await r.json();
-    return smogonSets;
+    const r=await fetch('https://pkmn.github.io/smogon/data/stats/gen9vgc2025.json');
+    usageStats=await r.json();
+    return usageStats;
   }catch(e){return null;}
 }
 
-async function autoFillSet(){
-  if(editIdx===null)return;
-  const p=team[editIdx];
-  const btn=document.getElementById('autofill-btn');
-  btn.textContent='Loading…';btn.classList.add('loading');
+function getPokeStats(p){
+  if(!usageStats||!usageStats.pokemon)return null;
+  // Try display name, then formatted name
+  return usageStats.pokemon[p.displayName]||usageStats.pokemon[fmt(p.name)]||null;
+}
 
-  const sets=await loadSmogonSets();
-  btn.textContent='⚡ Auto-Fill';btn.classList.remove('loading');
+function pct(v){return v?(v*100).toFixed(1)+'%':'';}
 
-  if(!sets){alert('Could not load set data. Check your connection.');return;}
+// Populate ability dropdown with usage %
+function renderAbilityWithUsage(p){
+  const stats=getPokeStats(p);
+  const el=document.getElementById('e-ability');
+  el.innerHTML=p.abilities.map(a=>{
+    const usage=stats?.abilities?.[a]||0;
+    const pctStr=usage?` (${pct(usage)})`:''
+    return `<option${a===p.ability?' selected':''}>${a}${pctStr}</option>`;
+  }).join('');
+  // Store clean value
+  el.onchange=()=>{
+    if(editIdx===null)return;
+    team[editIdx].ability=el.value.replace(/\s*\([\d.]+%\)/,'');
+    saveEdit();showAbilityDesc();
+  };
+}
 
-  // Find the pokemon in Smogon data — try display name and variations
-  const searchNames=[p.displayName,p.displayName.replace(/-/g,' '),fmt(p.name)];
-  let pokeData=null;
-  for(const n of searchNames){if(sets[n]){pokeData=sets[n];break;}}
-
-  if(!pokeData){alert(`No competitive set data found for ${p.displayName}.`);return;}
-
-  // Priority: vgc2025 > vgc2024 > vgc2023 > doublesou > first available
-  const formatPriority=['vgc2025','vgc2024','vgc2023','doublesou','battlestadiumdoubles','ou','uu','ru'];
-  let chosenFormat=null;let setData=null;
-  for(const f of formatPriority){
-    if(pokeData[f]){chosenFormat=f;setData=pokeData[f];break;}
+// Populate nature dropdown with usage %
+function renderNatureWithUsage(p){
+  const stats=getPokeStats(p);
+  // Extract nature usage from spreads
+  const natureUsage={};
+  if(stats?.spreads){
+    Object.entries(stats.spreads).forEach(([spread,pctVal])=>{
+      const nat=spread.split(':')[0];
+      if(nat)natureUsage[nat]=(natureUsage[nat]||0)+pctVal;
+    });
   }
-  if(!setData){
-    // Take first available format
-    const firstKey=Object.keys(pokeData)[0];
-    if(firstKey){chosenFormat=firstKey;setData=pokeData[firstKey];}
-  }
-  if(!setData){alert(`No set data available for ${p.displayName}.`);return;}
+  renderNatureDD(p.nature||'Jolly',natureUsage);
+  updateNatureBtn(p.nature||'Jolly');
+}
 
-  // Take first set variant
-  const setName=Object.keys(setData)[0];
-  const s=setData[setName];
+// Add usage to move list items
+function getMoveUsage(p){
+  const stats=getPokeStats(p);
+  return stats?.moves||{};
+}
 
-  // Apply ability
-  if(s.ability){
-    const ab=Array.isArray(s.ability)?s.ability[0]:s.ability;
-    if(p.abilities.includes(ab))p.ability=ab;
-    else if(p.abilities.includes(fmt(ab)))p.ability=fmt(ab);
-  }
-
-  // Apply item
-  if(s.item){
-    p.item=Array.isArray(s.item)?s.item[0]:s.item;
-  }
-
-  // Apply nature
-  if(s.nature){
-    p.nature=Array.isArray(s.nature)?s.nature[0]:s.nature;
-  }
-
-  // Apply moves (flatten slash options)
-  if(s.moves){
-    for(let i=0;i<4&&i<s.moves.length;i++){
-      const mv=s.moves[i];
-      p.moves[i]=Array.isArray(mv)?mv[0]:mv;
-      // Convert to hyphenated format to match movePool
-      p.moves[i]=p.moves[i].replace(/\s+/g,'-');
-    }
-  }
-
-  // Apply EVs — default to standard spread if not specified
-  STAT_KEYS.forEach(k=>p.evs[k]=0);
-  if(s.evs){
-    Object.entries(s.evs).forEach(([k,v])=>{if(STAT_KEYS.includes(k))p.evs[k]=v;});
-  } else {
-    // No EVs in set data — apply a sensible default based on stats
-    const mainOff=p.stats.atk>=p.stats.spa?'atk':'spa';
-    p.evs[mainOff]=252;p.evs.spe=252;p.evs.hp=4;
-  }
-
-  // Apply IVs
-  if(s.ivs){
-    Object.entries(s.ivs).forEach(([k,v])=>{if(p.ivs.hasOwnProperty(k))p.ivs[k]=v;});
-  }
-
-  // Apply tera type
-  if(s.teratypes){
-    const tera=Array.isArray(s.teratypes)?s.teratypes[0]:s.teratypes;
-    if(TYPES.includes(tera))p.tera=tera;
-  }
-
-  // Re-open edit to refresh everything
-  openEdit(editIdx);
-  renderAll();
-  // Trigger description fetches after DOM is updated
-  showItemDesc();showAbilityDesc();
+// Add usage to item dropdown
+function getItemUsage(p){
+  const stats=getPokeStats(p);
+  return stats?.items||{};
 }
 
 // --- Init ---
-loadTeamFromStorage();init();renderAll();
+loadTeamFromStorage();init();loadUsageStats();renderAll();
 // Pre-fetch move details for saved team moves
 (async()=>{
   const allMoves=new Set();
