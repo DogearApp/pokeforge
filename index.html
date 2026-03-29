@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>PokeForge — VGC Team Builder</title>
+<title>IncinForge — VGC Team Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
@@ -18,8 +18,8 @@
   --text: #f0f2f7;
   --muted: #9aa0b8;
   --muted2: #7a8099;
-  --accent: #6c8eff;
-  --accent2: #a78bfa;
+  --accent: #f06030;
+  --accent2: #ff9d4d;
   --gold: #f5c542;
   --red: #ff5f5f;
   --orange: #ff9d4d;
@@ -42,8 +42,8 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 
 /* HERO */
 .hero{padding:4rem 2rem 2.5rem;text-align:center;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,142,255,0.12) 0%, transparent 70%);pointer-events:none}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(108,142,255,0.1);border:1px solid rgba(108,142,255,0.25);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:500;color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:1.2rem}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(240,96,48,0.12) 0%, transparent 70%);pointer-events:none}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(240,96,48,0.1);border:1px solid rgba(240,96,48,0.25);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:500;color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:1.2rem}
 .hero-eyebrow::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
 .hero h1{font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:-.04em;line-height:1.05;margin-bottom:1rem}
@@ -65,7 +65,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--bg4);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;padding:2px 6px;line-height:1;border-radius:4px;display:none;transition:color .15s;z-index:10}
 .clear-btn:hover{color:var(--text)}
 .clear-btn.show{display:block}
-.search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,142,255,0.12)}
+.search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(240,96,48,0.12)}
 .search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none}
 .dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);z-index:200;max-height:260px;overflow-y:auto;box-shadow:0 16px 40px rgba(0,0,0,.5);display:none}
 .ddi{padding:10px 16px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--text);transition:background .15s}
@@ -76,7 +76,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .team-bar::-webkit-scrollbar{height:3px}
 .tslot{flex:0 0 auto;width:140px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px;cursor:pointer;position:relative;transition:all .15s}
 .tslot:hover{background:var(--bg3);border-color:var(--border2)}
-.tslot.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(108,142,255,0.2)}
+.tslot.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(240,96,48,0.2)}
 .tslot.empty{display:flex;align-items:center;justify-content:center;min-height:72px;opacity:.5}
 .tslot.empty:hover{opacity:.8}
 .tslot-head{display:flex;align-items:center;gap:6px;margin-bottom:4px}
@@ -177,7 +177,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .move-slots{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;padding:12px 16px;border-bottom:1px solid var(--border)}
 .mslot{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 10px;cursor:pointer;transition:all .15s;position:relative;min-height:60px}
 .mslot:hover{border-color:var(--border2)}
-.mslot.active{border-color:var(--accent);background:rgba(108,142,255,0.08)}
+.mslot.active{border-color:var(--accent);background:rgba(240,96,48,0.08)}
 .mslot.empty{display:flex;align-items:center;justify-content:center;color:var(--muted2);border-style:dashed;font-size:12px}
 .mslot-top{display:flex;align-items:center;gap:6px;margin-bottom:3px}
 .mslot-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -193,7 +193,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .move-filters{display:flex;gap:3px;margin-top:8px;flex-wrap:wrap;justify-content:center}
 .mf-btn{font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;border:1px solid var(--border);background:var(--bg4);color:var(--muted);cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;flex-shrink:0}
 .mf-btn:hover{border-color:var(--border2);color:var(--text)}
-.mf-btn.on{border-color:var(--accent);color:var(--accent);background:rgba(108,142,255,0.1)}
+.mf-btn.on{border-color:var(--accent);color:var(--accent);background:rgba(240,96,48,0.1)}
 .mf-type{color:#fff;border-color:transparent;padding:2px 5px}
 .mf-type.on{outline:2px solid rgba(255,255,255,.5);outline-offset:1px;opacity:1}
 .mf-type:not(.on){opacity:.4}
@@ -205,7 +205,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .mr-use{font-size:10px;text-align:right;color:var(--accent);font-weight:600}
 .move-row-wrap{border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background .12s}
 .move-row-wrap:hover{background:var(--bg3)}
-.move-row-wrap.selected{background:rgba(108,142,255,0.08)}
+.move-row-wrap.selected{background:rgba(240,96,48,0.08)}
 .move-row-wrap.popular{border-left:2px solid var(--accent)}
 .move-row{display:grid;grid-template-columns:62px 28px 1fr 38px 38px 32px 42px;gap:4px;padding:7px 16px 2px;align-items:center}
 .mr-type{font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px;color:#fff;text-align:center;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
@@ -260,7 +260,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .cov-grid-head{background:var(--bg3);padding:4px;text-align:center;font-size:10px;font-weight:600;color:var(--muted)}
 .cov-grid-type{background:var(--bg3);padding:4px 6px;font-size:8px;font-weight:700;color:#fff;text-align:center;text-transform:uppercase;letter-spacing:.02em}
 .cov-cell{padding:4px;text-align:center;font-size:10px;font-weight:700;min-width:0}
-.cov-cell.immune{background:rgba(108,142,255,0.15);color:var(--accent)}
+.cov-cell.immune{background:rgba(240,96,48,0.15);color:var(--accent)}
 .cov-cell.resist{background:rgba(74,222,128,0.1);color:var(--green)}
 .cov-cell.neutral{background:var(--bg2);color:var(--muted2)}
 .cov-cell.weak{background:rgba(255,157,77,0.12);color:var(--orange)}
@@ -279,11 +279,11 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .speed-ctx{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5}
 .tier-list{max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
 .tier-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:var(--bg3);transition:background .15s}
-.tier-row.mine{background:rgba(108,142,255,0.12);border:1px solid rgba(108,142,255,0.25)}
+.tier-row.mine{background:rgba(240,96,48,0.12);border:1px solid rgba(240,96,48,0.25)}
 .tier-name{font-size:13px;flex:1;font-weight:400}
 .tier-row.mine .tier-name{font-weight:600;color:var(--accent)}
 .tier-pill{font-size:9px;font-weight:700;letter-spacing:.04em;padding:2px 6px;border-radius:5px;text-transform:uppercase}
-.tier-pill.mine{background:rgba(108,142,255,0.2);color:var(--accent)}
+.tier-pill.mine{background:rgba(240,96,48,0.2);color:var(--accent)}
 .tier-pill.ref{background:var(--bg4);color:var(--muted2)}
 .tier-speed{font-size:13px;font-weight:700;color:var(--text);min-width:32px;text-align:right}
 .showdown-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-family:monospace;font-size:11.5px;color:var(--muted);white-space:pre-wrap;line-height:1.8;max-height:300px;overflow-y:auto;margin-bottom:10px}
@@ -310,7 +310,7 @@ footer a:hover{color:var(--text)}
 <body>
 
 <nav>
-  <div class="nav-logo">Poke<span>Forge</span></div>
+  <div class="nav-logo">Incin<span>Forge</span></div>
   <div class="nav-links">
     <a href="#builder">Builder</a>
     <a href="https://www.pokemon.com/us/pokemon-vg-championships" target="_blank">VGC Rules</a>
@@ -472,7 +472,7 @@ footer a:hover{color:var(--text)}
 </div>
 
 <footer>
-  <p>PokeForge — Built for VGC competitors. Powered by <a href="https://pokeapi.co" target="_blank">PokéAPI</a>. Not affiliated with Nintendo or The Pokémon Company.</p>
+  <p>IncinForge — Built for VGC competitors. Powered by <a href="https://pokeapi.co" target="_blank">PokéAPI</a>. Not affiliated with Nintendo or The Pokémon Company.</p>
   <p style="margin-top:6px">Data sourced from <a href="https://bulbapedia.bulbagarden.net" target="_blank">Bulbapedia</a> via PokéAPI.</p>
 </footer>
 
@@ -725,11 +725,11 @@ function removePoke(i,e){e.stopPropagation();team.splice(i,1);if(editIdx===i)clo
 function renderAll(){renderTeamBar();renderWeakness();renderSpeedTiers();renderStats();renderExport();saveTeamToStorage();}
 
 function saveTeamToStorage(){
-  try{localStorage.setItem('pokeforge-team',JSON.stringify(team));}catch(e){}
+  try{localStorage.setItem('incinforge-team',JSON.stringify(team));}catch(e){}
 }
 function loadTeamFromStorage(){
   try{
-    const raw=localStorage.getItem('pokeforge-team');
+    const raw=localStorage.getItem('incinforge-team')||localStorage.getItem('pokeforge-team');
     if(!raw)return;
     const saved=JSON.parse(raw);
     if(!Array.isArray(saved)||!saved.length)return;
