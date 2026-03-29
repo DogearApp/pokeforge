@@ -84,6 +84,12 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .tm-del{color:var(--muted2);cursor:pointer;font-size:11px;margin-left:2px}
 .tm-del:hover{color:var(--red)}
 
+/* TEAM NOTES */
+.team-notes{margin-bottom:8px}
+.team-notes-input{width:100%;padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none;resize:vertical;min-height:50px;max-height:200px;line-height:1.5;transition:border-color .2s}
+.team-notes-input:focus{border-color:var(--accent)}
+.team-notes-input::placeholder{color:var(--muted2)}
+
 /* TEAM BAR */
 .team-bar{display:flex;gap:8px;margin-bottom:1rem;overflow-x:auto;padding:4px 0}
 .team-bar::-webkit-scrollbar{height:3px}
@@ -430,6 +436,11 @@ footer a:hover{color:var(--text)}
 
   <!-- TEAM MANAGER -->
   <div class="team-mgr" id="team-mgr"></div>
+
+  <!-- TEAM NOTES -->
+  <div class="team-notes" id="team-notes-wrap" style="display:none">
+    <textarea id="team-notes" class="team-notes-input" placeholder="Write your team strategy, lead combos, win conditions..." oninput="saveTeamNotes()"></textarea>
+  </div>
 
   <!-- TEAM BAR -->
   <div class="team-bar" id="team-bar"></div>
@@ -928,6 +939,15 @@ function renameTeam(idx,name){
   saveAllTeams();renderTeamMgr();
 }
 
+function toggleNotes(){
+  const wrap=document.getElementById('team-notes-wrap');
+  wrap.style.display=wrap.style.display==='none'?'block':'none';
+}
+function saveTeamNotes(){
+  allTeams[activeTeamIdx].notes=document.getElementById('team-notes').value;
+  saveAllTeams();
+}
+
 function renderTeamMgr(){
   const el=document.getElementById('team-mgr');
   let html='';
@@ -939,9 +959,11 @@ function renderTeamMgr(){
     </div>`;
   });
   html+=`<button class="tm-btn" onclick="newTeam()">+ New Team</button>`;
-  // Rename active team
+  html+=`<button class="tm-btn" onclick="toggleNotes()">Notes</button>`;
   html+=`<input class="tm-name-input" value="${allTeams[activeTeamIdx].name}" onchange="renameTeam(${activeTeamIdx},this.value)" placeholder="Team name"/>`;
   el.innerHTML=html;
+  // Load notes for active team
+  document.getElementById('team-notes').value=allTeams[activeTeamIdx].notes||'';
 }
 
 function defWeak(types){
