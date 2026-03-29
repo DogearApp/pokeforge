@@ -110,6 +110,15 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .build-field .bf-desc{font-size:12px;color:#b0b8d0;margin-top:4px;line-height:1.4;min-height:14px}
 .nat-up{color:var(--green);font-weight:600}
 .nat-down{color:var(--red);font-weight:600}
+.nature-wrap{position:relative}
+.nature-selected{width:100%;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;transition:border-color .2s}
+.nature-selected:hover{border-color:var(--border2)}
+.nature-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);z-index:300;max-height:240px;overflow-y:auto;box-shadow:0 12px 32px rgba(0,0,0,.5);display:none}
+.nature-dd.open{display:block}
+.nature-opt{padding:7px 12px;font-size:13px;cursor:pointer;color:var(--text);transition:background .15s;display:flex;align-items:center;gap:6px}
+.nature-opt:hover{background:var(--bg3)}
+.nature-opt.active{background:var(--bg3)}
+.nature-opt .no-stat{font-size:12px;color:var(--muted2)}
 .ac-wrap{position:relative}
 .ac-wrap input{width:100%;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none;transition:border-color .2s}
 .ac-wrap input:focus{border-color:var(--accent)}
@@ -342,8 +351,10 @@ footer a:hover{color:var(--text)}
           </div>
           <div class="build-field">
             <label>Nature</label>
-            <select id="e-nature" onchange="onNatureChange()"></select>
-            <div class="bf-desc" id="desc-nature"></div>
+            <div class="nature-wrap">
+              <div class="nature-selected" id="nature-btn" onclick="toggleNatureDD()"><span id="nature-btn-text">Jolly</span></div>
+              <div class="nature-dd" id="nature-dd"></div>
+            </div>
           </div>
         </div>
 
@@ -645,6 +656,8 @@ searchEl.addEventListener('input',()=>{
 document.addEventListener('click',e=>{
   if(!document.getElementById('sw').contains(e.target))ddEl.style.display='none';
   document.querySelectorAll('.ac-dd').forEach(d=>{if(!d.parentElement.contains(e.target))d.style.display='none';});
+  const nw=document.querySelector('.nature-wrap');const ndd=document.getElementById('nature-dd');
+  if(nw&&ndd&&!nw.contains(e.target))ndd.classList.remove('open');
 });
 
 async function addPoke(name){
@@ -791,19 +804,13 @@ function openEdit(i){
   document.getElementById('edit-types').innerHTML=p.types.map(t=>`<span class="tbadge" style="background:${TCOL[t]}">${t}</span>`).join('');
   document.getElementById('e-item').value=p.item||'';
   document.getElementById('e-item').readOnly=!!p.isMega;
-  const natureEl=document.getElementById('e-nature');
-  natureEl.innerHTML=Object.keys(NM).map(n=>{
-    const nm=NM[n];const keys=Object.keys(nm);
-    let label=n;
-    label=n;
-    return `<option value="${n}"${n===p.nature?' selected':''}>${label}</option>`;
-  }).join('');
-  natureEl.value=p.nature||'Jolly';
+  updateNatureBtn(p.nature||'Jolly');
+  renderNatureDD(p.nature||'Jolly');
   document.getElementById('e-ability').innerHTML=p.abilities.map(a=>`<option${a===p.ability?' selected':''}>${a}</option>`).join('');
   document.getElementById('tera-opts').innerHTML=TYPES.map(t=>`<span class="tera-opt${p.tera===t?' sel':''}" style="background:${TCOL[t]}" onclick="setTera('${t}')">${t}</span>`).join('');
 
   showMegaControls(p);renderTeamBar();renderEVSliders();
-  showAbilityDesc();showItemDesc();showNatureDesc();
+  showAbilityDesc();showItemDesc();
 
   // Move panel
   document.getElementById('move-search-input').value='';
@@ -825,7 +832,7 @@ function setTera(t){if(editIdx===null)return;team[editIdx].tera=t;document.query
 function saveEdit(){
   if(editIdx===null)return;const p=team[editIdx];
   p.item=document.getElementById('e-item').value;
-  p.nature=document.getElementById('e-nature').value;p.ability=document.getElementById('e-ability').value;
+  p.ability=document.getElementById('e-ability').value;
   if(p.isMega&&p.megaForm){const mi=MEGA_DATA[p.name]?.find(m=>m.suffix===p.megaForm);if(mi&&mi.stone)p.item=mi.stone;}
   renderAll();
 }
@@ -892,7 +899,41 @@ function showNatureDesc(){
   document.getElementById('desc-nature').innerHTML=getNatureDesc(document.getElementById('e-nature').value);
 }
 function onAbilityChange(){saveEdit();showAbilityDesc();}
-function onNatureChange(){saveEdit();showNatureDesc();}
+
+function toggleNatureDD(){
+  const dd=document.getElementById('nature-dd');
+  dd.classList.toggle('open');
+}
+function renderNatureDD(current){
+  const dd=document.getElementById('nature-dd');
+  dd.innerHTML=Object.keys(NM).map(n=>{
+    const nm=NM[n];const keys=Object.keys(nm);
+    let statHtml='';
+    if(keys.length){
+      const up=keys.find(k=>nm[k]>1),dn=keys.find(k=>nm[k]<1);
+      statHtml=`<span class="nat-up">+${STAT_NAMES[up]}</span> <span class="nat-down">-${STAT_NAMES[dn]}</span>`;
+    } else {
+      statHtml='<span class="no-stat">Neutral</span>';
+    }
+    return `<div class="nature-opt${n===current?' active':''}" onclick="selectNature('${n}')">${n} ${statHtml}</div>`;
+  }).join('');
+}
+function selectNature(n){
+  if(editIdx===null)return;
+  team[editIdx].nature=n;
+  updateNatureBtn(n);
+  document.getElementById('nature-dd').classList.remove('open');
+  renderEVSliders();renderAll();
+}
+function updateNatureBtn(n){
+  const nm=NM[n]||{};const keys=Object.keys(nm);
+  let html=n;
+  if(keys.length){
+    const up=keys.find(k=>nm[k]>1),dn=keys.find(k=>nm[k]<1);
+    html=`${n} <span class="nat-up">+${STAT_NAMES[up]}</span> <span class="nat-down">-${STAT_NAMES[dn]}</span>`;
+  }
+  document.getElementById('nature-btn-text').innerHTML=html;
+}
 
 // --- Item autocomplete ---
 function setupAC(inputId,ddId,getList,onSelect,popularList){
