@@ -847,7 +847,8 @@ async function fetchAbilityDesc(name){
   try{const r=await fetch(`https://pokeapi.co/api/v2/ability/${key}`);const d=await r.json();
     const en=d.effect_entries.find(e=>e.language.name==='en');
     const short=d.flavor_text_entries.filter(e=>e.language.name==='en').pop();
-    const desc=en?.short_effect||short?.flavor_text||'';
+    let desc=en?.short_effect||short?.flavor_text||'';
+    desc=desc.replace(/\$effect_chance%?/g,'').replace(/(\d+)( chance)/g,'$1%$2');
     abilityCache[key]=desc;return desc;
   }catch(e){return '';}
 }
@@ -857,7 +858,8 @@ async function fetchItemDesc(name){
   try{const r=await fetch(`https://pokeapi.co/api/v2/item/${key}`);const d=await r.json();
     const en=d.effect_entries.find(e=>e.language.name==='en');
     const short=d.flavor_text_entries.filter(e=>e.language.name==='en').pop();
-    const desc=en?.short_effect||short?.flavor_text||'';
+    let desc=en?.short_effect||short?.flavor_text||'';
+    desc=desc.replace(/\$effect_chance%?/g,'').replace(/(\d+)( chance)/g,'$1%$2');
     itemCache[key]=desc;return desc;
   }catch(e){return '';}
 }
