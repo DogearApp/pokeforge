@@ -496,6 +496,8 @@ footer a:hover{color:var(--text)}
           <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Export</div>
           <div class="showdown-box" id="sdbox">Add Pokémon to generate paste.</div>
           <button class="copy-btn" onclick="copyPaste()">Copy to Clipboard</button>
+          <button class="copy-btn" style="background:var(--accent2);margin-top:6px" onclick="shareTeamURL()">Share Team via URL</button>
+          <div id="share-msg" style="font-size:12px;margin-top:6px"></div>
           <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px">Import</div>
           <textarea id="import-box" class="showdown-box" style="width:100%;min-height:120px;resize:vertical;cursor:text" placeholder="Paste a Showdown team here..."></textarea>
           <button class="copy-btn" style="background:var(--accent2);margin-top:8px" onclick="importPaste()">Import Team</button>
@@ -1961,6 +1963,32 @@ function parseShowdownBlock(block){
   return result.species?result:null;
 }
 
+// --- Share via URL ---
+function shareTeamURL(){
+  const msgEl=document.getElementById('share-msg');
+  if(!team.length){msgEl.innerHTML='<span style="color:var(--red)">Add Pokémon first.</span>';return;}
+  const paste=document.getElementById('sdbox').textContent;
+  const encoded=btoa(unescape(encodeURIComponent(paste)));
+  const url=window.location.origin+window.location.pathname+'?team='+encoded;
+  navigator.clipboard.writeText(url);
+  msgEl.innerHTML='<span style="color:var(--green)">Link copied to clipboard!</span>';
+  setTimeout(()=>{msgEl.innerHTML='';},3000);
+}
+
+async function loadTeamFromURL(){
+  const params=new URLSearchParams(window.location.search);
+  const teamParam=params.get('team');
+  if(!teamParam)return false;
+  try{
+    const paste=decodeURIComponent(escape(atob(teamParam)));
+    document.getElementById('import-box').value=paste;
+    await importPaste();
+    // Clean URL without reload
+    window.history.replaceState({},'',window.location.pathname);
+    return true;
+  }catch(e){return false;}
+}
+
 // --- Damage Calculator (two-sided) ---
 let calc={
   p1Idx:0,p2Idx:1,
@@ -2158,6 +2186,12 @@ function renderCalc(){
 
 // --- Init ---
 loadTeamFromStorage();init();loadUsageStats();renderAll();
+// Check for shared team in URL
+if(window.location.search.includes('team=')){
+  // Clear localStorage team so the shared one takes priority
+  team=[];
+  init().then(()=>loadTeamFromURL());
+}
 // Pre-fetch move details for saved team moves
 (async()=>{
   const allMoves=new Set();
