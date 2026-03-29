@@ -62,7 +62,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .search-box{position:relative}
 .search-box input{width:100%;padding:12px 18px 12px 46px;font-size:15px;font-family:'DM Sans',sans-serif;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
 .search-box input::placeholder{color:var(--muted2)}
-.clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted2);font-size:16px;cursor:pointer;padding:4px;line-height:1;border-radius:4px;display:none;transition:color .15s}
+.clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--bg4);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;padding:2px 6px;line-height:1;border-radius:4px;display:none;transition:color .15s;z-index:10}
 .clear-btn:hover{color:var(--text)}
 .clear-btn.show{display:block}
 .search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,142,255,0.12)}
@@ -416,9 +416,11 @@ footer a:hover{color:var(--text)}
           <div class="move-slots" id="move-slots"></div>
 
           <!-- Search & filters -->
-          <div class="move-search" style="position:relative">
-            <input id="move-search-input" placeholder="Search moves…" oninput="renderMoveList();toggleClear('move-search-input','clear-moves')" autocomplete="off"/>
-            <button class="clear-btn" id="clear-moves" onclick="clearInput('move-search-input','clear-moves');renderMoveList()" style="top:18px">✕</button>
+          <div class="move-search">
+            <div style="position:relative">
+              <input id="move-search-input" placeholder="Search moves…" oninput="renderMoveList();toggleClear('move-search-input','clear-moves')" autocomplete="off"/>
+              <button class="clear-btn" id="clear-moves" onclick="clearInput('move-search-input','clear-moves');renderMoveList()">✕</button>
+            </div>
             <div class="move-filters" id="move-filters"></div>
           </div>
 
