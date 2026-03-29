@@ -1381,6 +1381,34 @@ function runAI(){
     out.push(`Nobody on your team resists: <strong>${unresisted.join(', ')}</strong>. Opponents with these STAB types can freely attack into your team.`);
   }
 
+  // === 2b. Pokémon recommendations to cover weaknesses ===
+  const teamNames=new Set(team.map(p=>p.displayName));
+  const problemTypes=[...critical,...unresisted].filter((t,i,a)=>a.indexOf(t)===i);
+  if(problemTypes.length&&team.length<6){
+    out.push('');out.push(`<strong>Recommended Pokémon to Cover Weaknesses</strong>`);
+    // Score each VGC mon by how many problem types they resist/are immune to
+    const recs=VGC_POKEMON.filter(v=>!teamNames.has(v.name)).map(v=>{
+      let score=0;const covers=[];
+      problemTypes.forEach(t=>{
+        let mult=1;
+        v.types.forEach(def=>{const c=TC[t]||{};if(c[def]!==undefined)mult*=c[def];});
+        if(mult<1){score+=2;covers.push(t+' (resist)');}
+        else if(mult===0){score+=3;covers.push(t+' (immune)');}
+      });
+      return{...v,score,covers};
+    }).filter(v=>v.score>0).sort((a,b)=>b.score-a.score).slice(0,5);
+
+    if(recs.length){
+      recs.forEach(r=>{
+        out.push(`<div style="margin:4px 0;padding:8px;background:var(--bg);border-radius:8px">
+          <strong>${r.name}</strong> <span style="font-size:11px;color:var(--muted)">${r.types.map(t=>`<span class="wlabel" style="background:${TCOL[t]};display:inline-block;font-size:8px;padding:1px 5px">${t}</span>`).join(' ')}</span> — ${r.role}
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">${r.why}</div>
+          <div style="font-size:11px;color:var(--green);margin-top:2px">Covers: ${r.covers.join(', ')}</div>
+        </div>`);
+      });
+    }
+  }
+
   // === 3. Offensive coverage analysis ===
   const offensiveCoverage=new Set();
   team.forEach(p=>{
@@ -1395,7 +1423,48 @@ function runAI(){
   const missingOffense=TYPES.filter(t=>!offensiveCoverage.has(t));
   if(missingOffense.length&&team.some(p=>p.moves.some(m=>m))){
     out.push('');out.push(`<strong>Offensive Coverage Gaps</strong>`);
-    out.push(`Your team has no super-effective coverage for: <strong>${missingOffense.join(', ')}</strong> types. Consider adding moves of these types to handle threats.`);
+    out.push(`Your team has no super-effective coverage for: <strong>${missingOffense.join(', ')}</strong> types.`);
+
+    // Check each team member's move pool for coverage moves
+    const coverageRecs=[];
+    missingOffense.forEach(missType=>{
+      team.forEach(p=>{
+        const pool=p.movePool||[];
+        const available=pool.filter(mName=>{
+          const key=mName.toLowerCase().replace(/\s+/g,'-');
+          const d=moveCache[key];
+          return d&&d.type===missType&&d.power&&d.power>=60;
+        }).sort((a,b)=>{
+          const da=moveCache[a.toLowerCase().replace(/\s+/g,'-')];
+          const db=moveCache[b.toLowerCase().replace(/\s+/g,'-')];
+          return(db?.power||0)-(da?.power||0);
+        }).slice(0,2);
+        if(available.length){
+          available.forEach(mName=>{
+            const d=moveCache[mName.toLowerCase().replace(/\s+/g,'-')];
+            coverageRecs.push({mon:p.displayName,sprite:p.sprite,move:mName.replace(/-/g,' '),type:missType,power:d.power,cat:d.cat});
+          });
+        }
+      });
+    });
+
+    if(coverageRecs.length){
+      out.push('');out.push(`<strong>Recommended Coverage Moves</strong>`);
+      // Group by missing type
+      const byType={};
+      coverageRecs.forEach(r=>{if(!byType[r.type])byType[r.type]=[];byType[r.type].push(r);});
+      Object.entries(byType).forEach(([type,recs])=>{
+        out.push(`<div style="margin:6px 0"><span class="wlabel" style="background:${TCOL[type]};display:inline-block">${type}</span></div>`);
+        recs.slice(0,4).forEach(r=>{
+          const catLabel=r.cat==='physical'?'PHY':r.cat==='special'?'SPC':'STA';
+          out.push(`<div style="margin:2px 0 2px 8px;font-size:12px;display:flex;align-items:center;gap:6px">
+            ${r.sprite?`<img src="${r.sprite}" width="24" height="24" style="image-rendering:pixelated">`:''}
+            <strong>${r.mon}</strong> can learn <strong>${r.move}</strong>
+            <span style="color:var(--muted)">${catLabel} · ${r.power} BP</span>
+          </div>`);
+        });
+      });
+    }
   }
 
   // === 4. Speed tier analysis ===
@@ -1478,7 +1547,21 @@ function runAI(){
     // Check STAB coverage
     if(hasMoves){
       p.types.forEach(t=>{
-        if(!moveTypes.has(t))notes.push(`Missing <strong>${t}</strong> STAB move`);
+        if(!moveTypes.has(t)){
+          // Find best STAB moves from their pool
+          const stabOptions=(p.movePool||[]).filter(mName=>{
+            const d=moveCache[mName.toLowerCase().replace(/\s+/g,'-')];
+            return d&&d.type===t&&d.power&&d.power>=60;
+          }).sort((a,b)=>{
+            const da=moveCache[a.toLowerCase().replace(/\s+/g,'-')];
+            const db=moveCache[b.toLowerCase().replace(/\s+/g,'-')];
+            return(db?.power||0)-(da?.power||0);
+          }).slice(0,3).map(m=>{
+            const d=moveCache[m.toLowerCase().replace(/\s+/g,'-')];
+            return`${m.replace(/-/g,' ')} (${d.power} BP)`;
+          });
+          notes.push(`Missing <strong>${t}</strong> STAB${stabOptions.length?' — try: '+stabOptions.join(', '):''}`);
+        }
       });
     }
 
@@ -1519,6 +1602,54 @@ function runAI(){
   // === Render ===
   document.getElementById('ai-out').innerHTML=`<div class="ai-out">${out.map(l=>l?`<div style="margin-bottom:4px">${l}</div>`:'<div style="height:8px"></div>').join('')}</div>`;
 }
+
+// VGC Pokemon database for recommendations
+const VGC_POKEMON=[
+  {name:'Incineroar',types:['Fire','Dark'],role:'Support',why:'Intimidate + Fake Out + Parting Shot'},
+  {name:'Rillaboom',types:['Grass'],role:'Offense',why:'Grassy Surge + Fake Out + priority Grassy Glide'},
+  {name:'Flutter Mane',types:['Ghost','Fairy'],role:'Special Attacker',why:'Extremely fast, high SpA, Protosynthesis'},
+  {name:'Landorus',types:['Ground','Flying'],role:'Offense',why:'Intimidate + Earthquake immune to own EQ'},
+  {name:'Amoonguss',types:['Grass','Poison'],role:'Support',why:'Rage Powder redirection + Spore'},
+  {name:'Urshifu',types:['Water','Dark'],role:'Physical Attacker',why:'Unseen Fist ignores Protect'},
+  {name:'Tornadus',types:['Flying'],role:'Support',why:'Prankster Tailwind + Rain setter'},
+  {name:'Kingambit',types:['Dark','Steel'],role:'Attacker',why:'Supreme Overlord boost + great bulk'},
+  {name:'Gholdengo',types:['Steel','Ghost'],role:'Special Attacker',why:'Good As Gold blocks status'},
+  {name:'Iron Hands',types:['Fighting','Electric'],role:'Bulky Attacker',why:'Huge HP + Fake Out + Drain Punch'},
+  {name:'Garchomp',types:['Dragon','Ground'],role:'Offense',why:'Fast EQ user + Dragon STAB'},
+  {name:'Arcanine',types:['Fire'],role:'Support',why:'Intimidate + Will-O-Wisp + Snarl'},
+  {name:'Pelipper',types:['Water','Flying'],role:'Support',why:'Drizzle rain setter + Tailwind'},
+  {name:'Torkoal',types:['Fire'],role:'Trick Room',why:'Drought sun setter + slow for TR'},
+  {name:'Dondozo',types:['Water'],role:'Tank',why:'Unaware wall + Order Up combo'},
+  {name:'Tatsugiri',types:['Dragon','Water'],role:'Support',why:'Commander combo with Dondozo'},
+  {name:'Annihilape',types:['Fighting','Ghost'],role:'Attacker',why:'Rage Fist + Bulk Up + Drain Punch'},
+  {name:'Chien-Pao',types:['Dark','Ice'],role:'Physical Attacker',why:'Sword of Ruin + fast Ice/Dark STAB'},
+  {name:'Chi-Yu',types:['Dark','Fire'],role:'Special Attacker',why:'Beads of Ruin SpD drop + Heat Wave'},
+  {name:'Heatran',types:['Fire','Steel'],role:'Special Attacker',why:'Great defensive typing + Flash Fire'},
+  {name:'Cresselia',types:['Psychic'],role:'Support',why:'Bulk + Trick Room + Helping Hand'},
+  {name:'Dusclops',types:['Ghost'],role:'Trick Room',why:'Eviolite bulk + Trick Room + Ally Switch'},
+  {name:'Grimmsnarl',types:['Dark','Fairy'],role:'Support',why:'Prankster screens + Thunder Wave'},
+  {name:'Whimsicott',types:['Grass','Fairy'],role:'Support',why:'Prankster Tailwind + Encore + Helping Hand'},
+  {name:'Calyrex-Shadow',types:['Psychic','Ghost'],role:'Special Attacker',why:'Highest SpA + As One ability'},
+  {name:'Calyrex-Ice',types:['Psychic','Ice'],role:'Trick Room',why:'As One + slow + massive Atk'},
+  {name:'Kyogre',types:['Water'],role:'Special Attacker',why:'Drizzle + Water Spout'},
+  {name:'Groudon',types:['Ground'],role:'Physical Attacker',why:'Drought + Precipice Blades'},
+  {name:'Zacian',types:['Fairy','Steel'],role:'Physical Attacker',why:'Intrepid Sword + insane Atk'},
+  {name:'Ogerpon',types:['Grass'],role:'Attacker',why:'Versatile masks + Defiant + great speed'},
+  {name:'Farigiraf',types:['Normal','Psychic'],role:'Trick Room',why:'Armor Tail blocks priority + TR'},
+  {name:'Indeedee',types:['Psychic','Normal'],role:'Support',why:'Psychic Surge + Follow Me + Helping Hand'},
+  {name:'Porygon2',types:['Normal'],role:'Trick Room',why:'Eviolite bulk + Trick Room + Recover'},
+  {name:'Tsareena',types:['Grass'],role:'Support',why:'Queenly Majesty blocks priority'},
+  {name:'Scizor',types:['Bug','Steel'],role:'Physical Attacker',why:'Technician Bullet Punch priority'},
+  {name:'Metagross',types:['Steel','Psychic'],role:'Physical Attacker',why:'Clear Body + great bulk + Atk'},
+  {name:'Tyranitar',types:['Rock','Dark'],role:'Bulky Attacker',why:'Sand Stream + great mixed bulk'},
+  {name:'Dragonite',types:['Dragon','Flying'],role:'Attacker',why:'Multiscale + Extreme Speed priority'},
+  {name:'Salamence',types:['Dragon','Flying'],role:'Attacker',why:'Intimidate + great mixed offense'},
+  {name:'Ferrothorn',types:['Grass','Steel'],role:'Wall',why:'Incredible defensive typing + Leech Seed'},
+  {name:'Corviknight',types:['Flying','Steel'],role:'Wall',why:'Mirror Armor + Tailwind + bulk'},
+  {name:'Toxapex',types:['Poison','Water'],role:'Wall',why:'Regenerator + incredible defenses'},
+  {name:'Clefable',types:['Fairy'],role:'Support',why:'Follow Me + Helping Hand + Magic Guard'},
+  {name:'Excadrill',types:['Ground','Steel'],role:'Attacker',why:'Sand Rush doubles speed in sand'},
+];
 
 // --- Init ---
 loadTeamFromStorage();init();renderAll();
