@@ -71,6 +71,19 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .ddi{padding:10px 16px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--text);transition:background .15s}
 .ddi:hover{background:var(--bg3)}
 
+/* TEAM MANAGER */
+.team-mgr{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.tm-slot{padding:5px 12px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.tm-slot:hover{border-color:var(--border2);color:var(--text)}
+.tm-slot.active{border-color:var(--accent);color:var(--accent);background:rgba(240,96,48,0.1)}
+.tm-slot .tm-count{font-size:10px;color:var(--muted2)}
+.tm-btn{padding:5px 10px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid var(--border);background:var(--bg4);color:var(--muted);cursor:pointer;transition:all .15s}
+.tm-btn:hover{border-color:var(--border2);color:var(--text)}
+.tm-name-input{padding:4px 8px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none;width:120px}
+.tm-name-input:focus{border-color:var(--accent)}
+.tm-del{color:var(--muted2);cursor:pointer;font-size:11px;margin-left:2px}
+.tm-del:hover{color:var(--red)}
+
 /* TEAM BAR */
 .team-bar{display:flex;gap:8px;margin-bottom:1rem;overflow-x:auto;padding:4px 0}
 .team-bar::-webkit-scrollbar{height:3px}
@@ -377,6 +390,9 @@ footer a:hover{color:var(--text)}
       <div class="dropdown" id="pdd"></div>
     </div>
   </div>
+
+  <!-- TEAM MANAGER -->
+  <div class="team-mgr" id="team-mgr"></div>
 
   <!-- TEAM BAR -->
   <div class="team-bar" id="team-bar"></div>
@@ -799,19 +815,82 @@ async function addPoke(name){
 }
 
 function removePoke(i,e){e.stopPropagation();team.splice(i,1);if(editIdx===i)closeEdit();else if(editIdx!==null&&editIdx>i){editIdx--;openEdit(editIdx);}renderAll();}
-function renderAll(){renderTeamBar();renderWeakness();renderSpeedTiers();renderStats();renderExport();saveTeamToStorage();}
+function renderAll(){renderTeamMgr();renderTeamBar();renderWeakness();renderSpeedTiers();renderStats();renderExport();saveTeamToStorage();}
 
-function saveTeamToStorage(){
-  try{localStorage.setItem('incinforge-team',JSON.stringify(team));}catch(e){}
+// --- Multi-team storage ---
+let allTeams=[{name:'Team 1',pokemon:[]}];
+let activeTeamIdx=0;
+
+function saveAllTeams(){
+  allTeams[activeTeamIdx].pokemon=team;
+  try{localStorage.setItem('incinforge-teams',JSON.stringify({teams:allTeams,active:activeTeamIdx}));}catch(e){}
 }
+function saveTeamToStorage(){saveAllTeams();}
+
 function loadTeamFromStorage(){
   try{
-    const raw=localStorage.getItem('incinforge-team')||localStorage.getItem('pokeforge-team');
-    if(!raw)return;
-    const saved=JSON.parse(raw);
-    if(!Array.isArray(saved)||!saved.length)return;
-    team=saved;
+    const raw=localStorage.getItem('incinforge-teams');
+    if(raw){
+      const d=JSON.parse(raw);
+      if(d.teams&&d.teams.length){allTeams=d.teams;activeTeamIdx=d.active||0;team=allTeams[activeTeamIdx].pokemon||[];return;}
+    }
+    // Migrate from old single-team format
+    const old=localStorage.getItem('incinforge-team')||localStorage.getItem('pokeforge-team');
+    if(old){
+      const saved=JSON.parse(old);
+      if(Array.isArray(saved)&&saved.length){allTeams=[{name:'Team 1',pokemon:saved}];team=saved;}
+    }
   }catch(e){}
+}
+
+function switchTeam(idx){
+  if(idx===activeTeamIdx)return;
+  allTeams[activeTeamIdx].pokemon=team;
+  activeTeamIdx=idx;
+  team=allTeams[idx].pokemon||[];
+  if(editIdx!==null)closeEdit();
+  renderAll();renderTeamMgr();
+}
+
+function newTeam(){
+  allTeams[activeTeamIdx].pokemon=team;
+  const num=allTeams.length+1;
+  allTeams.push({name:'Team '+num,pokemon:[]});
+  activeTeamIdx=allTeams.length-1;
+  team=[];
+  if(editIdx!==null)closeEdit();
+  renderAll();renderTeamMgr();
+}
+
+function deleteTeam(idx){
+  if(allTeams.length<=1)return;
+  allTeams.splice(idx,1);
+  if(activeTeamIdx>=allTeams.length)activeTeamIdx=allTeams.length-1;
+  if(activeTeamIdx===idx||activeTeamIdx>=allTeams.length)activeTeamIdx=Math.max(0,idx-1);
+  team=allTeams[activeTeamIdx].pokemon||[];
+  if(editIdx!==null)closeEdit();
+  renderAll();renderTeamMgr();
+}
+
+function renameTeam(idx,name){
+  allTeams[idx].name=name||('Team '+(idx+1));
+  saveAllTeams();renderTeamMgr();
+}
+
+function renderTeamMgr(){
+  const el=document.getElementById('team-mgr');
+  let html='';
+  allTeams.forEach((t,i)=>{
+    const count=t.pokemon?t.pokemon.length:0;
+    html+=`<div class="tm-slot${i===activeTeamIdx?' active':''}" onclick="switchTeam(${i})">
+      ${t.name} <span class="tm-count">(${count})</span>
+      ${allTeams.length>1?`<span class="tm-del" onclick="event.stopPropagation();if(confirm('Delete ${t.name}?'))deleteTeam(${i})">✕</span>`:''}
+    </div>`;
+  });
+  html+=`<button class="tm-btn" onclick="newTeam()">+ New Team</button>`;
+  // Rename active team
+  html+=`<input class="tm-name-input" value="${allTeams[activeTeamIdx].name}" onchange="renameTeam(${activeTeamIdx},this.value)" placeholder="Team name"/>`;
+  el.innerHTML=html;
 }
 
 function defWeak(types){
