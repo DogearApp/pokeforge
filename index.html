@@ -333,6 +333,21 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .calc-hp-fill{height:100%;border-radius:5px;transition:width .3s}
 .calc-breakdown{font-size:11px;color:var(--muted);line-height:1.6}
 .calc-side-mods{margin:8px 0;padding:0;gap:4px}
+
+/* THREATS */
+.threat-grid{display:grid;grid-template-columns:200px repeat(var(--team-cols),1fr);gap:1px;background:var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.threat-head{background:var(--bg3);padding:8px;text-align:center;font-size:10px;font-weight:600;color:var(--muted)}
+.threat-name{background:var(--bg2);padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500}
+.threat-name img{width:32px;height:32px;image-rendering:pixelated}
+.threat-name-info{display:flex;flex-direction:column;gap:2px}
+.threat-name-sub{font-size:10px;color:var(--muted)}
+.threat-cell{background:var(--bg2);padding:6px;text-align:center;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.threat-cell.good{background:rgba(74,222,128,0.08);color:var(--green)}
+.threat-cell.ok{background:var(--bg2);color:var(--muted)}
+.threat-cell.bad{background:rgba(255,95,95,0.08);color:var(--red)}
+.threat-cell.immune{background:rgba(240,96,48,0.08);color:var(--accent)}
+.threat-verdict{font-size:9px;font-weight:400;color:var(--muted2)}
+.threat-legend{display:flex;gap:12px;margin-bottom:10px;font-size:11px;color:var(--muted);flex-wrap:wrap}
 .showdown-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-family:monospace;font-size:11.5px;color:var(--muted);white-space:pre-wrap;line-height:1.8;max-height:300px;overflow-y:auto;margin-bottom:10px}
 .copy-btn{width:100%;padding:10px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;letter-spacing:.02em;transition:opacity .2s,transform .1s}
 .copy-btn:hover{opacity:.9}
@@ -496,6 +511,7 @@ footer a:hover{color:var(--text)}
           <div class="tab on" onclick="tab('def')">Def Coverage</div>
           <div class="tab" onclick="tab('off')">Off Coverage</div>
           <div class="tab" onclick="tab('speed')">Speed</div>
+          <div class="tab" onclick="tab('threats')">Threats</div>
           <div class="tab" onclick="tab('ai')">Analyze</div>
           <div class="tab" onclick="tab('calc')">Dmg Calc</div>
           <div class="tab" onclick="tab('export')">Import/Export</div>
@@ -521,6 +537,9 @@ footer a:hover{color:var(--text)}
           <textarea id="import-box" class="showdown-box" style="width:100%;min-height:120px;resize:vertical;cursor:text" placeholder="Paste a Showdown team here..."></textarea>
           <button class="copy-btn" style="background:var(--accent2);margin-top:8px" onclick="importPaste()">Import Team</button>
           <div id="import-msg" style="font-size:12px;margin-top:6px"></div>
+        </div>
+        <div class="tab-body" id="t-threats" style="display:none">
+          <div id="threats-list"><span style="font-size:13px;color:var(--muted)">Add Pokémon to check threat matchups.</span></div>
         </div>
         <div class="tab-body" id="t-ai" style="display:none">
           <button class="ai-btn" onclick="runAI()">✦ Analyze Team</button>
@@ -1171,12 +1190,13 @@ function copyPaste(){
 }
 
 function tab(id){
-  const tabs=['def','off','speed','ai','calc','export'];
+  const tabs=['def','off','speed','threats','ai','calc','export'];
   tabs.forEach(t=>{const el=document.getElementById('t-'+t);if(el)el.style.display=t===id?'block':'none';});
   document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',tabs[i]===id));
   if(id==='speed')renderSpeedTiers();
   if(id==='calc')renderCalc();
   if(id==='off')renderOffensiveCoverage();
+  if(id==='threats')renderThreats();
 }
 
 // --- Edit panel ---
@@ -2164,6 +2184,125 @@ async function loadTeamFromURL(){
     window.history.replaceState({},'',window.location.pathname);
     return true;
   }catch(e){return false;}
+}
+
+// --- Common Threats ---
+const VGC_THREATS=[
+  {name:'Incineroar',types:['Fire','Dark'],stab:['Fire','Dark'],key:'Fake Out, Intimidate, Parting Shot'},
+  {name:'Flutter Mane',types:['Ghost','Fairy'],stab:['Ghost','Fairy'],key:'High SpA + Speed, Protosynthesis'},
+  {name:'Calyrex-Shadow',types:['Psychic','Ghost'],stab:['Psychic','Ghost'],key:'Astral Barrage spread, As One'},
+  {name:'Calyrex-Ice',types:['Psychic','Ice'],stab:['Psychic','Ice'],key:'Glacial Lance spread, Trick Room'},
+  {name:'Rillaboom',types:['Grass'],stab:['Grass'],key:'Grassy Glide priority, Fake Out'},
+  {name:'Urshifu-Rapid-Strike',types:['Fighting','Water'],stab:['Fighting','Water'],key:'Surging Strikes crits, Unseen Fist'},
+  {name:'Kingambit',types:['Dark','Steel'],stab:['Dark','Steel'],key:'Supreme Overlord, Sucker Punch'},
+  {name:'Gholdengo',types:['Steel','Ghost'],stab:['Steel','Ghost'],key:'Good As Gold blocks status'},
+  {name:'Landorus',types:['Ground','Flying'],stab:['Ground','Flying'],key:'Intimidate, Earthquake'},
+  {name:'Iron Hands',types:['Fighting','Electric'],stab:['Fighting','Electric'],key:'Fake Out, Drain Punch, huge HP'},
+  {name:'Chien-Pao',types:['Dark','Ice'],stab:['Dark','Ice'],key:'Sword of Ruin, fast Ice STAB'},
+  {name:'Chi-Yu',types:['Dark','Fire'],stab:['Dark','Fire'],key:'Beads of Ruin, Heat Wave spread'},
+  {name:'Garchomp',types:['Dragon','Ground'],stab:['Dragon','Ground'],key:'Fast EQ, Swords Dance'},
+  {name:'Tornadus',types:['Flying'],stab:['Flying'],key:'Prankster Tailwind'},
+  {name:'Amoonguss',types:['Grass','Poison'],stab:['Grass','Poison'],key:'Spore, Rage Powder redirect'},
+  {name:'Heatran',types:['Fire','Steel'],stab:['Fire','Steel'],key:'Flash Fire, great defensive typing'},
+  {name:'Dragonite',types:['Dragon','Flying'],stab:['Dragon','Flying'],key:'Multiscale, Extreme Speed priority'},
+  {name:'Metagross',types:['Steel','Psychic'],stab:['Steel','Psychic'],key:'Clear Body, strong physical'},
+  {name:'Tyranitar',types:['Rock','Dark'],stab:['Rock','Dark'],key:'Sand Stream, bulky mixed attacker'},
+  {name:'Ogerpon',types:['Grass'],stab:['Grass'],key:'Versatile masks, Defiant'},
+  {name:'Whimsicott',types:['Grass','Fairy'],stab:['Grass','Fairy'],key:'Prankster Tailwind, Encore'},
+  {name:'Grimmsnarl',types:['Dark','Fairy'],stab:['Dark','Fairy'],key:'Prankster screens, T-Wave'},
+  {name:'Cresselia',types:['Psychic'],stab:['Psychic'],key:'Trick Room, Helping Hand, bulky'},
+  {name:'Annihilape',types:['Fighting','Ghost'],stab:['Fighting','Ghost'],key:'Rage Fist, Bulk Up'},
+  {name:'Dondozo',types:['Water'],stab:['Water'],key:'Unaware, Order Up + Tatsugiri'},
+  {name:'Torkoal',types:['Fire'],stab:['Fire'],key:'Drought, Eruption, Trick Room'},
+  {name:'Pelipper',types:['Water','Flying'],stab:['Water','Flying'],key:'Drizzle, Tailwind'},
+  {name:'Indeedee',types:['Psychic','Normal'],stab:['Psychic','Normal'],key:'Psychic Surge, Follow Me'},
+  {name:'Farigiraf',types:['Normal','Psychic'],stab:['Normal','Psychic'],key:'Armor Tail blocks priority, TR'},
+  {name:'Porygon2',types:['Normal'],stab:['Normal'],key:'Eviolite bulk, Trick Room'},
+];
+
+function renderThreats(){
+  const el=document.getElementById('threats-list');
+  if(!team.length){el.innerHTML='<span style="font-size:13px;color:var(--muted)">Add Pokémon to check threat matchups.</span>';return;}
+
+  let html='';
+
+  // Legend
+  html+=`<div class="threat-legend">
+    <span><strong style="color:var(--green)">Resist</strong> = takes reduced damage from threat's STAB</span>
+    <span><strong style="color:var(--accent)">Immune</strong> = takes 0 damage</span>
+    <span><strong style="color:var(--red)">Weak</strong> = takes super effective from threat's STAB</span>
+    <span><strong style="color:var(--muted)">Neutral</strong></span>
+  </div>`;
+
+  // Grid
+  html+=`<div class="threat-grid" style="--team-cols:${team.length}">`;
+
+  // Header row
+  html+=`<div class="threat-head">Threat</div>`;
+  team.forEach(p=>{
+    html+=`<div class="threat-head">${p.sprite?`<img src="${p.sprite}" width="28" height="28" style="image-rendering:pixelated"><br>`:''}${p.displayName}</div>`;
+  });
+
+  // Each threat
+  VGC_THREATS.forEach(threat=>{
+    // Threat name cell
+    html+=`<div class="threat-name">
+      <div class="threat-name-info">
+        <div><strong>${threat.name}</strong></div>
+        <div class="threat-name-sub">${threat.types.map(t=>`<span class="tbadge tbadge-sm" style="background:${TCOL[t]}">${t}</span>`).join(' ')}</div>
+        <div class="threat-name-sub">${threat.key}</div>
+      </div>
+    </div>`;
+
+    // For each team member, check matchup vs this threat's STAB types
+    team.forEach(p=>{
+      // Worst multiplier from threat's STAB types
+      let worstMult=0;let bestMult=999;
+      threat.stab.forEach(atkType=>{
+        let mult=1;
+        p.types.forEach(defType=>{
+          const chart=TC[atkType]||{};
+          if(chart[defType]!==undefined)mult*=chart[defType];
+        });
+        if(mult>worstMult)worstMult=mult;
+        if(mult<bestMult)bestMult=mult;
+      });
+
+      // Can this team member hit the threat SE?
+      let canHitSE=false;
+      // Check STAB
+      p.types.forEach(atkType=>{
+        let eff=1;
+        threat.types.forEach(defType=>{const c=TC[atkType]||{};if(c[defType]!==undefined)eff*=c[defType];});
+        if(eff>1)canHitSE=true;
+      });
+      // Check moves
+      p.moves.filter(m=>m).forEach(m=>{
+        const d=moveCache[m.toLowerCase().replace(/\s+/g,'-')];
+        if(!d||!d.power)return;
+        let eff=1;
+        threat.types.forEach(defType=>{const c=TC[d.type]||{};if(c[defType]!==undefined)eff*=c[defType];});
+        if(eff>1)canHitSE=true;
+      });
+
+      let cls,label,sub='';
+      if(worstMult===0){cls='immune';label='Immune';sub='0x';}
+      else if(worstMult>=4){cls='bad';label='4x Weak';sub='danger';}
+      else if(worstMult>=2){cls='bad';label='Weak';sub='2x';}
+      else if(bestMult<1){cls='good';label='Resist';sub=bestMult<=0.25?'¼x':'½x';}
+      else{cls='ok';label='Neutral';sub='1x';}
+
+      if(canHitSE)sub+=' · can KO';
+
+      html+=`<div class="threat-cell ${cls}">
+        <div>${label}</div>
+        <div class="threat-verdict">${sub}</div>
+      </div>`;
+    });
+  });
+
+  html+=`</div>`;
+  el.innerHTML=html;
 }
 
 // --- Damage Calculator (two-sided) ---
