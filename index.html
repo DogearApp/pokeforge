@@ -235,11 +235,34 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .tab{flex:1;padding:10px 4px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;color:var(--muted);text-align:center;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s}
 .tab.on{color:var(--accent);border-bottom-color:var(--accent)}
 .tab-body{padding:1.25rem}
-.wrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.wlabel{font-size:9px;font-weight:700;padding:3px 7px;border-radius:6px;color:#fff;min-width:62px;text-align:center;letter-spacing:.03em;text-transform:uppercase}
-.wbg{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
+/* Coverage sections */
+.cov-section{margin-bottom:16px}
+.cov-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.cov-critical{background:rgba(255,95,95,0.1);border:1px solid rgba(255,95,95,0.25);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--red);font-weight:500}
+.cov-unresisted{background:rgba(255,157,77,0.1);border:1px solid rgba(255,157,77,0.25);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--orange);font-weight:500}
+.wrow{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.wlabel{font-size:9px;font-weight:700;padding:3px 7px;border-radius:6px;color:#fff;min-width:62px;text-align:center;letter-spacing:.03em;text-transform:uppercase;flex-shrink:0}
+.wbar-wrap{flex:1;min-width:60px}
+.wbg{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
 .wbar{height:100%;border-radius:3px;transition:width .4s ease}
-.wnum{font-size:12px;font-weight:600;min-width:16px;text-align:right;color:var(--muted)}
+.wnum{font-size:12px;font-weight:600;min-width:16px;text-align:right;color:var(--muted);flex-shrink:0}
+.w-mons{display:flex;gap:2px;flex-shrink:0}
+.w-mon-sprite{width:24px;height:24px;image-rendering:pixelated;border-radius:4px}
+.w-4x{outline:2px solid var(--red);outline-offset:-1px;border-radius:4px}
+.w-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:2px}
+/* Coverage grid */
+.cov-grid{display:grid;gap:1px;background:var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.cov-grid-head{background:var(--bg3);padding:4px;text-align:center;font-size:10px;font-weight:600;color:var(--muted)}
+.cov-grid-type{background:var(--bg3);padding:4px 6px;font-size:8px;font-weight:700;color:#fff;text-align:center;text-transform:uppercase;letter-spacing:.02em}
+.cov-cell{padding:4px;text-align:center;font-size:10px;font-weight:700;min-width:0}
+.cov-cell.immune{background:rgba(108,142,255,0.15);color:var(--accent)}
+.cov-cell.resist{background:rgba(74,222,128,0.1);color:var(--green)}
+.cov-cell.neutral{background:var(--bg2);color:var(--muted2)}
+.cov-cell.weak{background:rgba(255,157,77,0.12);color:var(--orange)}
+.cov-cell.weak4{background:rgba(255,95,95,0.15);color:var(--red)}
+/* Resist summary */
+.resist-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.resist-types{display:flex;gap:3px;flex-wrap:wrap}
 .stat-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
 .stat-bar-label{font-size:11px;color:var(--muted);min-width:30px;font-weight:500}
 .stat-bar-bg{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
@@ -726,18 +749,91 @@ function renderTeamBar(){
 // --- Analysis renderers (same logic) ---
 function renderWeakness(){
   if(!team.length){document.getElementById('wlist').innerHTML='<span style="font-size:13px;color:var(--muted)">Add Pokémon to see coverage analysis.</span>';return;}
-  let c={};TYPES.forEach(t=>c[t]=0);
-  team.forEach(p=>{const w=defWeak(p.types);TYPES.forEach(t=>{if(w[t]>1)c[t]+=(w[t]>=4?2:1);});});
-  const sorted=TYPES.slice().sort((a,b)=>c[b]-c[a]).filter(t=>c[t]>0);
-  const maxV=Math.max(...Object.values(c),1);
-  let html='';
-  sorted.forEach(t=>{
-    const n=c[t];const w=Math.round(n/maxV*100);
-    const col=n>=4?'#ff5f5f':n>=2?'#ff9d4d':'#6c8eff';
-    html+=`<div class="wrow"><span class="wlabel" style="background:${TCOL[t]}">${t}</span><div class="wbg"><div class="wbar" style="width:${w}%;background:${col}"></div></div><span class="wnum">${n}</span></div>`;
+
+  // Calculate per-pokemon weaknesses/resistances for each type
+  const typeData={};
+  TYPES.forEach(t=>{typeData[t]={weak:[],weak4:[],resist:[],immune:[]};});
+  team.forEach(p=>{
+    const w=defWeak(p.types);
+    TYPES.forEach(t=>{
+      if(w[t]>=4)typeData[t].weak4.push(p);
+      else if(w[t]>1)typeData[t].weak.push(p);
+      else if(w[t]===0)typeData[t].immune.push(p);
+      else if(w[t]<1)typeData[t].resist.push(p);
+    });
   });
-  const none=TYPES.filter(t=>c[t]===0);
-  if(none.length)html+=`<div style="margin-top:10px;font-size:11px;color:var(--muted)">Neutral / resists: ${none.join(', ')}</div>`;
+
+  let html='';
+
+  // Critical threats (3+ weak)
+  const critical=TYPES.filter(t=>typeData[t].weak.length+typeData[t].weak4.length>=3);
+  if(critical.length){
+    html+=`<div class="cov-critical">⚠ Critical weaknesses: ${critical.map(t=>`<span class="wlabel" style="background:${TCOL[t]};display:inline-block;margin:2px">${t}</span>`).join('')}<br><span style="font-size:11px">3+ team members are weak to these types</span></div>`;
+  }
+
+  // Unresisted types
+  const unresisted=TYPES.filter(t=>typeData[t].resist.length===0&&typeData[t].immune.length===0);
+  if(unresisted.length){
+    html+=`<div class="cov-unresisted">⚡ Unresisted types: ${unresisted.map(t=>`<span class="wlabel" style="background:${TCOL[t]};display:inline-block;margin:2px">${t}</span>`).join('')}<br><span style="font-size:11px">No team member resists or is immune to these</span></div>`;
+  }
+
+  // Type coverage grid
+  const cols=team.length+1;
+  html+=`<div class="cov-section"><div class="cov-title">Type Matchup Grid</div>`;
+  html+=`<div class="cov-grid" style="grid-template-columns:62px repeat(${team.length},1fr)">`;
+  html+=`<div class="cov-grid-head"></div>`;
+  team.forEach(p=>{html+=`<div class="cov-grid-head">${p.sprite?`<img src="${p.sprite}" width="24" height="24" style="image-rendering:pixelated">`:(p.nick||p.displayName).slice(0,4)}</div>`;});
+  TYPES.forEach(t=>{
+    html+=`<div class="cov-grid-type" style="background:${TCOL[t]}">${t}</div>`;
+    team.forEach(p=>{
+      const w=defWeak(p.types);const m=w[t];
+      let cls='neutral',txt='1x';
+      if(m===0){cls='immune';txt='0';}
+      else if(m<1){cls='resist';txt=m<=0.25?'¼x':'½x';}
+      else if(m>=4){cls='weak4';txt='4x';}
+      else if(m>1){cls='weak';txt='2x';}
+      html+=`<div class="cov-cell ${cls}">${txt}</div>`;
+    });
+  });
+  html+=`</div></div>`;
+
+  // Weaknesses with sprites
+  const weakTypes=TYPES.filter(t=>typeData[t].weak.length+typeData[t].weak4.length>0)
+    .sort((a,b)=>(typeData[b].weak.length+typeData[b].weak4.length*2)-(typeData[a].weak.length+typeData[a].weak4.length*2));
+  if(weakTypes.length){
+    html+=`<div class="cov-section"><div class="cov-title">Weaknesses</div>`;
+    const maxV=Math.max(...weakTypes.map(t=>typeData[t].weak.length+typeData[t].weak4.length*2));
+    weakTypes.forEach(t=>{
+      const d=typeData[t];const score=d.weak.length+d.weak4.length*2;
+      const pct=Math.round(score/maxV*100);
+      const col=score>=4?'#ff5f5f':score>=2?'#ff9d4d':'#6c8eff';
+      const sprites=[...d.weak4.map(p=>({p,is4x:true})),...d.weak.map(p=>({p,is4x:false}))];
+      html+=`<div class="wrow">
+        <span class="wlabel" style="background:${TCOL[t]}">${t}</span>
+        <div class="wbar-wrap"><div class="wbg"><div class="wbar" style="width:${pct}%;background:${col}"></div></div></div>
+        <div class="w-mons">${sprites.map(s=>`<img src="${s.p.sprite}" class="w-mon-sprite${s.is4x?' w-4x':''}" title="${s.p.displayName}${s.is4x?' (4×)':' (2×)'}">`).join('')}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  // Resistances
+  const resistTypes=TYPES.filter(t=>typeData[t].resist.length+typeData[t].immune.length>0)
+    .sort((a,b)=>(typeData[b].resist.length+typeData[b].immune.length)-(typeData[a].resist.length+typeData[a].immune.length));
+  if(resistTypes.length){
+    html+=`<div class="cov-section"><div class="cov-title">Resistances & Immunities</div>`;
+    resistTypes.forEach(t=>{
+      const d=typeData[t];
+      const sprites=[...d.immune.map(p=>({p,imm:true})),...d.resist.map(p=>({p,imm:false}))];
+      html+=`<div class="resist-row">
+        <span class="wlabel" style="background:${TCOL[t]}">${t}</span>
+        <div class="w-mons">${sprites.map(s=>`<img src="${s.p.sprite}" class="w-mon-sprite" title="${s.p.displayName}${s.imm?' (immune)':' (resist)'}" style="${s.imm?'opacity:1':'opacity:.7'}">`).join('')}</div>
+        ${d.immune.length?`<span class="w-tag" style="background:rgba(108,142,255,0.15);color:var(--accent)">${d.immune.length} immune</span>`:''}
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
   document.getElementById('wlist').innerHTML=html;
 }
 
