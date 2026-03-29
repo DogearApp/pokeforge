@@ -444,21 +444,48 @@ const MEGA_DATA={
   diancie:[{suffix:'mega',stone:'Diancite',label:'Mega Diancie'}]
 };
 
-let allPokemon=[],allItems=[],team=[],editIdx=null,pokeCache={},abilityCache={},itemCache={},moveCache={};
+const ITEMS=[
+  'Assault Vest','Choice Band','Choice Scarf','Choice Specs','Eviolite','Focus Sash','Leftovers',
+  'Life Orb','Rocky Helmet','Safety Goggles','Sitrus Berry','White Herb','Clear Amulet',
+  'Covert Cloak','Loaded Dice','Booster Energy','Mirror Herb','Punching Glove',
+  'Wide Lens','Scope Lens','Muscle Band','Wise Glasses','Expert Belt','Metronome',
+  'Shell Bell','Big Root','Black Sludge','Flame Orb','Toxic Orb','Light Clay','Terrain Extender',
+  'Light Ball','Thick Club','Lucky Punch','Metal Powder','Quick Powder','Deep Sea Tooth','Deep Sea Scale',
+  'Eject Button','Eject Pack','Red Card','Shed Shell','Air Balloon','Iron Ball','Ring Target','Lagging Tail',
+  'Quick Claw','Bright Powder','Lax Incense','Focus Band','Kings Rock','Razor Fang','Wide Lens',
+  'Zoom Lens','Power Herb','Mental Herb','Lum Berry','Chesto Berry','Aguav Berry','Figy Berry',
+  'Iapapa Berry','Mago Berry','Wiki Berry','Liechi Berry','Ganlon Berry','Salac Berry','Petaya Berry',
+  'Apicot Berry','Starf Berry','Lansat Berry','Custap Berry','Micle Berry','Jaboca Berry','Rowap Berry',
+  'Roseli Berry','Chilan Berry','Occa Berry','Passho Berry','Wacan Berry','Rindo Berry','Yache Berry',
+  'Chople Berry','Kebia Berry','Shuca Berry','Coba Berry','Payapa Berry','Tanga Berry','Charti Berry',
+  'Kasib Berry','Haban Berry','Colbur Berry','Babiri Berry',
+  'Charcoal','Mystic Water','Magnet','Miracle Seed','Never Melt Ice','Black Belt','Poison Barb',
+  'Soft Sand','Sharp Beak','Twisted Spoon','Silver Powder','Hard Stone','Spell Tag','Dragon Fang',
+  'Black Glasses','Metal Coat','Silk Scarf','Fairy Feather','Pixie Plate',
+  'Fire Gem','Water Gem','Electric Gem','Grass Gem','Normal Gem',
+  'Throat Spray','Blunder Policy','Room Service','Weakness Policy','Absorb Bulb','Cell Battery',
+  'Snowball','Luminous Moss','Adrenaline Orb','Protective Pads','Utility Umbrella','Heavy Duty Boots',
+  'Ability Shield','Ability Patch','Ability Capsule',
+  'Venusaurite','Charizardite X','Charizardite Y','Blastoisinite','Alakazite','Gengarite',
+  'Kangaskhanite','Pinsirite','Gyaradosite','Aerodactylite','Mewtwonite X','Mewtwonite Y',
+  'Ampharosite','Scizorite','Heracronite','Houndoominite','Tyranitarite','Blazikenite',
+  'Gardevoirite','Mawilite','Aggronite','Medichamite','Manectite','Banettite','Absolite',
+  'Garchompite','Lucarionite','Abomasite','Galladite','Audinite','Sharpedonite','Cameruptite',
+  'Altarianite','Glalitite','Salamencite','Metagrossite','Latiasite','Latiosite',
+  'Lopunnite','Slowbronite','Steelixite','Sceptilite','Swampertite','Sablenite',
+  'Beedrillite','Pidgeotite','Diancite'
+];
+
+let allPokemon=[],team=[],editIdx=null,pokeCache={},abilityCache={},itemCache={},moveCache={};
 
 function fmt(n){return n.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join('-')}
 
 async function init(){
   try{
-    const [pr,ir]=await Promise.all([
-      fetch('https://pokeapi.co/api/v2/pokemon?limit=1302&offset=0'),
-      fetch('https://pokeapi.co/api/v2/item?limit=2000&offset=0')
-    ]);
-    const pd=await pr.json();
-    allPokemon=pd.results.map(p=>({name:p.name}));
+    const r=await fetch('https://pokeapi.co/api/v2/pokemon?limit=1302&offset=0');
+    const d=await r.json();
+    allPokemon=d.results.map(p=>({name:p.name}));
     document.getElementById('psearch').placeholder=`Search all ${allPokemon.length} Pokémon…`;
-    const id=await ir.json();
-    allItems=id.results.map(i=>fmt(i.name));
   }catch(e){document.getElementById('psearch').placeholder='Search Pokémon…';}
 }
 
@@ -815,7 +842,7 @@ function setupAC(inputId,ddId,getList,onSelect){
 }
 
 function initAutocompletes(){
-  setupAC('e-item','ac-item',()=>allItems,()=>{saveEdit();showItemDesc();});
+  setupAC('e-item','ac-item',()=>ITEMS,()=>{saveEdit();showItemDesc();});
   ['m1','m2','m3','m4'].forEach(id=>{
     setupAC(id,'ac-'+id,()=>{
       if(editIdx===null)return[];
