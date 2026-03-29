@@ -358,6 +358,24 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .ai-out{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-size:13px;line-height:1.7;color:var(--text);max-height:none;overflow-y:visible}
 .ai-thinking{color:var(--muted);font-style:italic}
 
+/* USAGE TIER LIST */
+.tierlist-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:none;overflow-y:auto;padding:20px}
+.tierlist-overlay.open{display:flex;justify-content:center;align-items:flex-start}
+.tierlist-panel{background:var(--bg2);border:1px solid var(--border);border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:0}
+.tierlist-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
+.tierlist-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+.tierlist-row{display:grid;grid-template-columns:40px 40px 1fr 70px 60px;gap:8px;align-items:center;padding:8px 20px;border-bottom:1px solid rgba(255,255,255,0.03);transition:background .1s}
+.tierlist-row:hover{background:var(--bg3)}
+.tierlist-rank{font-size:14px;font-weight:700;color:var(--muted);text-align:center}
+.tierlist-sprite{width:36px;height:36px;image-rendering:pixelated}
+.tierlist-name{font-size:14px;font-weight:500}
+.tierlist-types{display:flex;gap:3px;margin-top:2px}
+.tierlist-usage{font-size:13px;font-weight:700;color:var(--accent);text-align:right}
+.tierlist-bar{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.tierlist-bar-fill{height:100%;border-radius:2px;background:var(--accent)}
+.tierlist-add{padding:3px 8px;font-size:11px;font-weight:600;border-radius:5px;border:1px solid var(--border);background:var(--bg4);color:var(--muted);cursor:pointer;transition:all .15s}
+.tierlist-add:hover{border-color:var(--accent);color:var(--accent)}
+
 /* BUILDER MODE */
 .hero.hidden{display:none}
 .app-wrap.focused{padding-top:1rem}
@@ -379,8 +397,8 @@ footer a:hover{color:var(--text)}
   <div class="nav-logo" onclick="exitBuilder()" style="cursor:pointer">Incin<span>Forge</span></div>
   <div class="nav-links">
     <a href="#builder" onclick="enterBuilder()">Builder</a>
+    <a href="#" onclick="event.preventDefault();showUsageTierList()">Usage Tier List</a>
     <a href="https://www.pokemon.com/us/pokemon-vg-championships" target="_blank">VGC Rules</a>
-    <a href="https://pokemonshowdown.com" target="_blank">Showdown</a>
     <span style="font-size:12px;color:var(--muted)">Free <span class="nav-badge">BETA</span></span>
   </div>
 </nav>
@@ -583,6 +601,17 @@ footer a:hover{color:var(--text)}
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- USAGE TIER LIST OVERLAY -->
+<div class="tierlist-overlay" id="tierlist-overlay" onclick="if(event.target===this)closeTierList()">
+  <div class="tierlist-panel">
+    <div class="tierlist-head">
+      <div class="tierlist-title">VGC Usage Tier List</div>
+      <button class="close-btn" onclick="closeTierList()">✕</button>
+    </div>
+    <div id="tierlist-body" style="padding:0"></div>
   </div>
 </div>
 
@@ -2498,6 +2527,54 @@ function renderCalc(){
   } else {
     document.getElementById('calc-r2-result').innerHTML='<span style="color:var(--muted);font-size:12px">No moves set</span>';
   }
+}
+
+// --- Usage Tier List ---
+async function showUsageTierList(){
+  const overlay=document.getElementById('tierlist-overlay');
+  const body=document.getElementById('tierlist-body');
+  overlay.classList.add('open');
+  body.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted)">Loading usage stats...</div>';
+
+  const stats=await loadUsageStats();
+  if(!stats||!stats.pokemon){body.innerHTML='<div style="padding:20px;color:var(--red)">Could not load usage data.</div>';return;}
+
+  // Sort by usage rate
+  const sorted=Object.entries(stats.pokemon)
+    .map(([name,d])=>({name,usage:d.usage?.weighted||d.usage?.raw||0}))
+    .filter(p=>p.usage>0)
+    .sort((a,b)=>b.usage-a.usage)
+    .slice(0,100);
+
+  const maxUsage=sorted[0]?.usage||1;
+
+  body.innerHTML=sorted.map((p,i)=>{
+    const pctStr=(p.usage*100).toFixed(1)+'%';
+    const barW=Math.round(p.usage/maxUsage*100);
+    // Try to find the pokemon in allPokemon for sprite
+    const found=allPokemon.find(ap=>fmt(ap.name)===p.name);
+    const spriteUrl=found?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${found.id}.png`:'';
+    return`<div class="tierlist-row">
+      <div class="tierlist-rank">${i+1}</div>
+      ${spriteUrl?`<img src="${spriteUrl}" class="tierlist-sprite" loading="lazy">`:'<div></div>'}
+      <div>
+        <div class="tierlist-name">${p.name}</div>
+        <div class="tierlist-bar"><div class="tierlist-bar-fill" style="width:${barW}%"></div></div>
+      </div>
+      <div class="tierlist-usage">${pctStr}</div>
+      <button class="tierlist-add" onclick="addPokeFromTierList('${p.name}')">+ Add</button>
+    </div>`;
+  }).join('');
+}
+
+function closeTierList(){document.getElementById('tierlist-overlay').classList.remove('open');}
+
+async function addPokeFromTierList(name){
+  if(team.length>=6)return;
+  const apiName=name.toLowerCase().replace(/\s+/g,'-');
+  closeTierList();
+  enterBuilder();
+  await addPoke(apiName);
 }
 
 // --- Builder mode ---
