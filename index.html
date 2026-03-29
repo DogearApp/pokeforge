@@ -250,6 +250,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .wbar-wrap{min-width:40px}
 .wbg{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
 .wbar{height:100%;border-radius:3px;transition:width .4s ease}
+.resist-grid{display:grid;grid-template-columns:62px 1fr auto auto auto;gap:6px 10px;align-items:center}
 .w-col{display:flex;gap:2px;min-width:80px;justify-content:center}
 .w-mon-sprite{width:36px;height:36px;image-rendering:pixelated;border-radius:4px}
 .w-mons{display:flex;gap:2px}
@@ -774,13 +775,14 @@ function renderWeakness(){
 
   // Calculate per-pokemon weaknesses/resistances for each type
   const typeData={};
-  TYPES.forEach(t=>{typeData[t]={weak:[],weak4:[],resist:[],immune:[]};});
+  TYPES.forEach(t=>{typeData[t]={weak:[],weak4:[],resist:[],resist4:[],immune:[]};});
   team.forEach(p=>{
     const w=defWeak(p.types);
     TYPES.forEach(t=>{
       if(w[t]>=4)typeData[t].weak4.push(p);
       else if(w[t]>1)typeData[t].weak.push(p);
       else if(w[t]===0)typeData[t].immune.push(p);
+      else if(w[t]<=0.25)typeData[t].resist4.push(p);
       else if(w[t]<1)typeData[t].resist.push(p);
     });
   });
@@ -794,7 +796,7 @@ function renderWeakness(){
   }
 
   // Unresisted types
-  const unresisted=TYPES.filter(t=>typeData[t].resist.length===0&&typeData[t].immune.length===0);
+  const unresisted=TYPES.filter(t=>typeData[t].resist.length===0&&typeData[t].resist4.length===0&&typeData[t].immune.length===0);
   if(unresisted.length){
     html+=`<div class="cov-unresisted">⚡ Unresisted types: ${unresisted.map(t=>`<span class="wlabel" style="background:${TCOL[t]};display:inline-block;margin:2px">${t}</span>`).join('')}<br><span style="font-size:11px">No team member resists or is immune to these</span></div>`;
   }
@@ -843,22 +845,24 @@ function renderWeakness(){
   }
 
   // Resistances
-  const resistTypes=TYPES.filter(t=>typeData[t].resist.length+typeData[t].immune.length>0)
-    .sort((a,b)=>(typeData[b].resist.length+typeData[b].immune.length)-(typeData[a].resist.length+typeData[a].immune.length));
+  const resistTypes=TYPES.filter(t=>typeData[t].resist.length+typeData[t].resist4.length+typeData[t].immune.length>0)
+    .sort((a,b)=>(typeData[b].resist.length+typeData[b].resist4.length*2+typeData[b].immune.length*3)-(typeData[a].resist.length+typeData[a].resist4.length*2+typeData[a].immune.length*3));
   if(resistTypes.length){
     html+=`<div class="cov-section"><div class="cov-title">Resistances & Immunities</div>`;
-    html+=`<div class="weak-grid">`;
-    html+=`<div></div><div></div><div class="weak-grid-header" style="color:var(--green)">Resist</div><div class="weak-grid-header" style="color:var(--accent)">Immune</div>`;
-    const maxR=Math.max(...resistTypes.map(t=>typeData[t].resist.length+typeData[t].immune.length*2));
+    html+=`<div class="resist-grid">`;
+    html+=`<div></div><div></div><div class="weak-grid-header" style="color:var(--green)">½×</div><div class="weak-grid-header" style="color:#2dd4a0">¼×</div><div class="weak-grid-header" style="color:var(--accent)">Immune</div>`;
+    const maxR=Math.max(...resistTypes.map(t=>typeData[t].resist.length+typeData[t].resist4.length*2+typeData[t].immune.length*3));
     resistTypes.forEach(t=>{
-      const d=typeData[t];const score=d.resist.length+d.immune.length*2;
+      const d=typeData[t];const score=d.resist.length+d.resist4.length*2+d.immune.length*3;
       const pct=Math.round(score/maxR*100);
-      const spritesResist=d.resist.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName}">`).join('')||'<span style="color:var(--muted2);font-size:11px">—</span>';
-      const spritesImmune=d.immune.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName}">`).join('')||'<span style="color:var(--muted2);font-size:11px">—</span>';
+      const s2=d.resist.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName}">`).join('')||'<span style="color:var(--muted2);font-size:11px">—</span>';
+      const s4=d.resist4.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName}">`).join('')||'<span style="color:var(--muted2);font-size:11px">—</span>';
+      const si=d.immune.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName}">`).join('')||'<span style="color:var(--muted2);font-size:11px">—</span>';
       html+=`<span class="wlabel" style="background:${TCOL[t]}">${t}</span>`;
       html+=`<div class="wbar-wrap"><div class="wbg"><div class="wbar" style="width:${pct}%;background:var(--green)"></div></div></div>`;
-      html+=`<div class="w-col">${spritesResist}</div>`;
-      html+=`<div class="w-col">${spritesImmune}</div>`;
+      html+=`<div class="w-col">${s2}</div>`;
+      html+=`<div class="w-col">${s4}</div>`;
+      html+=`<div class="w-col">${si}</div>`;
     });
     html+=`</div></div>`;
   }
@@ -1410,19 +1414,20 @@ function runAI(){
 
   // === 2. Defensive weakness analysis ===
   const typeData={};
-  TYPES.forEach(t=>{typeData[t]={weak:[],weak4:[],resist:[],immune:[]};});
+  TYPES.forEach(t=>{typeData[t]={weak:[],weak4:[],resist:[],resist4:[],immune:[]};});
   team.forEach(p=>{
     const w=defWeak(p.types);
     TYPES.forEach(t=>{
       if(w[t]>=4)typeData[t].weak4.push(p);
       else if(w[t]>1)typeData[t].weak.push(p);
       else if(w[t]===0)typeData[t].immune.push(p);
+      else if(w[t]<=0.25)typeData[t].resist4.push(p);
       else if(w[t]<1)typeData[t].resist.push(p);
     });
   });
 
   const critical=TYPES.filter(t=>typeData[t].weak.length+typeData[t].weak4.length>=3);
-  const unresisted=TYPES.filter(t=>typeData[t].resist.length===0&&typeData[t].immune.length===0);
+  const unresisted=TYPES.filter(t=>typeData[t].resist.length===0&&typeData[t].resist4.length===0&&typeData[t].immune.length===0);
 
   if(critical.length){
     out.push('');out.push(`<strong style="color:var(--red)">⚠ Critical Weaknesses</strong>`);
