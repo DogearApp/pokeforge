@@ -97,6 +97,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .edit-sprite{width:48px;height:48px;image-rendering:pixelated}
 .edit-mon-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text)}
 .edit-mon-types{display:flex;gap:4px;margin-top:4px}
+.autofill-btn{padding:6px 14px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:opacity .2s,transform .1s;flex-shrink:0;letter-spacing:.02em}
+.autofill-btn:hover{opacity:.85}
+.autofill-btn:active{transform:scale(.97)}
+.autofill-btn.loading{opacity:.5;pointer-events:none}
 .close-btn{background:var(--bg4);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:15px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .15s,background .15s}
 .close-btn:hover{color:var(--red);background:rgba(255,95,95,0.1)}
 
@@ -360,6 +364,7 @@ footer a:hover{color:var(--text)}
             <button class="mega-toggle" id="mega-btn" onclick="toggleMega()">⬡ Mega</button>
             <div class="mega-select" id="mega-select" style="display:none"></div>
           </div>
+          <button class="autofill-btn" id="autofill-btn" onclick="autoFillSet()">⚡ Auto-Fill</button>
           <button class="close-btn" onclick="closeEdit()">✕</button>
         </div>
 
@@ -1650,6 +1655,102 @@ const VGC_POKEMON=[
   {name:'Clefable',types:['Fairy'],role:'Support',why:'Follow Me + Helping Hand + Magic Guard'},
   {name:'Excadrill',types:['Ground','Steel'],role:'Attacker',why:'Sand Rush doubles speed in sand'},
 ];
+
+// --- Auto-fill from Smogon ---
+let smogonSets=null;
+async function loadSmogonSets(){
+  if(smogonSets)return smogonSets;
+  try{
+    const r=await fetch('https://pkmn.github.io/smogon/data/sets/gen9.json');
+    smogonSets=await r.json();
+    return smogonSets;
+  }catch(e){return null;}
+}
+
+async function autoFillSet(){
+  if(editIdx===null)return;
+  const p=team[editIdx];
+  const btn=document.getElementById('autofill-btn');
+  btn.textContent='Loading…';btn.classList.add('loading');
+
+  const sets=await loadSmogonSets();
+  btn.textContent='⚡ Auto-Fill';btn.classList.remove('loading');
+
+  if(!sets){alert('Could not load set data. Check your connection.');return;}
+
+  // Find the pokemon in Smogon data — try display name and variations
+  const searchNames=[p.displayName,p.displayName.replace(/-/g,' '),fmt(p.name)];
+  let pokeData=null;
+  for(const n of searchNames){if(sets[n]){pokeData=sets[n];break;}}
+
+  if(!pokeData){alert(`No competitive set data found for ${p.displayName}.`);return;}
+
+  // Priority: vgc2025 > vgc2024 > vgc2023 > doublesou > first available
+  const formatPriority=['vgc2025','vgc2024','vgc2023','doublesou','battlestadiumdoubles','ou','uu','ru'];
+  let chosenFormat=null;let setData=null;
+  for(const f of formatPriority){
+    if(pokeData[f]){chosenFormat=f;setData=pokeData[f];break;}
+  }
+  if(!setData){
+    // Take first available format
+    const firstKey=Object.keys(pokeData)[0];
+    if(firstKey){chosenFormat=firstKey;setData=pokeData[firstKey];}
+  }
+  if(!setData){alert(`No set data available for ${p.displayName}.`);return;}
+
+  // Take first set variant
+  const setName=Object.keys(setData)[0];
+  const s=setData[setName];
+
+  // Apply ability
+  if(s.ability){
+    const ab=Array.isArray(s.ability)?s.ability[0]:s.ability;
+    if(p.abilities.includes(ab))p.ability=ab;
+    else if(p.abilities.includes(fmt(ab)))p.ability=fmt(ab);
+  }
+
+  // Apply item
+  if(s.item){
+    p.item=Array.isArray(s.item)?s.item[0]:s.item;
+  }
+
+  // Apply nature
+  if(s.nature){
+    p.nature=Array.isArray(s.nature)?s.nature[0]:s.nature;
+  }
+
+  // Apply moves (flatten slash options)
+  if(s.moves){
+    for(let i=0;i<4&&i<s.moves.length;i++){
+      const mv=s.moves[i];
+      p.moves[i]=Array.isArray(mv)?mv[0]:mv;
+      // Convert to hyphenated format to match movePool
+      p.moves[i]=p.moves[i].replace(/\s+/g,'-');
+    }
+  }
+
+  // Apply EVs
+  if(s.evs){
+    STAT_KEYS.forEach(k=>p.evs[k]=0);
+    const evMap={hp:'hp',atk:'atk',def:'def',spa:'spa',spd:'spd',spe:'spe'};
+    Object.entries(s.evs).forEach(([k,v])=>{if(evMap[k])p.evs[evMap[k]]=v;});
+  }
+
+  // Apply IVs
+  if(s.ivs){
+    Object.entries(s.ivs).forEach(([k,v])=>{if(p.ivs.hasOwnProperty(k))p.ivs[k]=v;});
+  }
+
+  // Apply tera type
+  if(s.teratypes){
+    const tera=Array.isArray(s.teratypes)?s.teratypes[0]:s.teratypes;
+    if(TYPES.includes(tera))p.tera=tera;
+  }
+
+  // Re-open edit to refresh everything
+  openEdit(editIdx);
+  renderAll();
+}
 
 // --- Init ---
 loadTeamFromStorage();init();renderAll();
