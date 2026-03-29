@@ -191,6 +191,18 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .ev-row input:focus{border-color:var(--accent)}
 .ev-note{font-size:11px;color:var(--muted2);line-height:1.5}
 
+/* MEGA */
+.mega-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mega-toggle{padding:7px 14px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg4);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.mega-toggle:hover{border-color:var(--gold);color:var(--gold)}
+.mega-toggle.active{background:linear-gradient(135deg,rgba(245,197,66,0.15),rgba(255,157,77,0.15));border-color:var(--gold);color:var(--gold)}
+.mega-select{display:flex;gap:6px}
+.mega-select button{padding:4px 10px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;transition:all .15s}
+.mega-select button:hover{border-color:var(--gold);color:var(--gold)}
+.mega-select button.active{background:rgba(245,197,66,0.15);border-color:var(--gold);color:var(--gold)}
+.mega-badge{position:absolute;top:6px;left:6px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(245,197,66,0.2);color:var(--gold);letter-spacing:.04em;text-transform:uppercase;border:1px solid rgba(245,197,66,0.3)}
+.mega-warn{font-size:11px;color:var(--gold);margin-top:4px}
+
 /* FOOTER */
 footer{border-top:1px solid var(--border);padding:2rem;text-align:center;color:var(--muted2);font-size:12px}
 footer a{color:var(--muted);text-decoration:none}
@@ -300,6 +312,10 @@ footer a:hover{color:var(--text)}
             <div class="edit-mon-types" id="edit-types"></div>
           </div>
         </div>
+        <div class="mega-controls" id="mega-controls" style="display:none">
+          <button class="mega-toggle" id="mega-btn" onclick="toggleMega()">⬡ Mega Evolve</button>
+          <div class="mega-select" id="mega-select" style="display:none"></div>
+        </div>
         <button class="close-btn" onclick="closeEdit()">✕</button>
       </div>
       <div class="etabs">
@@ -356,6 +372,54 @@ const STAT_NAMES={hp:'HP',atk:'Atk',def:'Def',spa:'SpA',spd:'SpD',spe:'Spe'};
 const STAT_COLS={hp:'#4ade80',atk:'#F08030',def:'#6890F0',spa:'#F85888',spd:'#98D8D8',spe:'#F8D030'};
 const NM={Hardy:{},Lonely:{atk:1.1,def:.9},Brave:{atk:1.1,spe:.9},Adamant:{atk:1.1,spa:.9},Naughty:{atk:1.1,spd:.9},Bold:{def:1.1,atk:.9},Docile:{},Relaxed:{def:1.1,spe:.9},Impish:{def:1.1,spa:.9},Lax:{def:1.1,spd:.9},Timid:{spe:1.1,atk:.9},Hasty:{spe:1.1,def:.9},Serious:{},Jolly:{spe:1.1,spa:.9},Naive:{spe:1.1,spd:.9},Modest:{spa:1.1,atk:.9},Mild:{spa:1.1,def:.9},Quiet:{spa:1.1,spe:.9},Bashful:{},Rash:{spa:1.1,spd:.9},Calm:{spd:1.1,atk:.9},Gentle:{spd:1.1,def:.9},Sassy:{spd:1.1,spe:.9},Careful:{spd:1.1,spa:.9},Quirky:{}};
 const BENCHMARKS=[{name:'Regieleki',spe:200},{name:'Electrode',spe:150},{name:'Calyrex-S',spe:150},{name:'Dragapult',spe:142},{name:'Zacian',spe:148},{name:'Iron Bundle',spe:136},{name:'Miraidon',spe:135},{name:'Flutter Mane',spe:135},{name:'Chien-Pao',spe:135},{name:'Koraidon',spe:135},{name:'Garchomp',spe:102},{name:'Chi-Yu',spe:100},{name:'Landorus-T',spe:91},{name:'Incineroar',spe:60},{name:'Amoonguss',spe:30},{name:'Torkoal',spe:20}];
+const MEGA_DATA={
+  venusaur:[{suffix:'mega',stone:'Venusaurite',label:'Mega Venusaur'}],
+  charizard:[{suffix:'mega-x',stone:'Charizardite X',label:'Mega Charizard X'},{suffix:'mega-y',stone:'Charizardite Y',label:'Mega Charizard Y'}],
+  blastoise:[{suffix:'mega',stone:'Blastoisinite',label:'Mega Blastoise'}],
+  alakazam:[{suffix:'mega',stone:'Alakazite',label:'Mega Alakazam'}],
+  gengar:[{suffix:'mega',stone:'Gengarite',label:'Mega Gengar'}],
+  kangaskhan:[{suffix:'mega',stone:'Kangaskhanite',label:'Mega Kangaskhan'}],
+  pinsir:[{suffix:'mega',stone:'Pinsirite',label:'Mega Pinsir'}],
+  gyarados:[{suffix:'mega',stone:'Gyaradosite',label:'Mega Gyarados'}],
+  aerodactyl:[{suffix:'mega',stone:'Aerodactylite',label:'Mega Aerodactyl'}],
+  mewtwo:[{suffix:'mega-x',stone:'Mewtwonite X',label:'Mega Mewtwo X'},{suffix:'mega-y',stone:'Mewtwonite Y',label:'Mega Mewtwo Y'}],
+  ampharos:[{suffix:'mega',stone:'Ampharosite',label:'Mega Ampharos'}],
+  scizor:[{suffix:'mega',stone:'Scizorite',label:'Mega Scizor'}],
+  heracross:[{suffix:'mega',stone:'Heracronite',label:'Mega Heracross'}],
+  houndoom:[{suffix:'mega',stone:'Houndoominite',label:'Mega Houndoom'}],
+  tyranitar:[{suffix:'mega',stone:'Tyranitarite',label:'Mega Tyranitar'}],
+  blaziken:[{suffix:'mega',stone:'Blazikenite',label:'Mega Blaziken'}],
+  gardevoir:[{suffix:'mega',stone:'Gardevoirite',label:'Mega Gardevoir'}],
+  mawile:[{suffix:'mega',stone:'Mawilite',label:'Mega Mawile'}],
+  aggron:[{suffix:'mega',stone:'Aggronite',label:'Mega Aggron'}],
+  medicham:[{suffix:'mega',stone:'Medichamite',label:'Mega Medicham'}],
+  manectric:[{suffix:'mega',stone:'Manectite',label:'Mega Manectric'}],
+  banette:[{suffix:'mega',stone:'Banettite',label:'Mega Banette'}],
+  absol:[{suffix:'mega',stone:'Absolite',label:'Mega Absol'}],
+  garchomp:[{suffix:'mega',stone:'Garchompite',label:'Mega Garchomp'}],
+  lucario:[{suffix:'mega',stone:'Lucarionite',label:'Mega Lucario'}],
+  abomasnow:[{suffix:'mega',stone:'Abomasite',label:'Mega Abomasnow'}],
+  gallade:[{suffix:'mega',stone:'Galladite',label:'Mega Gallade'}],
+  audino:[{suffix:'mega',stone:'Audinite',label:'Mega Audino'}],
+  sharpedo:[{suffix:'mega',stone:'Sharpedonite',label:'Mega Sharpedo'}],
+  camerupt:[{suffix:'mega',stone:'Cameruptite',label:'Mega Camerupt'}],
+  altaria:[{suffix:'mega',stone:'Altarianite',label:'Mega Altaria'}],
+  glalie:[{suffix:'mega',stone:'Glalitite',label:'Mega Glalie'}],
+  salamence:[{suffix:'mega',stone:'Salamencite',label:'Mega Salamence'}],
+  metagross:[{suffix:'mega',stone:'Metagrossite',label:'Mega Metagross'}],
+  latias:[{suffix:'mega',stone:'Latiasite',label:'Mega Latias'}],
+  latios:[{suffix:'mega',stone:'Latiosite',label:'Mega Latios'}],
+  rayquaza:[{suffix:'mega',stone:'',label:'Mega Rayquaza'}],
+  lopunny:[{suffix:'mega',stone:'Lopunnite',label:'Mega Lopunny'}],
+  slowbro:[{suffix:'mega',stone:'Slowbronite',label:'Mega Slowbro'}],
+  steelix:[{suffix:'mega',stone:'Steelixite',label:'Mega Steelix'}],
+  sceptile:[{suffix:'mega',stone:'Sceptilite',label:'Mega Sceptile'}],
+  swampert:[{suffix:'mega',stone:'Swampertite',label:'Mega Swampert'}],
+  sableye:[{suffix:'mega',stone:'Sablenite',label:'Mega Sableye'}],
+  beedrill:[{suffix:'mega',stone:'Beedrillite',label:'Mega Beedrill'}],
+  pidgeot:[{suffix:'mega',stone:'Pidgeotite',label:'Mega Pidgeot'}],
+  diancie:[{suffix:'mega',stone:'Diancite',label:'Mega Diancie'}]
+};
 
 let allPokemon=[],team=[],editIdx=null,pokeCache={};
 
@@ -412,7 +476,7 @@ async function addPoke(name){
   const data=await fetchPoke(name);
   searchEl.placeholder=`Search all ${allPokemon.length} Pokémon…`;
   if(!data)return;
-  team.push({...data,nick:'',item:'',nature:'Jolly',tera:data.types[0],ability:data.abilities[0]||'',moves:['','','',''],evs:{hp:0,atk:0,def:0,spa:0,spd:0,spe:0},ivs:{hp:31,atk:31,def:31,spa:31,spd:31,spe:31}});
+  team.push({...data,nick:'',item:'',nature:'Jolly',tera:data.types[0],ability:data.abilities[0]||'',moves:['','','',''],evs:{hp:0,atk:0,def:0,spa:0,spd:0,spe:0},ivs:{hp:31,atk:31,def:31,spa:31,spd:31,spe:31},isMega:false,megaForm:null,basePoke:null});
   renderAll();
 }
 
@@ -434,6 +498,7 @@ function renderSlots(){
       const p=team[i];const wks=defWeak(p.types);const dbl=TYPES.filter(t=>wks[t]>=4);const spe=actualSpe(p);
       div.className='slot'+(editIdx===i?' active':'');div.onclick=()=>openEdit(i);
       div.innerHTML=`<button class="xbtn" onclick="removePoke(${i},event)">✕</button>
+        ${p.isMega?'<span class="mega-badge">MEGA</span>':''}
         <div class="slot-header">
           ${p.sprite?`<img src="${p.sprite}" class="slot-sprite"/>`:''}
           <div><div class="slot-name">${p.nick||p.displayName}</div><div class="slot-sub">${p.ability}${p.item?' @ '+p.item:''}</div></div>
@@ -508,7 +573,7 @@ function renderExport(){
   const evStr=p=>{const parts=STAT_KEYS.filter(k=>p.evs[k]>0).map(k=>`${p.evs[k]} ${STAT_NAMES[k]}`);return parts.length?parts.join(' / '):'No EVs';};
   const ivStr=p=>{const nf=STAT_KEYS.filter(k=>(p.ivs[k]||31)!==31).map(k=>`${p.ivs[k]} ${STAT_NAMES[k]}`);return nf.length?nf.join(' / '):null;};
   const paste=team.map(p=>{
-    let l=[];const nick=p.nick?`${p.nick} (${p.displayName})`:p.displayName;
+    let l=[];const baseName=p.isMega&&p.basePoke?p.basePoke.displayName:p.displayName;const nick=p.nick?`${p.nick} (${baseName})`:baseName;
     l.push(p.item?`${nick} @ ${p.item}`:nick);
     if(p.ability)l.push(`Ability: ${p.ability}`);
     l.push(`Tera Type: ${p.tera}`);l.push(`EVs: ${evStr(p)}`);l.push(`${p.nature} Nature`);
@@ -544,12 +609,13 @@ function openEdit(i){
   document.getElementById('edit-types').innerHTML=p.types.map(t=>`<span class="tbadge" style="background:${TCOL[t]}">${t}</span>`).join('');
   document.getElementById('e-nick').value=p.nick||'';
   document.getElementById('e-item').value=p.item||'';
+  document.getElementById('e-item').readOnly=!!p.isMega;
   document.getElementById('e-nature').value=p.nature||'Jolly';
   document.getElementById('e-ability').innerHTML=p.abilities.map(a=>`<option${a===p.ability?' selected':''}>${a}</option>`).join('');
   document.getElementById('tera-opts').innerHTML=TYPES.map(t=>`<span class="tera-opt${p.tera===t?' sel':''}" style="background:${TCOL[t]}" onclick="setTera('${t}')">${t}</span>`).join('');
   ['m1','m2','m3','m4'].forEach((id,j)=>document.getElementById(id).value=p.moves[j]||'');
   document.getElementById('edit-panel').style.display='block';
-  etab('build');renderSlots();
+  showMegaControls(p);etab('build');renderSlots();
 }
 
 function setTera(t){if(editIdx===null)return;team[editIdx].tera=t;document.querySelectorAll('.tera-opt').forEach(el=>el.classList.toggle('sel',el.textContent===t));saveEdit();}
@@ -560,6 +626,7 @@ function saveEdit(){
   p.nick=document.getElementById('e-nick').value;p.item=document.getElementById('e-item').value;
   p.nature=document.getElementById('e-nature').value;p.ability=document.getElementById('e-ability').value;
   p.moves=['m1','m2','m3','m4'].map(id=>document.getElementById(id).value.trim());
+  if(p.isMega&&p.megaForm){const mi=MEGA_DATA[p.name]?.find(m=>m.suffix===p.megaForm);if(mi&&mi.stone)p.item=mi.stone;}
   renderAll();
 }
 
@@ -601,6 +668,54 @@ async function runAI(){
     const txt=(d.content?.[0]?.text||'No response.').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'</p><p style="margin-top:8px">').replace(/\n/g,'<br>');
     document.getElementById('ai-out').innerHTML=`<div class="ai-out"><p>${txt}</p></div>`;
   }catch(e){document.getElementById('ai-out').innerHTML='<div class="ai-out" style="color:var(--red)">Connection error. Please try again.</div>';}
+}
+
+function showMegaControls(p){
+  const ctrl=document.getElementById('mega-controls');
+  const btn=document.getElementById('mega-btn');
+  const sel=document.getElementById('mega-select');
+  const megas=MEGA_DATA[p.name];
+  if(!megas&&!p.isMega){ctrl.style.display='none';return;}
+  ctrl.style.display='flex';
+  if(p.isMega){btn.textContent='✕ Revert';btn.classList.add('active');sel.style.display='none';}
+  else{btn.textContent='⬡ Mega Evolve';btn.classList.remove('active');
+    if(megas&&megas.length>1){sel.style.display='flex';sel.innerHTML=megas.map(m=>`<button onclick="toggleMega('${m.suffix}')">${m.label.replace('Mega ','')}</button>`).join('');}
+    else{sel.style.display='none';}
+  }
+}
+
+async function toggleMega(formSuffix){
+  if(editIdx===null)return;const p=team[editIdx];
+  if(p.isMega){
+    // Revert
+    if(p.basePoke){
+      const oldStone=MEGA_DATA[p.name]?.find(m=>m.suffix===p.megaForm)?.stone;
+      p.types=p.basePoke.types;p.abilities=p.basePoke.abilities;p.stats=p.basePoke.stats;
+      p.sprite=p.basePoke.sprite;p.displayName=p.basePoke.displayName;p.ability=p.basePoke.ability;
+      if(p.item===oldStone)p.item='';
+    }
+    p.isMega=false;p.megaForm=null;p.basePoke=null;
+    openEdit(editIdx);renderAll();return;
+  }
+  // Check one-mega-per-team rule
+  if(team.some((m,idx)=>m.isMega&&idx!==editIdx)){alert('Only one Mega Evolution allowed per team!');return;}
+  const megas=MEGA_DATA[p.name];if(!megas)return;
+  let form=megas[0];
+  if(megas.length>1){
+    if(!formSuffix)return; // need to pick X or Y
+    form=megas.find(m=>m.suffix===formSuffix);if(!form)return;
+  }
+  // Snapshot base data
+  p.basePoke={types:[...p.types],abilities:[...p.abilities],stats:{...p.stats},sprite:p.sprite,displayName:p.displayName,ability:p.ability};
+  const apiName=p.name+'-'+form.suffix;
+  const megaData=await fetchPoke(apiName);
+  if(!megaData){p.basePoke=null;alert('Could not load mega form data.');return;}
+  p.types=megaData.types;p.abilities=megaData.abilities;p.stats=megaData.stats;
+  p.sprite=megaData.sprite||p.basePoke.sprite;p.displayName=form.label;
+  p.ability=megaData.abilities[0]||p.basePoke.ability;
+  if(form.stone)p.item=form.stone;
+  p.isMega=true;p.megaForm=form.suffix;
+  openEdit(editIdx);renderAll();
 }
 
 init();renderAll();
