@@ -70,6 +70,25 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .clear-btn.show{display:block}
 .search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(240,96,48,0.12)}
 .search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none}
+.adv-search-btn{padding:10px 16px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s}
+.adv-search-btn:hover{border-color:var(--accent);color:var(--accent)}
+.adv-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:8px}
+.adv-row{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.adv-field{flex:1;min-width:150px}
+.adv-field label{display:block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.adv-field input{width:100%;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none}
+.adv-field input:focus{border-color:var(--accent)}
+.adv-types{display:flex;gap:3px;flex-wrap:wrap}
+.adv-type-btn{font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px;color:#fff;cursor:pointer;opacity:.4;transition:opacity .15s;text-transform:uppercase}
+.adv-type-btn.sel{opacity:1;outline:2px solid rgba(255,255,255,.5);outline-offset:1px}
+.adv-tags{display:flex;gap:4px;flex-wrap:wrap}
+.adv-tag{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all .15s}
+.adv-tag:hover{border-color:var(--border2);color:var(--text)}
+.adv-tag.sel{border-color:var(--accent);color:var(--accent);background:rgba(240,96,48,0.1)}
+.adv-go-btn{width:100%;padding:10px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;margin-bottom:10px}
+.adv-go-btn:hover{opacity:.9}
+.adv-results{max-height:300px;overflow-y:auto}
+.adv-results .ddi img{width:32px;height:32px;image-rendering:pixelated}
 .dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);z-index:200;max-height:260px;overflow-y:auto;box-shadow:0 16px 40px rgba(0,0,0,.5);display:none}
 .ddi{padding:10px 16px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--text);transition:background .15s}
 .ddi:hover{background:var(--bg3)}
@@ -438,24 +457,45 @@ footer a:hover{color:var(--text)}
 
 <div class="app-wrap" id="builder">
 
-  <div class="search-section" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-    <div style="flex:1;min-width:200px">
-      <div class="search-label">Add a Pokémon</div>
-      <div class="search-box" id="sw">
+  <div class="search-section">
+    <div class="search-label">Add a Pokémon</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="search-box" id="sw" style="flex:1">
         <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input id="psearch" placeholder="Loading Pokédex…" autocomplete="off"/>
         <button class="clear-btn" id="clear-psearch" onclick="clearInput('psearch','clear-psearch')">✕</button>
         <div class="dropdown" id="pdd"></div>
       </div>
+      <button class="adv-search-btn" onclick="toggleAdvSearch()">Advanced</button>
     </div>
-    <div style="flex:1;min-width:200px">
-      <div class="search-label">Search by Move or Ability</div>
-      <div class="search-box" id="msw">
-        <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input id="msearch" placeholder="e.g. Tailwind, Intimidate…" autocomplete="off"/>
-        <button class="clear-btn" id="clear-msearch" onclick="clearInput('msearch','clear-msearch');document.getElementById('mdd').style.display='none'">✕</button>
-        <div class="dropdown" id="mdd"></div>
+    <!-- Advanced search panel -->
+    <div class="adv-panel" id="adv-panel" style="display:none">
+      <div class="adv-row">
+        <div class="adv-field">
+          <label>By Move</label>
+          <input id="adv-move" placeholder="e.g. Tailwind" autocomplete="off"/>
+        </div>
+        <div class="adv-field">
+          <label>By Ability</label>
+          <input id="adv-ability" placeholder="e.g. Intimidate" autocomplete="off"/>
+        </div>
+        <div class="adv-field">
+          <label>By Type</label>
+          <div class="adv-types" id="adv-types"></div>
+        </div>
       </div>
+      <div class="adv-row">
+        <div class="adv-field">
+          <label>Role</label>
+          <div class="adv-tags" id="adv-roles"></div>
+        </div>
+        <div class="adv-field">
+          <label>Team Comp</label>
+          <div class="adv-tags" id="adv-comps"></div>
+        </div>
+      </div>
+      <button class="adv-go-btn" onclick="runAdvSearch()">Search</button>
+      <div class="adv-results" id="adv-results"></div>
     </div>
   </div>
 
@@ -919,59 +959,144 @@ searchEl.addEventListener('input',()=>{
     ddEl.style.display='block';
   },100);
 });
-// --- Move/Ability search ---
-const msearchEl=document.getElementById('msearch'),mddEl=document.getElementById('mdd');
-let mst,moveAbilSearchCache={};
-msearchEl.addEventListener('input',()=>{
-  toggleClear('msearch','clear-msearch');
-  clearTimeout(mst);mst=setTimeout(async()=>{
-    const q=msearchEl.value.trim();
-    if(!q||q.length<3){mddEl.style.display='none';return;}
-    const key=q.toLowerCase().replace(/\s+/g,'-');
-    mddEl.innerHTML='<div class="ddi" style="color:var(--muted)">Searching…</div>';
-    mddEl.style.display='block';
+// --- Advanced search ---
+let advType=null,advRole=null,advComp=null;
+const ADV_ROLES={
+  'Physical Sweeper':{test:p=>p.stats.atk>=100&&p.stats.spe>=90},
+  'Special Sweeper':{test:p=>p.stats.spa>=100&&p.stats.spe>=90},
+  'Bulky Attacker':{test:p=>Math.max(p.stats.atk,p.stats.spa)>=90&&(p.stats.hp+p.stats.def+p.stats.spd)/3>=80},
+  'Wall':{test:p=>(p.stats.hp+p.stats.def+p.stats.spd)/3>=90},
+  'Fast Support':{test:p=>p.stats.spe>=90&&Math.max(p.stats.atk,p.stats.spa)<90},
+  'Slow Tank':{test:p=>p.stats.spe<=50&&p.stats.hp>=80},
+};
+const ADV_COMPS={
+  'Trick Room':{moves:['trick-room'],desc:'Learns Trick Room or is very slow (Spe ≤ 50)',testNoMove:p=>p.stats.spe<=50},
+  'Sun Team':{abilities:['drought','orichalcum-pulse','chlorophyll','solar-power','flower-gift'],desc:'Sun setters or Sun abusers'},
+  'Rain Team':{abilities:['drizzle','swift-swim','rain-dish'],desc:'Rain setters or Rain abusers'},
+  'Sand Team':{abilities:['sand-stream','sand-rush','sand-force'],desc:'Sand setters or Sand abusers'},
+  'Tailwind':{moves:['tailwind'],desc:'Learns Tailwind'},
+  'Redirection':{moves:['follow-me','rage-powder'],desc:'Learns Follow Me or Rage Powder'},
+  'Fake Out':{moves:['fake-out'],desc:'Learns Fake Out'},
+  'Priority':{moves:['extreme-speed','aqua-jet','bullet-punch','ice-shard','shadow-sneak','sucker-punch','mach-punch','grassy-glide'],desc:'Has priority attacking moves'},
+};
 
-    let results=[];
-    // Try as a move first
+function toggleAdvSearch(){
+  const p=document.getElementById('adv-panel');
+  p.style.display=p.style.display==='none'?'block':'none';
+  if(p.style.display==='block')initAdvSearch();
+}
+function initAdvSearch(){
+  // Type buttons
+  document.getElementById('adv-types').innerHTML=TYPES.map(t=>
+    `<span class="adv-type-btn${advType===t?' sel':''}" style="background:${TCOL[t]}" onclick="advType=advType==='${t}'?null:'${t}';initAdvSearch()">${t}</span>`
+  ).join('');
+  // Role tags
+  document.getElementById('adv-roles').innerHTML=Object.keys(ADV_ROLES).map(r=>
+    `<span class="adv-tag${advRole===r?' sel':''}" onclick="advRole=advRole==='${r}'?null:'${r}';initAdvSearch()">${r}</span>`
+  ).join('');
+  // Comp tags
+  document.getElementById('adv-comps').innerHTML=Object.keys(ADV_COMPS).map(c=>
+    `<span class="adv-tag${advComp===c?' sel':''}" onclick="advComp=advComp==='${c}'?null:'${c}';initAdvSearch()">${c}</span>`
+  ).join('');
+}
+
+async function runAdvSearch(){
+  const el=document.getElementById('adv-results');
+  const moveQ=document.getElementById('adv-move').value.trim();
+  const abilQ=document.getElementById('adv-ability').value.trim();
+  el.innerHTML='<div style="padding:10px;color:var(--muted)">Searching…</div>';
+
+  // Start with all pokemon (Champions filtered)
+  let pool=championsMode?allPokemon.filter(p=>CHAMPIONS_POKEMON.has(p.name)):allPokemon.slice();
+
+  // Filter by type
+  if(advType){
+    const typeResults=[];
+    for(const p of pool){
+      const data=pokeCache[p.name];
+      if(data&&data.types.includes(advType))typeResults.push(p);
+      else if(!data){
+        // Must fetch — but only check cached for performance
+      }
+    }
+    // For uncached, fetch in batches — but this is slow, so only use cached + fetch a few
+    const uncached=pool.filter(p=>!pokeCache[p.name]).slice(0,30);
+    for(const p of uncached){await fetchPoke(p.name);}
+    pool=pool.filter(p=>{const d=pokeCache[p.name];return d&&d.types.includes(advType);});
+  }
+
+  // Filter by move (API call)
+  if(moveQ){
+    const key=moveQ.toLowerCase().replace(/\s+/g,'-');
     try{
       const r=await fetch(`https://pokeapi.co/api/v2/move/${key}`);
       if(r.ok){
         const d=await r.json();
-        results=d.learned_by_pokemon.map(p=>p.name);
+        const learners=new Set(d.learned_by_pokemon.map(p=>p.name));
+        pool=pool.filter(p=>learners.has(p.name));
+      }else{pool=[];}
+    }catch(e){pool=[];}
+  }
+
+  // Filter by ability (API call)
+  if(abilQ){
+    const key=abilQ.toLowerCase().replace(/\s+/g,'-');
+    try{
+      const r=await fetch(`https://pokeapi.co/api/v2/ability/${key}`);
+      if(r.ok){
+        const d=await r.json();
+        const havers=new Set(d.pokemon.map(p=>p.pokemon.name));
+        pool=pool.filter(p=>havers.has(p.name));
+      }else{pool=[];}
+    }catch(e){pool=[];}
+  }
+
+  // Filter by role (needs stats — fetch uncached)
+  if(advRole){
+    const role=ADV_ROLES[advRole];
+    const uncached=pool.filter(p=>!pokeCache[p.name]).slice(0,50);
+    await Promise.all(uncached.map(p=>fetchPoke(p.name)));
+    pool=pool.filter(p=>{const d=pokeCache[p.name];return d&&role.test(d);});
+  }
+
+  // Filter by comp
+  if(advComp){
+    const comp=ADV_COMPS[advComp];
+    if(comp.moves){
+      // Fetch move learners for each comp move
+      const learnerSets=await Promise.all(comp.moves.map(async m=>{
+        try{const r=await fetch(`https://pokeapi.co/api/v2/move/${m}`);if(r.ok){const d=await r.json();return new Set(d.learned_by_pokemon.map(p=>p.name));}return new Set();}catch(e){return new Set();}
+      }));
+      const allLearners=new Set();learnerSets.forEach(s=>s.forEach(n=>allLearners.add(n)));
+      if(comp.testNoMove){
+        // Also include pokemon that pass the stat test
+        const uncached=pool.filter(p=>!pokeCache[p.name]).slice(0,50);
+        await Promise.all(uncached.map(p=>fetchPoke(p.name)));
+        pool=pool.filter(p=>allLearners.has(p.name)||(pokeCache[p.name]&&comp.testNoMove(pokeCache[p.name])));
+      }else{
+        pool=pool.filter(p=>allLearners.has(p.name));
       }
-    }catch(e){}
-
-    // If no move results, try as ability
-    if(!results.length){
-      try{
-        const r=await fetch(`https://pokeapi.co/api/v2/ability/${key}`);
-        if(r.ok){
-          const d=await r.json();
-          results=d.pokemon.map(p=>p.pokemon.name);
-        }
-      }catch(e){}
     }
+    if(comp.abilities){
+      const abilSets=await Promise.all(comp.abilities.map(async a=>{
+        try{const r=await fetch(`https://pokeapi.co/api/v2/ability/${a}`);if(r.ok){const d=await r.json();return new Set(d.pokemon.map(p=>p.pokemon.name));}return new Set();}catch(e){return new Set();}
+      }));
+      const allHavers=new Set();abilSets.forEach(s=>s.forEach(n=>allHavers.add(n)));
+      pool=pool.filter(p=>allHavers.has(p.name));
+    }
+  }
 
-    if(!results.length){mddEl.innerHTML='<div class="ddi" style="color:var(--muted)">No Pokémon found for "'+q+'"</div>';return;}
-
-    // Filter by Champions mode and match with allPokemon for sprites
-    let filtered=results;
-    if(championsMode)filtered=filtered.filter(n=>CHAMPIONS_POKEMON.has(n));
-
-    const display=filtered.slice(0,20).map(name=>{
-      const found=allPokemon.find(ap=>ap.name===name);
-      const spriteUrl=found?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${found.id}.png`:'';
-      return`<div class="ddi" onclick="addPoke('${name}')">
-        ${spriteUrl?`<img src="${spriteUrl}" width="32" height="32" style="image-rendering:pixelated" loading="lazy">`:''} ${fmt(name)}
-      </div>`;
-    });
-    mddEl.innerHTML=`<div style="padding:6px 16px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">${filtered.length} Pokémon can learn/have <strong>${q}</strong>${championsMode?' (Champions only)':''}</div>`+display.join('');
-  },400);
-});
+  // Render results
+  if(!pool.length){el.innerHTML='<div style="padding:10px;color:var(--muted)">No Pokémon match your filters.</div>';return;}
+  el.innerHTML=`<div style="padding:6px 0;font-size:12px;color:var(--muted);margin-bottom:4px">${pool.length} results${championsMode?' (Champions)':''}</div>`+
+    pool.slice(0,30).map(p=>{
+      const spriteUrl=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`;
+      return`<div class="ddi" onclick="addPoke('${p.name}')"><img src="${spriteUrl}" width="32" height="32" style="image-rendering:pixelated" loading="lazy"/> ${fmt(p.name)}</div>`;
+    }).join('')+(pool.length>30?`<div style="padding:8px;font-size:11px;color:var(--muted)">...and ${pool.length-30} more</div>`:'');
+}
 
 document.addEventListener('click',e=>{
   if(!document.getElementById('sw').contains(e.target))ddEl.style.display='none';
-  if(!document.getElementById('msw').contains(e.target))mddEl.style.display='none';
   document.querySelectorAll('.ac-dd').forEach(d=>{if(!d.parentElement.contains(e.target))d.style.display='none';});
   const nw=document.querySelector('.nature-wrap');const ndd=document.getElementById('nature-dd');
   if(nw&&ndd&&!nw.contains(e.target))ndd.classList.remove('open');
