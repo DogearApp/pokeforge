@@ -1915,8 +1915,8 @@ function runCalcSide(atk,def,moveName,mods){
   let ko;
   const hitsToKO=maxDmg>0?Math.ceil(hp/maxDmg):99;
   const hitsToKOMin=minDmg>0?Math.ceil(hp/minDmg):99;
-  if(hitsToKOMin<=1)ko='Guaranteed OHKO';
-  else if(hitsToKO<=1)ko='Possible OHKO';
+  if(hitsToKOMin<=1)ko='Guaranteed 1HKO';
+  else if(hitsToKO<=1)ko='Possible 1HKO';
   else if(hitsToKOMin<=2)ko='Guaranteed 2HKO';
   else if(hitsToKO<=2)ko='Possible 2HKO';
   else ko=hitsToKO+'HKO';
@@ -1939,7 +1939,7 @@ function renderCalcResult(r,elId){
   if(!r){el.innerHTML='<span style="color:var(--muted);font-size:12px">No moves set</span>';return;}
   if(r.status){el.innerHTML=`<span style="color:var(--muted);font-size:12px">${r.moveName} — status move</span>`;return;}
   if(r.typeEff===0){el.innerHTML=`<span style="color:var(--accent);font-weight:700">${r.moveName}: Immune</span>`;return;}
-  const koCol=r.ko.includes('OHKO')?'var(--red)':r.ko.includes('2HKO')?'var(--orange)':'var(--muted)';
+  const koCol=r.ko.includes('1HKO')?'var(--red)':r.ko.includes('2HKO')?'var(--orange)':'var(--muted)';
   const remainPct=Math.max(0,100-r.maxPct);
   el.innerHTML=`
     <div class="calc-result-dmg">${r.minDmg}–${r.maxDmg} <span style="font-size:13px;font-weight:400;color:var(--muted)">(${r.minPct.toFixed(1)}%–${r.maxPct.toFixed(1)}%)</span></div>
