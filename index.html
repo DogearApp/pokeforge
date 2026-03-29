@@ -84,24 +84,26 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .tm-del{color:var(--muted2);cursor:pointer;font-size:11px;margin-left:2px}
 .tm-del:hover{color:var(--red)}
 
-/* TEAM NOTES */
-.team-notes{margin-bottom:8px}
-.team-notes-input{width:100%;padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none;resize:vertical;min-height:50px;max-height:200px;line-height:1.5;transition:border-color .2s}
+/* TEAM MGR + NOTES row */
+.team-mgr-row{display:flex;gap:8px;margin-bottom:8px;align-items:stretch}
+.team-mgr{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.team-notes-inline{flex:1;min-width:0}
+.team-notes-input{width:100%;padding:8px 10px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none;resize:none;height:100%;min-height:36px;line-height:1.4;transition:border-color .2s}
 .team-notes-input:focus{border-color:var(--accent)}
 .team-notes-input::placeholder{color:var(--muted2)}
 
 /* TEAM BAR */
-.team-bar{display:flex;gap:8px;margin-bottom:1rem;overflow-x:auto;padding:4px 0}
-.team-bar::-webkit-scrollbar{height:3px}
-.tslot{flex:0 0 auto;width:140px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px;cursor:pointer;position:relative;transition:all .15s}
+.team-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:1rem}
+@media(max-width:700px){.team-bar{grid-template-columns:repeat(3,1fr)}}
+.tslot{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:8px;cursor:pointer;position:relative;transition:all .15s;text-align:center}
 .tslot:hover{background:var(--bg3);border-color:var(--border2)}
 .tslot.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(240,96,48,0.2)}
-.tslot.empty{display:flex;align-items:center;justify-content:center;min-height:72px;opacity:.5}
+.tslot.empty{display:flex;align-items:center;justify-content:center;min-height:90px;opacity:.5}
 .tslot.empty:hover{opacity:.8}
-.tslot-head{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-.tslot-sprite{width:32px;height:32px;image-rendering:pixelated}
-.tslot-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tslot-types{display:flex;gap:2px}
+.tslot-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.tslot-body{display:flex;align-items:center;justify-content:center;gap:6px}
+.tslot-sprite{width:48px;height:48px;image-rendering:pixelated}
+.tslot-types{display:flex;flex-direction:column;gap:2px}
 .tslot-xbtn{position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;font-size:12px;color:var(--muted2);line-height:1;padding:2px;border-radius:4px}
 .tslot-xbtn:hover{color:var(--red)}
 .mega-badge{position:absolute;top:4px;left:4px;font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(245,197,66,0.2);color:var(--gold);letter-spacing:.04em;text-transform:uppercase;border:1px solid rgba(245,197,66,0.3)}
@@ -434,12 +436,12 @@ footer a:hover{color:var(--text)}
     </div>
   </div>
 
-  <!-- TEAM MANAGER -->
-  <div class="team-mgr" id="team-mgr"></div>
-
-  <!-- TEAM NOTES -->
-  <div class="team-notes" id="team-notes-wrap" style="display:none">
-    <textarea id="team-notes" class="team-notes-input" placeholder="Write your team strategy, lead combos, win conditions..." oninput="saveTeamNotes()"></textarea>
+  <!-- TEAM MANAGER + NOTES -->
+  <div class="team-mgr-row">
+    <div class="team-mgr" id="team-mgr"></div>
+    <div class="team-notes-inline">
+      <textarea id="team-notes" class="team-notes-input" placeholder="Team notes / strategy..." oninput="saveTeamNotes()"></textarea>
+    </div>
   </div>
 
   <!-- TEAM BAR -->
@@ -959,7 +961,6 @@ function renderTeamMgr(){
     </div>`;
   });
   html+=`<button class="tm-btn" onclick="newTeam()">+ New Team</button>`;
-  html+=`<button class="tm-btn" onclick="toggleNotes()">Notes</button>`;
   html+=`<input class="tm-name-input" value="${allTeams[activeTeamIdx].name}" onchange="renameTeam(${activeTeamIdx},this.value)" placeholder="Team name"/>`;
   el.innerHTML=html;
   // Load notes for active team
@@ -975,19 +976,18 @@ function defWeak(types){
 // --- Team bar (horizontal) ---
 function renderTeamBar(){
   const el=document.getElementById('team-bar');
-  const total=Math.max(team.length+(team.length<6?1:0),4);
   let html='';
-  for(let i=0;i<total;i++){
+  for(let i=0;i<6;i++){
     if(i<team.length){
       const p=team[i];
       html+=`<div class="tslot${editIdx===i?' active':''}" onclick="openEdit(${i})">
         <button class="tslot-xbtn" onclick="removePoke(${i},event)">✕</button>
         ${p.isMega?'<span class="mega-badge">M</span>':''}
-        <div class="tslot-head">
+        <div class="tslot-name">${p.nick||p.displayName}</div>
+        <div class="tslot-body">
           ${p.sprite?`<img src="${p.sprite}" class="tslot-sprite"/>`:''}
-          <div class="tslot-name">${p.nick||p.displayName}</div>
+          <div class="tslot-types">${p.types.map(t=>`<span class="tbadge tbadge-sm" style="background:${TCOL[t]}">${t}</span>`).join('')}</div>
         </div>
-        <div class="tslot-types">${p.types.map(t=>`<span class="tbadge tbadge-sm" style="background:${TCOL[t]}">${t}</span>`).join('')}</div>
       </div>`;
     } else if(i===team.length){
       html+=`<div class="tslot empty" onclick="document.getElementById('psearch').focus()"><span style="font-size:13px;color:var(--muted2)">+ Add</span></div>`;
