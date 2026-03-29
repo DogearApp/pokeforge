@@ -826,15 +826,19 @@ function renderWeakness(){
     .sort((a,b)=>(typeData[b].weak.length+typeData[b].weak4.length*2)-(typeData[a].weak.length+typeData[a].weak4.length*2));
   if(weakTypes.length){
     html+=`<div class="cov-section"><div class="cov-title">Weaknesses</div>`;
+    const maxV=Math.max(...weakTypes.map(t=>typeData[t].weak.length+typeData[t].weak4.length*2));
     weakTypes.forEach(t=>{
-      const d=typeData[t];
-      const sprites2x=d.weak.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName} (2×)">`).join('')||'<span style="color:var(--muted2);font-size:10px">—</span>';
-      const sprites4x=d.weak4.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName} (4×)">`).join('')||'<span style="color:var(--muted2);font-size:10px">—</span>';
+      const d=typeData[t];const score=d.weak.length+d.weak4.length*2;
+      const pct=Math.round(score/maxV*100);
+      const col=score>=4?'#ff5f5f':score>=2?'#ff9d4d':'#6c8eff';
+      const sprites2x=d.weak.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName} (2×)">`).join('');
+      const sprites4x=d.weak4.map(p=>`<img src="${p.sprite}" class="w-mon-sprite" title="${p.displayName} (4×)">`).join('');
       html+=`<div class="wrow">
         <span class="wlabel" style="background:${TCOL[t]}">${t}</span>
+        <div class="wbar-wrap"><div class="wbg"><div class="wbar" style="width:${pct}%;background:${col}"></div></div></div>
         <div class="w-cols">
-          <div class="w-col"><span class="w-col-label" style="color:var(--orange)">2×</span>${sprites2x}</div>
-          <div class="w-col"><span class="w-col-label" style="color:var(--red)">4×</span>${sprites4x}</div>
+          <div class="w-col"><span class="w-col-label" style="color:var(--orange)">2×</span>${sprites2x||'—'}</div>
+          <div class="w-col"><span class="w-col-label" style="color:var(--red)">4×</span>${sprites4x||'—'}</div>
         </div>
       </div>`;
     });
