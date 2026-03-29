@@ -795,8 +795,7 @@ function openEdit(i){
   natureEl.innerHTML=Object.keys(NM).map(n=>{
     const nm=NM[n];const keys=Object.keys(nm);
     let label=n;
-    if(keys.length){const up=keys.find(k=>nm[k]>1),dn=keys.find(k=>nm[k]<1);label=`${n} (+${STAT_NAMES[up]} / -${STAT_NAMES[dn]})`;}
-    else{label=`${n} (Neutral)`;}
+    label=n;
     return `<option value="${n}"${n===p.nature?' selected':''}>${label}</option>`;
   }).join('');
   natureEl.value=p.nature||'Jolly';
