@@ -2295,7 +2295,7 @@ function renderAbilityWithUsage(p){
   el.innerHTML=p.abilities.map(a=>{
     const usage=stats?.abilities?.[a]||0;
     const pctStr=usage?` (${pct(usage)})`:''
-    return `<option${a===p.ability?' selected':''}>${a}${pctStr}</option>`;
+    return `<option value="${a}"${a===p.ability?' selected':''}>${a}${pctStr}</option>`;
   }).join('');
   // Store clean value
   el.onchange=()=>{
