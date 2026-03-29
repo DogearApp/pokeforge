@@ -167,14 +167,14 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 
 /* Move list */
 .move-list-wrap{max-height:calc(100vh - 340px);min-height:300px;overflow-y:auto}
-.move-list-header{display:grid;grid-template-columns:62px 22px 1fr 38px 38px 32px;gap:4px;padding:6px 16px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:1}
+.move-list-header{display:grid;grid-template-columns:62px 28px 1fr 38px 38px 32px;gap:4px;padding:6px 16px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:1}
 .move-row-wrap{border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background .12s}
 .move-row-wrap:hover{background:var(--bg3)}
 .move-row-wrap.selected{background:rgba(108,142,255,0.08)}
 .move-row-wrap.popular{border-left:2px solid var(--accent)}
-.move-row{display:grid;grid-template-columns:62px 22px 1fr 38px 38px 32px;gap:4px;padding:7px 16px 2px;align-items:center}
+.move-row{display:grid;grid-template-columns:62px 28px 1fr 38px 38px 32px;gap:4px;padding:7px 16px 2px;align-items:center}
 .mr-type{font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px;color:#fff;text-align:center;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
-.mr-cat{font-size:13px;text-align:center;line-height:1}
+.mr-cat{font-size:9px;font-weight:700;text-align:center;line-height:1;color:var(--muted);letter-spacing:.03em}
 .mr-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mr-pow,.mr-acc,.mr-pp{font-size:12px;text-align:right;color:var(--muted);font-weight:500}
 .mr-effect{padding:0 16px 7px 90px;font-size:12px;color:#9aa0b8;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -950,7 +950,7 @@ function renderMoveList(){
       addedOtherDivider=true;
     }
     const d=m.d;
-    const catIcon=d?(d.cat==='physical'?'💥':d.cat==='special'?'✦':'◈'):'·';
+    const catIcon=d?(d.cat==='physical'?'PHY':d.cat==='special'?'SPC':'STA'):'·';
     const typeCol=d?TCOL[d.type]||'var(--muted)':'var(--muted2)';
     const effect=d?d.desc.replace(/\n/g,' '):'';
     html+=`<div class="move-row-wrap${m.isSelected?' selected':''}${m.isPopular&&!m.isSelected?' popular':''}" onclick="selectMove('${m.name}')">
