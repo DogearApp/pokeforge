@@ -1077,16 +1077,25 @@ function renderEVSliders(){
     const col=STAT_COLS[k];
     return `<div class="ev-sl">
       <div class="ev-sl-label" style="color:${col}">${STAT_NAMES[k]}</div>
-      <div class="ev-sl-val">${p.evs[k]||0}</div>
-      <input type="range" min="0" max="252" step="4" value="${p.evs[k]||0}" style="accent-color:${col}" oninput="setEV('${k}',this.value)"/>
-      <div class="ev-sl-computed">Stat: ${comp}</div>
-      <div class="ev-sl-iv"><input type="number" min="0" max="31" value="${p.ivs[k]!==undefined?p.ivs[k]:31}" title="IV" oninput="setIV('${k}',this.value)"/></div>
+      <div class="ev-sl-val" id="evval-${k}">${p.evs[k]||0}</div>
+      <input type="range" min="0" max="252" step="4" value="${p.evs[k]||0}" id="evrange-${k}" style="accent-color:${col}" oninput="setEV('${k}',this.value)"/>
+      <div class="ev-sl-computed" id="evcomp-${k}">Stat: ${comp}</div>
+      <div class="ev-sl-iv"><input type="number" min="0" max="31" value="${p.ivs[k]!==undefined?p.ivs[k]:31}" id="eviv-${k}" title="IV" oninput="setIV('${k}',this.value)"/></div>
     </div>`;
   }).join('');
   updateEVTotal();
 }
-function setEV(k,val){if(editIdx===null)return;team[editIdx].evs[k]=Math.min(252,Math.max(0,parseInt(val)||0));renderEVSliders();renderAll();}
-function setIV(k,val){if(editIdx===null)return;team[editIdx].ivs[k]=Math.min(31,Math.max(0,parseInt(val)||0));renderEVSliders();renderAll();}
+function updateEVDisplay(){
+  if(editIdx===null)return;const p=team[editIdx];const nm=NM[p.nature]||{};
+  STAT_KEYS.forEach(k=>{
+    const nat=nm[k]||1;const comp=calcStat(p.stats[k],p.evs[k]||0,p.ivs[k]!==undefined?p.ivs[k]:31,nat,k==='hp');
+    const valEl=document.getElementById('evval-'+k);if(valEl)valEl.textContent=p.evs[k]||0;
+    const compEl=document.getElementById('evcomp-'+k);if(compEl)compEl.textContent='Stat: '+comp;
+  });
+  updateEVTotal();
+}
+function setEV(k,val){if(editIdx===null)return;team[editIdx].evs[k]=Math.min(252,Math.max(0,parseInt(val)||0));updateEVDisplay();renderAll();}
+function setIV(k,val){if(editIdx===null)return;team[editIdx].ivs[k]=Math.min(31,Math.max(0,parseInt(val)||0));updateEVDisplay();renderAll();}
 function resetEVs(){if(editIdx===null)return;STAT_KEYS.forEach(k=>{team[editIdx].evs[k]=0;team[editIdx].ivs[k]=31;});renderEVSliders();renderAll();}
 function updateEVTotal(){
   if(editIdx===null)return;
