@@ -2552,7 +2552,8 @@ async function showUsageTierList(){
     const pctStr=(p.usage*100).toFixed(1)+'%';
     const barW=Math.round(p.usage/maxUsage*100);
     // Try to find the pokemon in allPokemon for sprite
-    const found=allPokemon.find(ap=>fmt(ap.name)===p.name);
+    const apiName=p.name.toLowerCase().replace(/\s+/g,'-');
+    const found=allPokemon.find(ap=>ap.name===apiName||ap.name.startsWith(apiName));
     const spriteUrl=found?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${found.id}.png`:'';
     return`<div class="tierlist-row">
       <div class="tierlist-rank">${i+1}</div>
