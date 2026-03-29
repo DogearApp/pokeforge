@@ -319,6 +319,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .calc-hp-bar{height:10px;background:var(--bg4);border-radius:5px;overflow:hidden;margin-bottom:8px;position:relative}
 .calc-hp-fill{height:100%;border-radius:5px;transition:width .3s}
 .calc-breakdown{font-size:11px;color:var(--muted);line-height:1.6}
+.calc-side-mods{margin:8px 0;padding:0;gap:4px}
 .showdown-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-family:monospace;font-size:11.5px;color:var(--muted);white-space:pre-wrap;line-height:1.8;max-height:300px;overflow-y:auto;margin-bottom:10px}
 .copy-btn{width:100%;padding:10px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;letter-spacing:.02em;transition:opacity .2s,transform .1s}
 .copy-btn:hover{opacity:.9}
@@ -501,25 +502,37 @@ footer a:hover{color:var(--text)}
         </div>
 
         <div class="tab-body" id="t-calc" style="display:none">
+          <!-- Pokemon pickers -->
+          <div class="calc-row" style="margin-bottom:8px">
+            <div class="calc-box">
+              <div class="calc-box-title">Pokemon 1</div>
+              <div class="calc-poke-btns" id="calc-p1-btns"></div>
+              <div class="calc-summary" id="calc-p1-summary"></div>
+            </div>
+            <div class="calc-box">
+              <div class="calc-box-title">Pokemon 2</div>
+              <div class="calc-poke-btns" id="calc-p2-btns"></div>
+              <div class="calc-summary" id="calc-p2-summary"></div>
+            </div>
+          </div>
+          <!-- Shared modifiers -->
+          <div class="calc-mods" id="calc-mods-shared"></div>
+          <!-- Two-sided results -->
           <div class="calc-row">
+            <!-- P1 attacks P2 -->
             <div class="calc-box">
-              <div class="calc-box-title">Attacker</div>
-              <div class="calc-poke-btns" id="calc-atk-btns"></div>
-              <div class="calc-summary" id="calc-atk-summary"></div>
+              <div class="calc-box-title" id="calc-r1-title">P1 → P2</div>
+              <div class="calc-move-btns" id="calc-r1-moves"></div>
+              <div class="calc-mods calc-side-mods" id="calc-r1-mods"></div>
+              <div class="calc-result" id="calc-r1-result"></div>
             </div>
+            <!-- P2 attacks P1 -->
             <div class="calc-box">
-              <div class="calc-box-title">Defender</div>
-              <div class="calc-poke-btns" id="calc-def-btns"></div>
-              <div class="calc-summary" id="calc-def-summary"></div>
+              <div class="calc-box-title" id="calc-r2-title">P2 → P1</div>
+              <div class="calc-move-btns" id="calc-r2-moves"></div>
+              <div class="calc-mods calc-side-mods" id="calc-r2-mods"></div>
+              <div class="calc-result" id="calc-r2-result"></div>
             </div>
-          </div>
-          <div class="calc-box" style="margin-bottom:12px">
-            <div class="calc-box-title">Move</div>
-            <div class="calc-move-btns" id="calc-move-btns"><span style="font-size:12px;color:var(--muted)">Select an attacker first</span></div>
-          </div>
-          <div class="calc-mods" id="calc-mods"></div>
-          <div class="calc-result" id="calc-result">
-            <span style="font-size:13px;color:var(--muted)">Select an attacker, move, and defender to calculate damage.</span>
           </div>
         </div>
       </div>
@@ -1833,8 +1846,14 @@ function getItemUsage(p){
   return stats?.items||{};
 }
 
-// --- Damage Calculator ---
-let calc={atkIdx:0,defIdx:1,moveIdx:0,weather:'none',terrain:'none',spread:true,crit:false,burn:false,teraAtk:false,atkStage:0,spaStage:0,defStage:0,spdStage:0};
+// --- Damage Calculator (two-sided) ---
+let calc={
+  p1Idx:0,p2Idx:1,
+  r1MoveIdx:0,r2MoveIdx:0,
+  weather:'none',terrain:'none',
+  r1:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0,defStage:0,spdStage:0},
+  r2:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0,defStage:0,spdStage:0}
+};
 
 function applyStage(stat,stage){
   stage=Math.max(-6,Math.min(6,stage));
@@ -1842,214 +1861,182 @@ function applyStage(stat,stage){
   return Math.floor(stat*2/(2-stage));
 }
 
-function calcDamage(){
-  if(!team.length||team.length<2&&calc.defIdx>=team.length)return null;
-  const atk=team[calc.atkIdx];const def=team[calc.defIdx];
-  if(!atk||!def)return null;
-  const moves=atk.moves.filter(m=>m);
-  if(!moves.length)return null;
-  const moveName=moves[calc.moveIdx]||moves[0];
+const TYPE_ITEMS={'Charcoal':'Fire','Mystic Water':'Water','Magnet':'Electric','Miracle Seed':'Grass','Never Melt Ice':'Ice','Black Belt':'Fighting','Poison Barb':'Poison','Soft Sand':'Ground','Sharp Beak':'Flying','Twisted Spoon':'Psychic','Silver Powder':'Bug','Hard Stone':'Rock','Spell Tag':'Ghost','Dragon Fang':'Dragon','Black Glasses':'Dark','Metal Coat':'Steel','Silk Scarf':'Normal','Fairy Feather':'Fairy','Pixie Plate':'Fairy'};
+
+function runCalcSide(atk,def,moveName,mods){
   const key=moveName.toLowerCase().replace(/\s+/g,'-');
   const md=moveCache[key];
-  if(!md||!md.power||md.cat==='status')return{status:true,moveName:moveName.replace(/-/g,' '),type:md?.type||'Normal'};
+  if(!md||!md.power||md.cat==='status')return{status:true,moveName:moveName.replace(/-/g,' ')};
 
   const as=computedStats(atk),ds=computedStats(def);
-  const lvl=50;let power=md.power;
-
-  // A and D
   let A=md.cat==='physical'?as.atk:as.spa;
   let D=md.cat==='physical'?ds.def:ds.spd;
 
-  // Stat stages — use the correct one based on move category
-  A=applyStage(A,md.cat==='physical'?calc.atkStage:calc.spaStage);
-  D=applyStage(D,md.cat==='physical'?calc.defStage:calc.spdStage);
+  // Attacker stat stages
+  A=applyStage(A,md.cat==='physical'?mods.atkStage:mods.spaStage);
+  // Defender stat stages (from the OTHER side's perspective)
+  D=applyStage(D,md.cat==='physical'?mods.defStage:mods.spdStage);
 
-  // Ability mods
   if(['Huge-Power','Pure-Power'].includes(atk.ability)&&md.cat==='physical')A=Math.floor(A*2);
   if(atk.ability==='Hustle'&&md.cat==='physical')A=Math.floor(A*1.5);
-
-  // Item mods on stats
   if(atk.item==='Choice Band'&&md.cat==='physical')A=Math.floor(A*1.5);
   if(atk.item==='Choice Specs'&&md.cat==='special')A=Math.floor(A*1.5);
   if(def.item==='Assault Vest'&&md.cat==='special')D=Math.floor(D*1.5);
-  if(def.item==='Eviolite'){D=Math.floor(D*1.5);}
+  if(def.item==='Eviolite')D=Math.floor(D*1.5);
 
-  // Base damage
-  const base=Math.floor(((2*lvl/5+2)*power*A/D)/50)+2;
+  const base=Math.floor(((2*50/5+2)*md.power*A/D)/50)+2;
 
-  // Modifier chain
-  let targets=calc.spread?0.75:1;
-
+  let targets=mods.spread?0.75:1;
   let weather=1;
   if(calc.weather==='sun'){if(md.type==='Fire')weather=1.5;else if(md.type==='Water')weather=0.5;}
   if(calc.weather==='rain'){if(md.type==='Water')weather=1.5;else if(md.type==='Fire')weather=0.5;}
-
-  let critical=calc.crit?1.5:1;
-
-  // STAB
+  let critical=mods.crit?1.5:1;
   let stab=1;
-  const atkTypes=calc.teraAtk?[atk.tera]:atk.types;
+  const atkTypes=mods.tera?[atk.tera]:atk.types;
   if(atkTypes.includes(md.type))stab=atk.ability==='Adaptability'?2:1.5;
-
-  // Type effectiveness
   let typeEff=1;
   def.types.forEach(dt=>{const c=TC[md.type]||{};if(c[dt]!==undefined)typeEff*=c[dt];});
-
-  // Burn
-  let burn=(calc.burn&&md.cat==='physical'&&atk.ability!=='Guts')?0.5:1;
-
-  // Other multipliers
+  let burn=(mods.burn&&md.cat==='physical'&&atk.ability!=='Guts')?0.5:1;
   let other=1;
   if(atk.item==='Life Orb')other*=1.3;
   if(atk.item==='Expert Belt'&&typeEff>1)other*=1.2;
-  const typeItems={'Charcoal':'Fire','Mystic Water':'Water','Magnet':'Electric','Miracle Seed':'Grass',
-    'Never Melt Ice':'Ice','Black Belt':'Fighting','Poison Barb':'Poison','Soft Sand':'Ground',
-    'Sharp Beak':'Flying','Twisted Spoon':'Psychic','Silver Powder':'Bug','Hard Stone':'Rock',
-    'Spell Tag':'Ghost','Dragon Fang':'Dragon','Black Glasses':'Dark','Metal Coat':'Steel',
-    'Silk Scarf':'Normal','Fairy Feather':'Fairy','Pixie Plate':'Fairy'};
-  if(typeItems[atk.item]===md.type)other*=1.2;
-
-  // Terrain
+  if(TYPE_ITEMS[atk.item]===md.type)other*=1.2;
   if(calc.terrain==='electric'&&md.type==='Electric')other*=1.3;
   if(calc.terrain==='grassy'&&md.type==='Grass')other*=1.3;
   if(calc.terrain==='psychic'&&md.type==='Psychic')other*=1.3;
   if(calc.terrain==='misty'&&md.type==='Dragon')other*=0.5;
-
-  // Guts
-  if(atk.ability==='Guts'&&calc.burn&&md.cat==='physical')other*=1.5;
+  if(atk.ability==='Guts'&&mods.burn&&md.cat==='physical')other*=1.5;
 
   const mod=targets*weather*critical*stab*typeEff*burn*other;
-  const minDmg=Math.floor(base*mod*0.85);
-  const maxDmg=Math.floor(base*mod*1.00);
-  const hp=ds.hp;
-  const minPct=minDmg/hp*100;
-  const maxPct=maxDmg/hp*100;
+  const minDmg=Math.floor(base*mod*0.85),maxDmg=Math.floor(base*mod*1.00);
+  const hp=ds.hp,minPct=minDmg/hp*100,maxPct=maxDmg/hp*100;
 
   let ko;
   if(minPct>=100)ko='Guaranteed OHKO';
-  else if(maxPct>=100)ko='Possible OHKO ('+Math.round(minPct)+'–100%)';
+  else if(maxPct>=100)ko='Possible OHKO';
   else if(minPct>=50)ko='Guaranteed 2HKO';
   else if(maxPct>=50)ko='Possible 2HKO';
-  else if(minPct>=34)ko='Guaranteed 3HKO';
-  else if(maxPct>=34)ko='Possible 3HKO';
+  else if(minPct>=34)ko='3HKO';
   else ko=Math.ceil(100/maxPct)+'HKO';
 
-  // Build breakdown tags
   const tags=[];
   if(stab>1)tags.push('STAB');
-  if(typeEff>1)tags.push(typeEff>=4?'Super effective (4x)':'Super effective (2x)');
-  else if(typeEff>0&&typeEff<1)tags.push(typeEff<=0.25?'Not very effective (0.25x)':'Not very effective (0.5x)');
-  else if(typeEff===0)tags.push('Immune (0x)');
-  if(atk.item&&['Choice Band','Choice Specs','Life Orb','Expert Belt'].includes(atk.item))tags.push(atk.item);
-  if(calc.spread)tags.push('Spread (0.75x)');
-  if(weather!==1)tags.push(calc.weather==='sun'?'Sun':'Rain');
-  if(calc.crit)tags.push('Critical hit');
-  if(calc.burn&&burn<1)tags.push('Burned');
-  if(calc.teraAtk)tags.push('Tera '+atk.tera);
-  if(calc.terrain!=='none')tags.push(calc.terrain.charAt(0).toUpperCase()+calc.terrain.slice(1)+' Terrain');
-  const usedAtkStage=md.cat==='physical'?calc.atkStage:calc.spaStage;
-  const usedDefStage=md.cat==='physical'?calc.defStage:calc.spdStage;
-  if(usedAtkStage!==0)tags.push((usedAtkStage>0?'+':'')+usedAtkStage+' '+(md.cat==='physical'?'Atk':'SpA'));
-  if(usedDefStage!==0)tags.push((usedDefStage>0?'+':'')+usedDefStage+' '+(md.cat==='physical'?'Def':'SpD'));
+  if(typeEff>1)tags.push(typeEff>=4?'4x SE':'2x SE');
+  else if(typeEff>0&&typeEff<1)tags.push(typeEff<=0.25?'0.25x NVE':'0.5x NVE');
+  else if(typeEff===0)tags.push('Immune');
+  if(mods.spread)tags.push('Spread');
+  if(weather!==1)tags.push(calc.weather);
+  if(mods.crit)tags.push('Crit');
+  if(mods.burn&&burn<1)tags.push('Burn');
+  if(mods.tera)tags.push('Tera');
+  return{minDmg,maxDmg,hp,minPct,maxPct,ko,typeEff,tags,moveName:moveName.replace(/-/g,' ')};
+}
 
-  return{minDmg,maxDmg,hp,minPct,maxPct,ko,typeEff,tags,moveName:moveName.replace(/-/g,' '),type:md.type,cat:md.cat,power};
+function renderCalcResult(r,elId){
+  const el=document.getElementById(elId);
+  if(!r){el.innerHTML='<span style="color:var(--muted);font-size:12px">No moves set</span>';return;}
+  if(r.status){el.innerHTML=`<span style="color:var(--muted);font-size:12px">${r.moveName} — status move</span>`;return;}
+  if(r.typeEff===0){el.innerHTML=`<span style="color:var(--accent);font-weight:700">${r.moveName}: Immune</span>`;return;}
+  const koCol=r.ko.includes('OHKO')?'var(--red)':r.ko.includes('2HKO')?'var(--orange)':'var(--muted)';
+  const remainPct=Math.max(0,100-r.maxPct);
+  el.innerHTML=`
+    <div class="calc-result-dmg">${r.minDmg}–${r.maxDmg} <span style="font-size:13px;font-weight:400;color:var(--muted)">(${r.minPct.toFixed(1)}%–${r.maxPct.toFixed(1)}%)</span></div>
+    <div class="calc-result-ko" style="color:${koCol}">${r.ko}</div>
+    <div class="calc-hp-bar"><div class="calc-hp-fill" style="width:${Math.min(100,remainPct)}%;background:${remainPct>50?'var(--green)':remainPct>25?'var(--orange)':'var(--red)'}"></div></div>
+    <div class="calc-breakdown">${r.tags.join(' · ')}</div>`;
+}
+
+function renderSideMods(side,prefix){
+  const s=calc[side];
+  let h='';
+  h+=`<span class="calc-pill${s.spread?' sel':''}" onclick="calc.${side}.spread=!calc.${side}.spread;renderCalc()">Spread</span>`;
+  h+=`<span class="calc-pill${s.crit?' sel':''}" onclick="calc.${side}.crit=!calc.${side}.crit;renderCalc()">Crit</span>`;
+  h+=`<span class="calc-pill${s.burn?' sel':''}" onclick="calc.${side}.burn=!calc.${side}.burn;renderCalc()">Burned</span>`;
+  h+=`<span class="calc-pill${s.tera?' sel':''}" onclick="calc.${side}.tera=!calc.${side}.tera;renderCalc()">Tera</span>`;
+  const stages=[['atkStage','Atk'],['spaStage','SpA'],['defStage','Def'],['spdStage','SpD']];
+  h+=`<div style="display:flex;gap:6px;margin-top:6px">`
+  stages.forEach(([k,lbl])=>{
+    h+=`<div class="calc-stage-wrap"><div class="calc-stage-label">${lbl}</div><div class="calc-stage"><button onclick="calc.${side}.${k}=Math.max(-6,calc.${side}.${k}-1);renderCalc()">-</button><span>${s[k]>=0?'+':''}${s[k]}</span><button onclick="calc.${side}.${k}=Math.min(6,calc.${side}.${k}+1);renderCalc()">+</button></div></div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+
+function renderMoveButtons(poke,moveIdx,side){
+  const moves=poke.moves.filter(m=>m);
+  if(!moves.length)return'<span style="font-size:12px;color:var(--muted)">No moves set</span>';
+  return moves.map((m,i)=>{
+    const k=m.toLowerCase().replace(/\s+/g,'-');
+    const d=moveCache[k];
+    const col=d?TCOL[d.type]||'var(--muted)':'var(--muted)';
+    const catL=d?(d.cat==='physical'?'PHY':d.cat==='special'?'SPC':'STA'):'';
+    return`<div class="calc-move-btn${moveIdx===i?' sel':''}" onclick="calc.${side}MoveIdx=${i};renderCalc()">
+      ${d?`<span class="tbadge tbadge-sm" style="background:${col}">${d.type}</span>`:''}
+      ${m.replace(/-/g,' ')} ${d?`<span style="color:var(--muted);font-size:10px">${d.power||''}</span>`:''}
+    </div>`;
+  }).join('');
 }
 
 function renderCalc(){
-  if(!team.length){
-    document.getElementById('calc-result').innerHTML='<span style="font-size:13px;color:var(--muted)">Add Pokémon to your team to use the damage calculator.</span>';
+  if(team.length<2){
+    document.getElementById('calc-r1-result').innerHTML='<span style="color:var(--muted);font-size:12px">Add at least 2 Pokémon to use the calculator.</span>';
+    document.getElementById('calc-r2-result').innerHTML='';
+    document.getElementById('calc-r1-moves').innerHTML='';document.getElementById('calc-r2-moves').innerHTML='';
+    document.getElementById('calc-r1-mods').innerHTML='';document.getElementById('calc-r2-mods').innerHTML='';
+    document.getElementById('calc-p1-btns').innerHTML='';document.getElementById('calc-p2-btns').innerHTML='';
+    document.getElementById('calc-p1-summary').innerHTML='';document.getElementById('calc-p2-summary').innerHTML='';
+    document.getElementById('calc-mods-shared').innerHTML='';
     return;
   }
-  if(calc.atkIdx>=team.length)calc.atkIdx=0;
-  if(calc.defIdx>=team.length)calc.defIdx=Math.min(1,team.length-1);
-  if(calc.atkIdx===calc.defIdx&&team.length>1)calc.defIdx=(calc.atkIdx+1)%team.length;
+  if(calc.p1Idx>=team.length)calc.p1Idx=0;
+  if(calc.p2Idx>=team.length)calc.p2Idx=1;
+  if(calc.p1Idx===calc.p2Idx)calc.p2Idx=(calc.p1Idx+1)%team.length;
 
-  // Attacker buttons
-  document.getElementById('calc-atk-btns').innerHTML=team.map((p,i)=>
-    `<div class="calc-poke-btn${calc.atkIdx===i?' sel':''}" onclick="calc.atkIdx=${i};calc.moveIdx=0;renderCalc()">
-      ${p.sprite?`<img src="${p.sprite}">`:''}${p.displayName}
-    </div>`
-  ).join('');
+  const p1=team[calc.p1Idx],p2=team[calc.p2Idx];
+  const s1=computedStats(p1),s2=computedStats(p2);
 
-  // Defender buttons
-  document.getElementById('calc-def-btns').innerHTML=team.map((p,i)=>
-    `<div class="calc-poke-btn${calc.defIdx===i?' sel':''}" onclick="calc.defIdx=${i};renderCalc()">
-      ${p.sprite?`<img src="${p.sprite}">`:''}${p.displayName}
-    </div>`
-  ).join('');
+  // Pokemon pickers
+  document.getElementById('calc-p1-btns').innerHTML=team.map((p,i)=>`<div class="calc-poke-btn${calc.p1Idx===i?' sel':''}" onclick="calc.p1Idx=${i};calc.r1MoveIdx=0;renderCalc()">${p.sprite?`<img src="${p.sprite}">`:''}${p.displayName}</div>`).join('');
+  document.getElementById('calc-p2-btns').innerHTML=team.map((p,i)=>`<div class="calc-poke-btn${calc.p2Idx===i?' sel':''}" onclick="calc.p2Idx=${i};calc.r2MoveIdx=0;renderCalc()">${p.sprite?`<img src="${p.sprite}">`:''}${p.displayName}</div>`).join('');
 
-  // Attacker summary
-  const atk=team[calc.atkIdx],def=team[calc.defIdx];
-  const as=computedStats(atk),ds=computedStats(def);
-  document.getElementById('calc-atk-summary').innerHTML=`
-    <strong>${atk.displayName}</strong> · ${atk.nature} · ${atk.item||'No item'}<br>
-    Atk: <strong>${as.atk}</strong> · SpA: <strong>${as.spa}</strong> · Spe: <strong>${as.spe}</strong>
-  `;
-  document.getElementById('calc-def-summary').innerHTML=`
-    <strong>${def.displayName}</strong> · ${def.nature} · ${def.item||'No item'}<br>
-    HP: <strong>${ds.hp}</strong> · Def: <strong>${ds.def}</strong> · SpD: <strong>${ds.spd}</strong>
-  `;
+  document.getElementById('calc-p1-summary').innerHTML=`<strong>${p1.displayName}</strong> · ${p1.nature} · ${p1.item||'No item'}<br>HP: <strong>${s1.hp}</strong> Atk: <strong>${s1.atk}</strong> Def: <strong>${s1.def}</strong> SpA: <strong>${s1.spa}</strong> SpD: <strong>${s1.spd}</strong> Spe: <strong>${s1.spe}</strong>`;
+  document.getElementById('calc-p2-summary').innerHTML=`<strong>${p2.displayName}</strong> · ${p2.nature} · ${p2.item||'No item'}<br>HP: <strong>${s2.hp}</strong> Atk: <strong>${s2.atk}</strong> Def: <strong>${s2.def}</strong> SpA: <strong>${s2.spa}</strong> SpD: <strong>${s2.spd}</strong> Spe: <strong>${s2.spe}</strong>`;
 
-  // Move buttons
-  const moves=atk.moves.filter(m=>m);
-  if(calc.moveIdx>=moves.length)calc.moveIdx=0;
-  if(moves.length){
-    document.getElementById('calc-move-btns').innerHTML=moves.map((m,i)=>{
-      const k=m.toLowerCase().replace(/\s+/g,'-');
-      const d=moveCache[k];
-      const col=d?TCOL[d.type]||'var(--muted)':'var(--muted)';
-      const catL=d?(d.cat==='physical'?'PHY':d.cat==='special'?'SPC':'STA'):'';
-      return`<div class="calc-move-btn${calc.moveIdx===i?' sel':''}" onclick="calc.moveIdx=${i};renderCalc()">
-        ${d?`<span class="tbadge tbadge-sm" style="background:${col}">${d.type}</span>`:''}
-        ${m.replace(/-/g,' ')} ${d?`<span style="color:var(--muted);font-size:11px">${catL} ${d.power||'—'}</span>`:''}
-      </div>`;
-    }).join('');
-  } else {
-    document.getElementById('calc-move-btns').innerHTML='<span style="font-size:12px;color:var(--muted)">No moves set — edit this Pokémon to add moves</span>';
-  }
-
-  // Modifiers
+  // Shared mods
   const weathers=['none','sun','rain','sand','snow'];
   const terrains=['none','electric','grassy','psychic','misty'];
-  let modHtml='';
-  modHtml+=`<div class="calc-mod-group"><span class="calc-mod-label">Weather</span>${weathers.map(w=>`<span class="calc-pill${calc.weather===w?' sel':''}" onclick="calc.weather='${w}';renderCalc()">${w==='none'?'None':w.charAt(0).toUpperCase()+w.slice(1)}</span>`).join('')}</div>`;
-  modHtml+=`<div class="calc-mod-group"><span class="calc-mod-label">Terrain</span>${terrains.map(t=>`<span class="calc-pill${calc.terrain===t?' sel':''}" onclick="calc.terrain='${t}';renderCalc()">${t==='none'?'None':t.charAt(0).toUpperCase()+t.slice(1)}</span>`).join('')}</div>`;
-  modHtml+=`<div class="calc-mod-group"><span class="calc-pill${calc.spread?' sel':''}" onclick="calc.spread=!calc.spread;renderCalc()">Spread</span>`;
-  modHtml+=`<span class="calc-pill${calc.crit?' sel':''}" onclick="calc.crit=!calc.crit;renderCalc()">Crit</span>`;
-  modHtml+=`<span class="calc-pill${calc.burn?' sel':''}" onclick="calc.burn=!calc.burn;renderCalc()">Burned</span>`;
-  modHtml+=`<span class="calc-pill${calc.teraAtk?' sel':''}" onclick="calc.teraAtk=!calc.teraAtk;renderCalc()">Tera</span></div>`;
-  modHtml+=`<div class="calc-mod-group">
-    <div class="calc-stage-wrap"><div class="calc-stage-label">Atk</div><div class="calc-stage"><button onclick="calc.atkStage=Math.max(-6,calc.atkStage-1);renderCalc()">-</button><span>${calc.atkStage>=0?'+':''}${calc.atkStage}</span><button onclick="calc.atkStage=Math.min(6,calc.atkStage+1);renderCalc()">+</button></div></div>
-    <div class="calc-stage-wrap"><div class="calc-stage-label">SpA</div><div class="calc-stage"><button onclick="calc.spaStage=Math.max(-6,calc.spaStage-1);renderCalc()">-</button><span>${calc.spaStage>=0?'+':''}${calc.spaStage}</span><button onclick="calc.spaStage=Math.min(6,calc.spaStage+1);renderCalc()">+</button></div></div>
-    <div class="calc-stage-wrap"><div class="calc-stage-label">Def</div><div class="calc-stage"><button onclick="calc.defStage=Math.max(-6,calc.defStage-1);renderCalc()">-</button><span>${calc.defStage>=0?'+':''}${calc.defStage}</span><button onclick="calc.defStage=Math.min(6,calc.defStage+1);renderCalc()">+</button></div></div>
-    <div class="calc-stage-wrap"><div class="calc-stage-label">SpD</div><div class="calc-stage"><button onclick="calc.spdStage=Math.max(-6,calc.spdStage-1);renderCalc()">-</button><span>${calc.spdStage>=0?'+':''}${calc.spdStage}</span><button onclick="calc.spdStage=Math.min(6,calc.spdStage+1);renderCalc()">+</button></div></div>
-  </div>`;
-  document.getElementById('calc-mods').innerHTML=modHtml;
+  let shared='';
+  shared+=`<div class="calc-mod-group"><span class="calc-mod-label">Weather</span>${weathers.map(w=>`<span class="calc-pill${calc.weather===w?' sel':''}" onclick="calc.weather='${w}';renderCalc()">${w==='none'?'—':w.charAt(0).toUpperCase()+w.slice(1)}</span>`).join('')}</div>`;
+  shared+=`<div class="calc-mod-group"><span class="calc-mod-label">Terrain</span>${terrains.map(t=>`<span class="calc-pill${calc.terrain===t?' sel':''}" onclick="calc.terrain='${t}';renderCalc()">${t==='none'?'—':t.charAt(0).toUpperCase()+t.slice(1)}</span>`).join('')}</div>`;
+  document.getElementById('calc-mods-shared').innerHTML=shared;
 
-  // Calculate and show result
-  const r=calcDamage();
-  if(!r){
-    document.getElementById('calc-result').innerHTML='<span style="font-size:13px;color:var(--muted)">Select a move to calculate damage.</span>';
-    return;
+  // Side titles
+  document.getElementById('calc-r1-title').textContent=`${p1.displayName} → ${p2.displayName}`;
+  document.getElementById('calc-r2-title').textContent=`${p2.displayName} → ${p1.displayName}`;
+
+  // Move buttons
+  const m1=p1.moves.filter(m=>m);if(calc.r1MoveIdx>=m1.length)calc.r1MoveIdx=0;
+  const m2=p2.moves.filter(m=>m);if(calc.r2MoveIdx>=m2.length)calc.r2MoveIdx=0;
+  document.getElementById('calc-r1-moves').innerHTML=renderMoveButtons(p1,calc.r1MoveIdx,'r1');
+  document.getElementById('calc-r2-moves').innerHTML=renderMoveButtons(p2,calc.r2MoveIdx,'r2');
+
+  // Side mods
+  document.getElementById('calc-r1-mods').innerHTML=renderSideMods('r1','r1');
+  document.getElementById('calc-r2-mods').innerHTML=renderSideMods('r2','r2');
+
+  // Calculate both sides
+  if(m1.length){
+    const r1=runCalcSide(p1,p2,m1[calc.r1MoveIdx],calc.r1);
+    renderCalcResult(r1,'calc-r1-result');
+  } else {
+    document.getElementById('calc-r1-result').innerHTML='<span style="color:var(--muted);font-size:12px">No moves set</span>';
   }
-  if(r.status){
-    document.getElementById('calc-result').innerHTML=`<div class="calc-result-dmg">${r.moveName}</div><div style="color:var(--muted)">Status move — no damage to calculate</div>`;
-    return;
+  if(m2.length){
+    const r2=runCalcSide(p2,p1,m2[calc.r2MoveIdx],calc.r2);
+    renderCalcResult(r2,'calc-r2-result');
+  } else {
+    document.getElementById('calc-r2-result').innerHTML='<span style="color:var(--muted);font-size:12px">No moves set</span>';
   }
-  if(r.typeEff===0){
-    document.getElementById('calc-result').innerHTML=`<div class="calc-result-dmg">${r.moveName}</div><div style="color:var(--accent);font-weight:700;font-size:16px">Immune — 0 damage</div>`;
-    return;
-  }
-  const koCol=r.ko.includes('OHKO')?'var(--red)':r.ko.includes('2HKO')?'var(--orange)':r.ko.includes('3HKO')?'var(--gold)':'var(--muted)';
-  const remainPct=Math.max(0,100-r.maxPct);
-  document.getElementById('calc-result').innerHTML=`
-    <div class="calc-result-dmg">${r.minDmg}–${r.maxDmg} (${r.minPct.toFixed(1)}%–${r.maxPct.toFixed(1)}%)</div>
-    <div class="calc-result-ko" style="color:${koCol}">${r.ko}</div>
-    <div class="calc-hp-bar">
-      <div class="calc-hp-fill" style="width:${Math.min(100,remainPct)}%;background:${remainPct>50?'var(--green)':remainPct>25?'var(--orange)':'var(--red)'}"></div>
-    </div>
-    <div class="calc-breakdown">${r.tags.join(' · ')}</div>
-  `;
 }
 
 // --- Init ---
