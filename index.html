@@ -168,18 +168,25 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 /* Move list */
 .move-list-wrap{max-height:calc(100vh - 380px);min-height:300px;overflow-y:auto}
 .move-list-header{display:grid;grid-template-columns:62px 22px 1fr 38px 38px 32px;gap:4px;padding:6px 16px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:1}
-.move-row{display:grid;grid-template-columns:62px 22px 1fr 38px 38px 32px;gap:4px;padding:8px 16px;align-items:center;cursor:pointer;transition:background .12s;border-bottom:1px solid rgba(255,255,255,0.03)}
+.move-row-wrap{border-bottom:1px solid rgba(255,255,255,0.03)}
+.move-row{display:grid;grid-template-columns:62px 22px 1fr 38px 38px 32px;gap:4px;padding:8px 16px;align-items:center;cursor:pointer;transition:background .12s}
 .move-row:hover{background:var(--bg3)}
 .move-row.selected{background:rgba(108,142,255,0.08)}
 .move-row.popular{border-left:2px solid var(--accent)}
+.move-row.expanded{background:var(--bg3)}
 .mr-type{font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px;color:#fff;text-align:center;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
 .mr-cat{font-size:13px;text-align:center;line-height:1}
 .mr-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mr-pow,.mr-acc,.mr-pp{font-size:12px;text-align:right;color:var(--muted);font-weight:500}
 .mr-loading{color:var(--muted2);font-size:11px}
+.mr-desc{display:none;padding:4px 16px 10px 16px;font-size:12px;color:var(--muted);line-height:1.6;background:var(--bg3);border-left:2px solid var(--accent)}
+.mr-desc.open{display:block}
+.mr-desc .mr-desc-stats{font-size:11px;color:var(--accent);font-weight:600;margin-bottom:3px}
+.mr-desc .mr-desc-text{color:var(--muted)}
 .move-divider{padding:6px 16px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);background:var(--bg);border-bottom:1px solid var(--border)}
-.move-desc-bar{padding:10px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);line-height:1.5;min-height:40px;background:var(--bg3)}
+.move-desc-bar{padding:10px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.6;min-height:48px;background:var(--bg3)}
 .move-desc-bar .desc-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;color:#fff;margin-right:4px;letter-spacing:.03em;text-transform:uppercase;vertical-align:middle}
+.move-desc-bar .desc-stats{font-weight:600;color:var(--text)}
 
 /* EV GRID */
 .ev-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -397,14 +404,14 @@ footer a:hover{color:var(--text)}
 
           <!-- Column headers -->
           <div class="move-list-header">
-            <span>Type</span><span></span><span>Move</span><span>Pow</span><span>Acc</span><span>PP</span>
+            <span>Type</span><span></span><span>Move</span><span>Pow</span><span>Acc</span><span>Info</span>
           </div>
 
           <!-- Scrollable move list -->
           <div class="move-list-wrap" id="move-list"></div>
 
           <!-- Description bar -->
-          <div class="move-desc-bar" id="move-desc-bar">Hover over a move to see its description.</div>
+          <div class="move-desc-bar" id="move-desc-bar">Hover a move to preview · Click <strong>ℹ</strong> to expand full description</div>
         </div>
 
       </div>
@@ -956,13 +963,21 @@ function renderMoveList(){
     const d=m.d;
     const catIcon=d?(d.cat==='physical'?'💥':d.cat==='special'?'✦':'◈'):'·';
     const typeCol=d?TCOL[d.type]||'var(--muted)':'var(--muted2)';
-    html+=`<div class="move-row${m.isSelected?' selected':''}${m.isPopular&&!m.isSelected?' popular':''}" onclick="selectMove('${m.name}')" onmouseenter="showMoveHover('${m.key}')">
-      <span class="mr-type" style="background:${typeCol}">${d?d.type:'…'}</span>
-      <span class="mr-cat">${catIcon}</span>
-      <span class="mr-name">${m.name.replace(/-/g,' ')}</span>
-      <span class="mr-pow">${d?(d.power||'—'):'·'}</span>
-      <span class="mr-acc">${d?(d.accuracy||'—'):'·'}</span>
-      <span class="mr-pp">${d?(d.pp||'—'):'·'}</span>
+    const catLabel=d?(d.cat==='physical'?'Physical':d.cat==='special'?'Special':'Status'):'';
+    const descText=d?d.desc:'Loading…';
+    html+=`<div class="move-row-wrap">
+      <div class="move-row${m.isSelected?' selected':''}${m.isPopular&&!m.isSelected?' popular':''}" onclick="selectMove('${m.name}')" onmouseenter="showMoveHover('${m.key}')">
+        <span class="mr-type" style="background:${typeCol}">${d?d.type:'…'}</span>
+        <span class="mr-cat">${catIcon}</span>
+        <span class="mr-name">${m.name.replace(/-/g,' ')}</span>
+        <span class="mr-pow">${d?(d.power||'—'):'·'}</span>
+        <span class="mr-acc">${d?(d.accuracy||'—'):'·'}</span>
+        <span class="mr-pp" style="cursor:help" onclick="event.stopPropagation();toggleMoveDesc('md-${m.key}')" title="Click for details">ℹ</span>
+      </div>
+      <div class="mr-desc" id="md-${m.key}">
+        <div class="mr-desc-stats">${catLabel}${d?' · Power: '+(d.power||'—')+' · Accuracy: '+(d.accuracy||'—')+' · PP: '+(d.pp||'—'):''}</div>
+        <div class="mr-desc-text">${descText}</div>
+      </div>
     </div>`;
   });
   if(!moves.length)html='<div style="padding:20px;text-align:center;color:var(--muted)">No moves match your filters.</div>';
@@ -970,13 +985,24 @@ function renderMoveList(){
   document.getElementById('move-pool-count').textContent=`${pool.length} moves · ${moves.length} shown`;
 }
 
+function toggleMoveDesc(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  // Close all others
+  document.querySelectorAll('.mr-desc.open').forEach(d=>{if(d.id!==id)d.classList.remove('open');});
+  el.classList.toggle('open');
+  // Also highlight the parent row
+  const row=el.previousElementSibling;
+  if(row)row.classList.toggle('expanded',el.classList.contains('open'));
+}
+
 function showMoveHover(key){
   const d=moveCache[key];
   const el=document.getElementById('move-desc-bar');
-  if(!d){el.textContent='Loading move details…';return;}
+  if(!d){el.innerHTML='<span style="color:var(--muted2)">Loading move details…</span>';return;}
   const col=TCOL[d.type]||'var(--muted)';
   const catIcon=d.cat==='physical'?'💥 Physical':d.cat==='special'?'✦ Special':'◈ Status';
-  el.innerHTML=`<span class="desc-tag" style="background:${col}">${d.type}</span> ${catIcon} · Pow: ${d.power||'—'} · Acc: ${d.accuracy||'—'} · PP: ${d.pp||'—'}<br>${d.desc}`;
+  el.innerHTML=`<span class="desc-tag" style="background:${col}">${d.type}</span> <span class="desc-stats">${catIcon} · Power: ${d.power||'—'} · Accuracy: ${d.accuracy||'—'} · PP: ${d.pp||'—'}</span><br>${d.desc}`;
 }
 
 function selectMove(name){
