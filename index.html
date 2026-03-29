@@ -1851,8 +1851,8 @@ let calc={
   p1Idx:0,p2Idx:1,
   r1MoveIdx:0,r2MoveIdx:0,
   weather:'none',terrain:'none',
-  r1:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0,defStage:0,spdStage:0},
-  r2:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0,defStage:0,spdStage:0}
+  r1:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0},
+  r2:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0}
 };
 
 function applyStage(stat,stage){
@@ -1875,7 +1875,7 @@ function runCalcSide(atk,def,moveName,mods){
   // Attacker stat stages
   A=applyStage(A,md.cat==='physical'?mods.atkStage:mods.spaStage);
   // Defender stat stages (from the OTHER side's perspective)
-  D=applyStage(D,md.cat==='physical'?mods.defStage:mods.spdStage);
+  // No def/spd stage modifiers — only attack stages are adjustable
 
   if(['Huge-Power','Pure-Power'].includes(atk.ability)&&md.cat==='physical')A=Math.floor(A*2);
   if(atk.ability==='Hustle'&&md.cat==='physical')A=Math.floor(A*1.5);
@@ -1955,7 +1955,7 @@ function renderSideMods(side,prefix){
   h+=`<span class="calc-pill${s.crit?' sel':''}" onclick="calc.${side}.crit=!calc.${side}.crit;renderCalc()">Crit</span>`;
   h+=`<span class="calc-pill${s.burn?' sel':''}" onclick="calc.${side}.burn=!calc.${side}.burn;renderCalc()">Burned</span>`;
   h+=`<span class="calc-pill${s.tera?' sel':''}" onclick="calc.${side}.tera=!calc.${side}.tera;renderCalc()">Tera</span>`;
-  const stages=[['atkStage','Atk'],['spaStage','SpA'],['defStage','Def'],['spdStage','SpD']];
+  const stages=[['atkStage','Atk'],['spaStage','SpA']];
   h+=`<div style="display:flex;gap:6px;margin-top:6px">`
   stages.forEach(([k,lbl])=>{
     h+=`<div class="calc-stage-wrap"><div class="calc-stage-label">${lbl}</div><div class="calc-stage"><button onclick="calc.${side}.${k}=Math.max(-6,calc.${side}.${k}-1);renderCalc()">-</button><span>${s[k]>=0?'+':''}${s[k]}</span><button onclick="calc.${side}.${k}=Math.min(6,calc.${side}.${k}+1);renderCalc()">+</button></div></div>`;
