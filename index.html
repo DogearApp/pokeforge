@@ -438,13 +438,24 @@ footer a:hover{color:var(--text)}
 
 <div class="app-wrap" id="builder">
 
-  <div class="search-section">
-    <div class="search-label">Add a Pokémon</div>
-    <div class="search-box" id="sw">
-      <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input id="psearch" placeholder="Loading Pokédex…" autocomplete="off"/>
-      <button class="clear-btn" id="clear-psearch" onclick="clearInput('psearch','clear-psearch')">✕</button>
-      <div class="dropdown" id="pdd"></div>
+  <div class="search-section" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <div class="search-label">Add a Pokémon</div>
+      <div class="search-box" id="sw">
+        <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="psearch" placeholder="Loading Pokédex…" autocomplete="off"/>
+        <button class="clear-btn" id="clear-psearch" onclick="clearInput('psearch','clear-psearch')">✕</button>
+        <div class="dropdown" id="pdd"></div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div class="search-label">Search by Move or Ability</div>
+      <div class="search-box" id="msw">
+        <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="msearch" placeholder="e.g. Tailwind, Intimidate…" autocomplete="off"/>
+        <button class="clear-btn" id="clear-msearch" onclick="clearInput('msearch','clear-msearch');document.getElementById('mdd').style.display='none'">✕</button>
+        <div class="dropdown" id="mdd"></div>
+      </div>
     </div>
   </div>
 
@@ -908,8 +919,59 @@ searchEl.addEventListener('input',()=>{
     ddEl.style.display='block';
   },100);
 });
+// --- Move/Ability search ---
+const msearchEl=document.getElementById('msearch'),mddEl=document.getElementById('mdd');
+let mst,moveAbilSearchCache={};
+msearchEl.addEventListener('input',()=>{
+  toggleClear('msearch','clear-msearch');
+  clearTimeout(mst);mst=setTimeout(async()=>{
+    const q=msearchEl.value.trim();
+    if(!q||q.length<3){mddEl.style.display='none';return;}
+    const key=q.toLowerCase().replace(/\s+/g,'-');
+    mddEl.innerHTML='<div class="ddi" style="color:var(--muted)">Searching…</div>';
+    mddEl.style.display='block';
+
+    let results=[];
+    // Try as a move first
+    try{
+      const r=await fetch(`https://pokeapi.co/api/v2/move/${key}`);
+      if(r.ok){
+        const d=await r.json();
+        results=d.learned_by_pokemon.map(p=>p.name);
+      }
+    }catch(e){}
+
+    // If no move results, try as ability
+    if(!results.length){
+      try{
+        const r=await fetch(`https://pokeapi.co/api/v2/ability/${key}`);
+        if(r.ok){
+          const d=await r.json();
+          results=d.pokemon.map(p=>p.pokemon.name);
+        }
+      }catch(e){}
+    }
+
+    if(!results.length){mddEl.innerHTML='<div class="ddi" style="color:var(--muted)">No Pokémon found for "'+q+'"</div>';return;}
+
+    // Filter by Champions mode and match with allPokemon for sprites
+    let filtered=results;
+    if(championsMode)filtered=filtered.filter(n=>CHAMPIONS_POKEMON.has(n));
+
+    const display=filtered.slice(0,20).map(name=>{
+      const found=allPokemon.find(ap=>ap.name===name);
+      const spriteUrl=found?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${found.id}.png`:'';
+      return`<div class="ddi" onclick="addPoke('${name}')">
+        ${spriteUrl?`<img src="${spriteUrl}" width="32" height="32" style="image-rendering:pixelated" loading="lazy">`:''} ${fmt(name)}
+      </div>`;
+    });
+    mddEl.innerHTML=`<div style="padding:6px 16px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">${filtered.length} Pokémon can learn/have <strong>${q}</strong>${championsMode?' (Champions only)':''}</div>`+display.join('');
+  },400);
+});
+
 document.addEventListener('click',e=>{
   if(!document.getElementById('sw').contains(e.target))ddEl.style.display='none';
+  if(!document.getElementById('msw').contains(e.target))mddEl.style.display='none';
   document.querySelectorAll('.ac-dd').forEach(d=>{if(!d.parentElement.contains(e.target))d.style.display='none';});
   const nw=document.querySelector('.nature-wrap');const ndd=document.getElementById('nature-dd');
   if(nw&&ndd&&!nw.contains(e.target))ndd.classList.remove('open');
