@@ -611,8 +611,11 @@ footer a:hover{color:var(--text)}
           <!-- Search & filters -->
           <div class="move-search">
             <div style="position:relative">
-              <input id="move-search-input" placeholder="Search moves…" oninput="renderMoveList();toggleClear('move-search-input','clear-moves')" autocomplete="off"/>
+              <input id="move-search-input" placeholder="Search moves…" oninput="renderMoveList();toggleClear('move-search-input','clear-moves')" onkeydown="if(event.key==='Enter'){addCustomMove();}" autocomplete="off"/>
               <button class="clear-btn" id="clear-moves" onclick="clearInput('move-search-input','clear-moves');renderMoveList()">✕</button>
+            </div>
+            <div id="custom-move-hint" style="display:none;padding:4px 0;font-size:11px;color:var(--muted)">
+              Move not in list? <button style="font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit" onclick="addCustomMove()">Add it anyway</button> (or press Enter)
             </div>
             <div class="move-filters" id="move-filters"></div>
           </div>
@@ -1999,9 +2002,30 @@ function renderMoveList(){
       ${d?`<div class="mr-effect">${moveTargetLabel(d.target)}${d.target&&moveTargetLabel(d.target)?' · ':''}${effect}${FIELD_EFFECTS[m.key]?' · '+FIELD_EFFECTS[m.key]:''}</div>`:''}
     </div>`;
   });
+  // Show custom move hint when searching with few results
+  const hintEl=document.getElementById('custom-move-hint');
+  if(hintEl)hintEl.style.display=(q&&moves.length<3)?'block':'none';
   if(!moves.length)html='<div style="padding:20px;text-align:center;color:var(--muted)">No moves match your filters.</div>';
   document.getElementById('move-list').innerHTML=html;
   document.getElementById('move-pool-count').textContent=`${pool.length} moves · ${moves.length} shown`;
+}
+
+async function addCustomMove(){
+  if(editIdx===null)return;
+  const input=document.getElementById('move-search-input');
+  const q=input.value.trim();
+  if(!q)return;
+  const moveName=q.replace(/\s+/g,'-');
+  // Fetch the move data to validate it exists
+  const data=await fetchMoveData(moveName);
+  if(!data){alert('Move "'+q+'" not found.');return;}
+  // Add to the pokemon's movePool so it shows up
+  const p=team[editIdx];
+  const formatted=fmt(moveName);
+  if(!p.movePool.includes(formatted))p.movePool.push(formatted);
+  selectMove(formatted);
+  input.value='';
+  document.getElementById('custom-move-hint').style.display='none';
 }
 
 function selectMove(name){
