@@ -92,8 +92,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);z-index:200;max-height:260px;overflow-y:auto;box-shadow:0 16px 40px rgba(0,0,0,.5);display:none}
 .ddi{padding:10px 16px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--text);transition:background .15s}
 .ddi:hover{background:var(--bg3)}
-.ddi-preview{position:absolute;left:100%;top:0;margin-left:8px;width:240px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:12px;box-shadow:0 12px 32px rgba(0,0,0,.5);z-index:250;display:none;pointer-events:none}
-.ddi:hover .ddi-preview{display:block}
+#poke-preview{position:fixed;width:240px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:12px;box-shadow:0 12px 32px rgba(0,0,0,.5);z-index:500;display:none;pointer-events:none}
 .ddi-preview-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px}
 .ddi-preview-types{display:flex;gap:3px;margin-bottom:6px}
 .ddi-preview-stats{display:grid;grid-template-columns:30px 1fr 28px;gap:2px 6px;font-size:11px;margin-bottom:6px}
@@ -866,6 +865,8 @@ footer a:hover{color:var(--text)}
   </div>
 </div>
 
+<div id="poke-preview"></div>
+
 <footer>
   <p>InciniForge — Built for VGC competitors. Powered by <a href="https://pokeapi.co" target="_blank">PokéAPI</a>. Not affiliated with Nintendo or The Pokémon Company.</p>
   <p style="margin-top:6px">Data sourced from <a href="https://bulbapedia.bulbagarden.net" target="_blank">Bulbapedia</a> via PokéAPI.</p>
@@ -1155,13 +1156,22 @@ function computedStats(p){const nm=NM[p.nature]||{};const r={};STAT_KEYS.forEach
 function actualSpe(p){const nm=NM[p.nature]||{};return calcStat(p.stats.spe,p.evs.spe||0,p.ivs.spe!==undefined?p.ivs.spe:31,nm.spe||1,false);}
 
 // --- Pokemon preview on hover ---
-async function showPokePreview(name,el){
-  const prev=el.querySelector('.ddi-preview');
-  if(!prev||prev.dataset.loaded)return;
+let previewCache={};
+async function showPokePreview(name,e){
+  const prev=document.getElementById('poke-preview');
+  if(!prev)return;
+  // Position next to the hovered item
+  const rect=e.target.closest('.ddi').getBoundingClientRect();
+  prev.style.top=rect.top+'px';
+  prev.style.left=(rect.right+8)+'px';
+  // If goes off right edge, show on left
+  if(rect.right+256>window.innerWidth){prev.style.left=(rect.left-248)+'px';}
+  prev.style.display='block';
+
+  if(previewCache[name]){prev.innerHTML=previewCache[name];return;}
   prev.innerHTML='<span style="color:var(--muted);font-size:11px">Loading…</span>';
-  prev.dataset.loaded='1';
   const data=await fetchPoke(name);
-  if(!data){prev.innerHTML='';return;}
+  if(!data){prev.style.display='none';return;}
   const bst=Object.values(data.stats).reduce((a,b)=>a+b,0);
   let html=`<div class="ddi-preview-name">${data.displayName} <span style="font-size:11px;font-weight:400;color:var(--muted)">BST ${bst}</span></div>`;
   html+=`<div class="ddi-preview-types">${data.types.map(t=>`<span class="tbadge" style="background:${TCOL[t]}">${t}</span>`).join('')}</div>`;
@@ -1172,7 +1182,12 @@ async function showPokePreview(name,el){
   });
   html+=`</div>`;
   html+=`<div class="ddi-preview-abilities">${data.abilities.join(' / ')}</div>`;
+  previewCache[name]=html;
   prev.innerHTML=html;
+}
+function hidePokePreview(){
+  const prev=document.getElementById('poke-preview');
+  if(prev)prev.style.display='none';
 }
 
 // --- Clear buttons ---
@@ -1198,7 +1213,7 @@ searchEl.addEventListener('input',()=>{
     if(!q){ddEl.style.display='none';return;}
     const m=allPokemon.filter(p=>p.name.includes(q)&&(!championsMode||isChampionsLegal(p.name))).slice(0,14);
     if(!m.length){ddEl.style.display='none';return;}
-    ddEl.innerHTML=m.map(p=>`<div class="ddi" onclick="addPoke('${p.name}')" onmouseenter="showPokePreview('${p.name}',this)" style="position:relative"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" width="32" height="32" style="image-rendering:pixelated" loading="lazy"/>${fmt(p.name)}<div class="ddi-preview" id="prev-${p.name}"></div></div>`).join('');
+    ddEl.innerHTML=m.map(p=>`<div class="ddi" onclick="addPoke('${p.name}')" onmouseenter="showPokePreview('${p.name}',event)" onmouseleave="hidePokePreview()"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" width="32" height="32" style="image-rendering:pixelated" loading="lazy"/>${fmt(p.name)}</div>`).join('');
     ddEl.style.display='block';
   },100);
 });
@@ -1340,7 +1355,7 @@ async function runAdvSearch(){
 }
 
 document.addEventListener('click',e=>{
-  if(!document.getElementById('sw').contains(e.target))ddEl.style.display='none';
+  if(!document.getElementById('sw').contains(e.target)){ddEl.style.display='none';hidePokePreview();}
   document.querySelectorAll('.ac-dd').forEach(d=>{if(!d.parentElement.contains(e.target))d.style.display='none';});
   const cdd=document.getElementById('calc-p2-dd');if(cdd&&!cdd.parentElement.contains(e.target))cdd.style.display='none';
 });
