@@ -710,21 +710,19 @@ footer a:hover{color:var(--text)}
           </div>
           <!-- Shared modifiers -->
           <div class="calc-mods" id="calc-mods-shared"></div>
-          <!-- Two-sided results -->
+          <!-- Attack + Defensive buffs side by side -->
           <div class="calc-row">
             <!-- P1 attacks P2 -->
             <div class="calc-box">
-              <div class="calc-box-title" id="calc-r1-title">P1 → P2</div>
+              <div class="calc-box-title" id="calc-r1-title">Your Attack</div>
               <div class="calc-move-btns" id="calc-r1-moves"></div>
               <div class="calc-mods calc-side-mods" id="calc-r1-mods"></div>
               <div class="calc-result" id="calc-r1-result"></div>
             </div>
-            <!-- P2 attacks P1 -->
+            <!-- P2 defensive buffs -->
             <div class="calc-box">
-              <div class="calc-box-title" id="calc-r2-title">P2 → P1</div>
-              <div class="calc-move-btns" id="calc-r2-moves"></div>
-              <div class="calc-mods calc-side-mods" id="calc-r2-mods"></div>
-              <div class="calc-result" id="calc-r2-result"></div>
+              <div class="calc-box-title">Opponent Defensive Buffs</div>
+              <div class="calc-mods calc-side-mods" id="calc-def-mods"></div>
             </div>
           </div>
         </div>
@@ -3217,6 +3215,7 @@ let calc={
   weather:'none',terrain:'none',
   r1:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0},
   r2:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0},
+  defBuff:{reflect:false,lightscreen:false,auroraveil:false,defStage:0,spdStage:0,friendguard:false},
   p2Custom:null // custom opponent (not on team)
 };
 
@@ -3249,6 +3248,11 @@ function runCalcSide(atk,def,moveName,mods){
   if(def.item==='Assault Vest'&&md.cat==='special')D=Math.floor(D*1.5);
   if(def.item==='Eviolite')D=Math.floor(D*1.5);
 
+  // Defensive stat stages
+  const db=calc.defBuff;
+  if(md.cat==='physical')D=applyStage(D,db.defStage);
+  else D=applyStage(D,db.spdStage);
+
   const base=Math.floor(((2*50/5+2)*md.power*A/D)/50)+2;
 
   let targets=mods.spread?0.75:1;
@@ -3271,6 +3275,12 @@ function runCalcSide(atk,def,moveName,mods){
   if(calc.terrain==='psychic'&&md.type==='Psychic')other*=1.3;
   if(calc.terrain==='misty'&&md.type==='Dragon')other*=0.5;
   if(atk.ability==='Guts'&&mods.burn&&md.cat==='physical')other*=1.5;
+
+  // Defensive buffs
+  if(db.auroraveil)other*=0.5;
+  else if(db.reflect&&md.cat==='physical')other*=0.5;
+  else if(db.lightscreen&&md.cat==='special')other*=0.5;
+  if(db.friendguard)other*=0.75;
 
   const mod=targets*weather*critical*stab*typeEff*burn*other;
   const minDmg=Math.floor(base*mod*0.85),maxDmg=Math.floor(base*mod*1.00);
@@ -3296,6 +3306,11 @@ function runCalcSide(atk,def,moveName,mods){
   if(mods.crit)tags.push('Crit');
   if(mods.burn&&burn<1)tags.push('Burn');
   if(mods.tera)tags.push('Tera');
+  if(db.auroraveil)tags.push('Aurora Veil');
+  else{if(db.reflect&&md.cat==='physical')tags.push('Reflect');if(db.lightscreen&&md.cat==='special')tags.push('Light Screen');}
+  if(db.friendguard)tags.push('Friend Guard');
+  if(db.defStage)tags.push((db.defStage>0?'+':'')+db.defStage+' Def');
+  if(db.spdStage)tags.push((db.spdStage>0?'+':'')+db.spdStage+' SpD');
   return{minDmg,maxDmg,hp,minPct,maxPct,ko,typeEff,tags,moveName:moveName.replace(/-/g,' ')};
 }
 
@@ -3378,9 +3393,8 @@ function ensureP2Custom(){
 function renderCalc(){
   if(!team.length){
     document.getElementById('calc-r1-result').innerHTML='<span style="color:var(--muted);font-size:12px">Add at least 1 Pokémon to use the calculator.</span>';
-    document.getElementById('calc-r2-result').innerHTML='';
-    document.getElementById('calc-r1-moves').innerHTML='';document.getElementById('calc-r2-moves').innerHTML='';
-    document.getElementById('calc-r1-mods').innerHTML='';document.getElementById('calc-r2-mods').innerHTML='';
+    document.getElementById('calc-r1-moves').innerHTML='';
+    document.getElementById('calc-r1-mods').innerHTML='';document.getElementById('calc-def-mods').innerHTML='';
     document.getElementById('calc-p1-btns').innerHTML='';document.getElementById('calc-p2-btns').innerHTML='';
     document.getElementById('calc-p1-summary').innerHTML='';document.getElementById('calc-p2-summary').innerHTML='';
     document.getElementById('calc-mods-shared').innerHTML='';
@@ -3407,9 +3421,8 @@ function renderCalc(){
 
   if(!p2){
     document.getElementById('calc-p2-summary').innerHTML='<span style="color:var(--muted);font-size:12px">Search for any Pokémon to calc against</span>';
-    document.getElementById('calc-r1-result').innerHTML='';document.getElementById('calc-r2-result').innerHTML='';
-    document.getElementById('calc-r1-moves').innerHTML='';document.getElementById('calc-r2-moves').innerHTML='';
-    document.getElementById('calc-r1-mods').innerHTML='';document.getElementById('calc-r2-mods').innerHTML='';
+    document.getElementById('calc-r1-result').innerHTML='';document.getElementById('calc-r1-moves').innerHTML='';
+    document.getElementById('calc-r1-mods').innerHTML='';document.getElementById('calc-def-mods').innerHTML='';
     return;
   }
 
@@ -3458,32 +3471,37 @@ function renderCalc(){
   shared+=`<div class="calc-mod-group"><span class="calc-mod-label">Terrain</span>${terrains.map(t=>`<span class="calc-pill${calc.terrain===t?' sel':''}" onclick="calc.terrain='${t}';renderCalc()">${t==='none'?'—':t.charAt(0).toUpperCase()+t.slice(1)}</span>`).join('')}</div>`;
   document.getElementById('calc-mods-shared').innerHTML=shared;
 
-  // Side titles
+  // Side title
   document.getElementById('calc-r1-title').textContent=`${p1.displayName} → ${p2.displayName}`;
-  document.getElementById('calc-r2-title').textContent=`${p2.displayName} → ${p1.displayName}`;
 
-  // Move buttons
+  // P1 Move buttons
   const m1=p1.moves.filter(m=>m);if(calc.r1MoveIdx>=m1.length)calc.r1MoveIdx=0;
-  const m2=p2.moves.filter(m=>m);if(calc.r2MoveIdx>=m2.length)calc.r2MoveIdx=0;
   document.getElementById('calc-r1-moves').innerHTML=renderMoveButtons(p1,calc.r1MoveIdx,'r1');
-  document.getElementById('calc-r2-moves').innerHTML=renderMoveButtons(p2,calc.r2MoveIdx,'r2');
 
-  // Side mods
+  // P1 attack mods
   document.getElementById('calc-r1-mods').innerHTML=renderSideMods('r1','r1');
-  document.getElementById('calc-r2-mods').innerHTML=renderSideMods('r2','r2');
 
-  // Calculate both sides
+  // P2 defensive buffs
+  const db=calc.defBuff;
+  let defHtml='';
+  defHtml+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+    <span class="calc-pill${db.reflect?' sel':''}" onclick="calc.defBuff.reflect=!calc.defBuff.reflect;renderCalc()">Reflect (Phys 0.5x)</span>
+    <span class="calc-pill${db.lightscreen?' sel':''}" onclick="calc.defBuff.lightscreen=!calc.defBuff.lightscreen;renderCalc()">Light Screen (Spec 0.5x)</span>
+    <span class="calc-pill${db.auroraveil?' sel':''}" onclick="calc.defBuff.auroraveil=!calc.defBuff.auroraveil;renderCalc()">Aurora Veil (0.5x)</span>
+    <span class="calc-pill${db.friendguard?' sel':''}" onclick="calc.defBuff.friendguard=!calc.defBuff.friendguard;renderCalc()">Friend Guard (0.75x)</span>
+  </div>`;
+  defHtml+=`<div style="display:flex;gap:10px;flex-wrap:wrap">
+    <div class="calc-stage-wrap"><div class="calc-stage-label">Def</div><div class="calc-stage"><button onclick="calc.defBuff.defStage=Math.max(-6,calc.defBuff.defStage-1);renderCalc()">-</button><span>${db.defStage>=0?'+':''}${db.defStage}</span><button onclick="calc.defBuff.defStage=Math.min(6,calc.defBuff.defStage+1);renderCalc()">+</button></div></div>
+    <div class="calc-stage-wrap"><div class="calc-stage-label">SpD</div><div class="calc-stage"><button onclick="calc.defBuff.spdStage=Math.max(-6,calc.defBuff.spdStage-1);renderCalc()">-</button><span>${db.spdStage>=0?'+':''}${db.spdStage}</span><button onclick="calc.defBuff.spdStage=Math.min(6,calc.defBuff.spdStage+1);renderCalc()">+</button></div></div>
+  </div>`;
+  document.getElementById('calc-def-mods').innerHTML=defHtml;
+
+  // Calculate P1 → P2
   if(m1.length){
     const r1=runCalcSide(p1,p2,m1[calc.r1MoveIdx],calc.r1);
     renderCalcResult(r1,'calc-r1-result');
   } else {
-    document.getElementById('calc-r1-result').innerHTML='<span style="color:var(--muted);font-size:12px">No moves set</span>';
-  }
-  if(m2.length){
-    const r2=runCalcSide(p2,p1,m2[calc.r2MoveIdx],calc.r2);
-    renderCalcResult(r2,'calc-r2-result');
-  } else {
-    document.getElementById('calc-r2-result').innerHTML='<span style="color:var(--muted);font-size:12px">No moves set</span>';
+    document.getElementById('calc-r1-result').innerHTML='<span style="color:var(--muted);font-size:12px">No moves set — edit your Pokémon to add moves</span>';
   }
 }
 
