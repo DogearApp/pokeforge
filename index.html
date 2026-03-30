@@ -2135,19 +2135,23 @@ async function addCustomMove(){
   document.getElementById('custom-move-hint').style.display='none';
 }
 
+function clearMoveSearch(){
+  const el=document.getElementById('move-search-input');
+  if(el){el.value='';el.dispatchEvent(new Event('input'));}
+  const cb=document.getElementById('clear-moves');if(cb)cb.classList.remove('show');
+  const hint=document.getElementById('custom-move-hint');if(hint)hint.style.display='none';
+}
 function selectMove(name){
   if(editIdx===null)return;
   const p=team[editIdx];
   // If already selected, deselect it
   const existIdx=p.moves.indexOf(name);
-  if(existIdx>=0){p.moves[existIdx]='';renderMoveSlots();renderMoveList();saveEdit();return;}
+  if(existIdx>=0){p.moves[existIdx]='';clearMoveSearch();renderMoveSlots();renderMoveList();saveEdit();return;}
   // Assign to selected slot
   p.moves[selectedMoveSlot]=name;
   // Advance to next empty slot
   for(let i=0;i<4;i++){const next=(selectedMoveSlot+1+i)%4;if(!p.moves[next]){selectedMoveSlot=next;break;}}
-  // Clear search so full list shows again
-  const msi=document.getElementById('move-search-input');if(msi)msi.value='';
-  const cmb=document.getElementById('clear-moves');if(cmb)cmb.classList.remove('show');
+  clearMoveSearch();
   renderMoveSlots();renderMoveList();saveEdit();
 }
 
