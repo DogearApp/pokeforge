@@ -654,6 +654,13 @@ footer a:hover{color:var(--text)}
         </div>
         <div class="tab-body" id="t-speed" style="display:none">
           <div class="speed-search"><input id="speed-search" placeholder="Filter by name…" oninput="renderSpeedTiers()"/></div>
+          <div class="speed-mods" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">
+            <span class="calc-pill" id="smod-tailwind" onclick="toggleSpeedMod('tailwind')">Tailwind (2x)</span>
+            <span class="calc-pill" id="smod-scarf" onclick="toggleSpeedMod('scarf')">Choice Scarf (1.5x)</span>
+            <span class="calc-pill" id="smod-paralysis" onclick="toggleSpeedMod('paralysis')">Paralysis (0.25x)</span>
+            <span class="calc-pill" id="smod-icywind" onclick="toggleSpeedMod('icywind')">Icy Wind (-1)</span>
+            <span class="calc-pill" id="smod-trickroom" onclick="toggleSpeedMod('trickroom')">Trick Room</span>
+          </div>
           <div class="speed-ctx" id="speed-ctx">Add Pokémon to compare speed tiers.</div>
           <div class="tier-list" id="tier-list"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see speed tiers.</span></div>
         </div>
@@ -1472,17 +1479,55 @@ function renderOffensiveCoverage(){
   el.innerHTML=html;
 }
 
+let speedMods={tailwind:false,scarf:false,paralysis:false,icywind:false,trickroom:false};
+function toggleSpeedMod(mod){
+  speedMods[mod]=!speedMods[mod];
+  document.getElementById('smod-'+mod).classList.toggle('sel',speedMods[mod]);
+  renderSpeedTiers();
+}
+function applySpeedMods(spe){
+  let s=spe;
+  if(speedMods.icywind)s=applyStage(s,-1);
+  if(speedMods.scarf)s=Math.floor(s*1.5);
+  if(speedMods.tailwind)s=Math.floor(s*2);
+  if(speedMods.paralysis)s=Math.floor(s*0.25);
+  return s;
+}
 function renderSpeedTiers(){
   if(!team.length){document.getElementById('tier-list').innerHTML='<span style="font-size:13px;color:var(--muted)">Add Pokémon to see speed tiers.</span>';document.getElementById('speed-ctx').textContent='Add Pokémon to compare speed tiers.';return;}
   const filterQ=(document.getElementById('speed-search').value||'').toLowerCase();
-  const teamE=team.map(p=>({name:p.nick||p.displayName,spe:actualSpe(p),mine:true,note:`${p.nature} | ${p.evs.spe||0} EVs`}));
-  const refE=BENCHMARKS.map(b=>({name:b.name,spe:Math.floor(Math.floor((.01*(2*b.spe+31)*50)+5)*1),mine:false}));
+  const hasMods=Object.values(speedMods).some(v=>v);
+  const teamE=team.map(p=>{
+    const baseSpe=actualSpe(p);
+    const modSpe=hasMods?applySpeedMods(baseSpe):baseSpe;
+    const tags=[];
+    if(speedMods.tailwind)tags.push('TW');if(speedMods.scarf)tags.push('Scarf');
+    if(speedMods.paralysis)tags.push('Para');if(speedMods.icywind)tags.push('IW');
+    return{name:p.nick||p.displayName,spe:modSpe,baseSpe,mine:true,note:`${p.nature} | ${p.evs.spe||0} EVs${tags.length?' | '+tags.join('+'):''}`};
+  });
+  const refE=BENCHMARKS.map(b=>({name:b.name,spe:Math.floor(Math.floor((.01*(2*b.spe+31)*50)+5)*1),baseSpe:0,mine:false}));
   const seen=new Set();let all=[...teamE,...refE].filter(e=>{if(seen.has(e.name))return false;seen.add(e.name);return true;});
   if(filterQ)all=all.filter(e=>e.name.toLowerCase().includes(filterQ));
-  all.sort((a,b)=>b.spe-a.spe);
+  if(speedMods.trickroom)all.sort((a,b)=>a.spe-b.spe);
+  else all.sort((a,b)=>b.spe-a.spe);
   const myMin=Math.min(...teamE.map(e=>e.spe)),myMax=Math.max(...teamE.map(e=>e.spe));
-  document.getElementById('speed-ctx').innerHTML=`Your team speed range: <strong style="color:var(--accent)">${myMin}–${myMax}</strong>. Your Pokémon highlighted in blue.`;
-  document.getElementById('tier-list').innerHTML=all.map(e=>`<div class="tier-row${e.mine?' mine':''}"><span class="tier-name">${e.name}</span><span class="tier-pill ${e.mine?'mine':'ref'}">${e.mine?'yours':'ref'}</span><span class="tier-speed">${e.spe}</span></div>`).join('');
+  let ctx=`Your team speed range: <strong style="color:var(--accent)">${myMin}–${myMax}</strong>`;
+  if(hasMods){
+    const active=[];
+    if(speedMods.tailwind)active.push('Tailwind 2x');if(speedMods.scarf)active.push('Scarf 1.5x');
+    if(speedMods.paralysis)active.push('Paralysis 0.25x');if(speedMods.icywind)active.push('Icy Wind -1');
+    if(speedMods.trickroom)active.push('Trick Room');
+    ctx+=` <span style="color:var(--gold)">· ${active.join(', ')}</span>`;
+  }
+  document.getElementById('speed-ctx').innerHTML=ctx;
+  document.getElementById('tier-list').innerHTML=all.map(e=>{
+    const changed=e.mine&&hasMods&&e.spe!==e.baseSpe;
+    return`<div class="tier-row${e.mine?' mine':''}">
+      <span class="tier-name">${e.name}${e.note?' <span style="font-size:10px;color:var(--muted)">'+e.note+'</span>':''}</span>
+      <span class="tier-pill ${e.mine?'mine':'ref'}">${e.mine?'yours':'ref'}</span>
+      <span class="tier-speed">${changed?'<span style="text-decoration:line-through;color:var(--muted2);font-size:11px">'+e.baseSpe+'</span> ':''}${e.spe}</span>
+    </div>`;
+  }).join('');
 }
 
 function renderStats(){
