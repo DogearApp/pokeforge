@@ -576,7 +576,7 @@ footer a:hover{color:var(--text)}
           <div class="build-field">
             <label>Nature</label>
             <div class="nature-wrap">
-              <div class="nature-selected" id="nature-btn" onclick="toggleNatureDD()"><span id="nature-btn-text">Jolly</span></div>
+              <input class="nature-selected" id="nature-input" placeholder="Search nature…" autocomplete="off" onfocus="openNatureDD()" oninput="filterNatureDD()"/>
               <div class="nature-dd" id="nature-dd"></div>
             </div>
           </div>
@@ -1157,8 +1157,6 @@ async function runAdvSearch(){
 document.addEventListener('click',e=>{
   if(!document.getElementById('sw').contains(e.target))ddEl.style.display='none';
   document.querySelectorAll('.ac-dd').forEach(d=>{if(!d.parentElement.contains(e.target))d.style.display='none';});
-  const nw=document.querySelector('.nature-wrap');const ndd=document.getElementById('nature-dd');
-  if(nw&&ndd&&!nw.contains(e.target))ndd.classList.remove('open');
 });
 
 async function addPoke(name){
@@ -1864,17 +1862,21 @@ function renderItemSelect(p){
   el.value=p.item||'';
 }
 
-function toggleNatureDD(){
+let natureUsageMap={};
+function openNatureDD(){
   const dd=document.getElementById('nature-dd');
-  dd.classList.toggle('open');
+  dd.classList.add('open');
+  filterNatureDD();
 }
-function renderNatureDD(current,usageMap){
+function filterNatureDD(){
   const dd=document.getElementById('nature-dd');
-  // Sort natures by usage if available
+  const q=(document.getElementById('nature-input').value||'').toLowerCase();
   let natures=Object.keys(NM);
-  if(usageMap&&Object.keys(usageMap).length){
-    natures.sort((a,b)=>(usageMap[b]||0)-(usageMap[a]||0));
+  if(q)natures=natures.filter(n=>n.toLowerCase().includes(q));
+  if(natureUsageMap&&Object.keys(natureUsageMap).length&&!q){
+    natures.sort((a,b)=>(natureUsageMap[b]||0)-(natureUsageMap[a]||0));
   }
+  const current=editIdx!==null?team[editIdx].nature:'';
   dd.innerHTML=natures.map(n=>{
     const nm=NM[n];const keys=Object.keys(nm);
     let statHtml='';
@@ -1884,27 +1886,39 @@ function renderNatureDD(current,usageMap){
     } else {
       statHtml='<span class="no-stat">Neutral</span>';
     }
-    const usage=usageMap?.[n];
+    const usage=natureUsageMap?.[n];
     const usageHtml=usage?`<span class="usage-pct">${(usage*100).toFixed(1)}%</span>`:'';
-    return `<div class="nature-opt${n===current?' active':''}" onclick="selectNature('${n}')" style="display:flex;align-items:center;gap:6px">${n} ${statHtml}${usageHtml}</div>`;
+    return `<div class="nature-opt${n===current?' active':''}" onmousedown="event.preventDefault();selectNature('${n}')" style="display:flex;align-items:center;gap:6px">${n} ${statHtml}${usageHtml}</div>`;
   }).join('');
+  if(!natures.length)dd.innerHTML='<div style="padding:8px 12px;color:var(--muted);font-size:12px">No match</div>';
+}
+function renderNatureDD(current,usageMap){
+  natureUsageMap=usageMap||{};
+  updateNatureInput(current);
 }
 function selectNature(n){
   if(editIdx===null)return;
   team[editIdx].nature=n;
-  updateNatureBtn(n);
+  updateNatureInput(n);
   document.getElementById('nature-dd').classList.remove('open');
   renderEVSliders();renderAll();
 }
-function updateNatureBtn(n){
+function updateNatureInput(n){
+  const inp=document.getElementById('nature-input');
+  if(!inp)return;
   const nm=NM[n]||{};const keys=Object.keys(nm);
-  let html=n;
   if(keys.length){
     const up=keys.find(k=>nm[k]>1),dn=keys.find(k=>nm[k]<1);
-    html=`${n} <span class="nat-up">+${STAT_NAMES[up]}</span> <span class="nat-down">-${STAT_NAMES[dn]}</span>`;
+    inp.value=`${n} (+${STAT_NAMES[up]} / -${STAT_NAMES[dn]})`;
+  } else {
+    inp.value=n;
   }
-  document.getElementById('nature-btn-text').innerHTML=html;
 }
+// Close nature DD on blur
+document.addEventListener('click',e=>{
+  const nw=document.querySelector('.nature-wrap');const ndd=document.getElementById('nature-dd');
+  if(nw&&ndd&&!nw.contains(e.target))ndd.classList.remove('open');
+},{capture:true});
 
 // --- Item autocomplete ---
 function setupAC(inputId,ddId,getList,onSelect,popularList){
@@ -2678,7 +2692,7 @@ function renderNatureWithUsage(p){
     });
   }
   renderNatureDD(p.nature||'Jolly',natureUsage);
-  updateNatureBtn(p.nature||'Jolly');
+  updateNatureInput(p.nature||'Jolly');
 }
 
 // Add usage to move list items
