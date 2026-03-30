@@ -3357,7 +3357,12 @@ async function calcSearchP2(q){
   calc.p2Idx=-1;calc.r2MoveIdx=0;
   renderCalc();
 }
-function calcSelectTeamP2(i){calc.p2Idx=i;calc.p2Custom=null;calc.r2MoveIdx=0;renderCalc();}
+function ensureP2Custom(){
+  if(!calc.p2Custom){
+    const src=calc.p2Idx>=0&&calc.p2Idx<team.length?team[calc.p2Idx]:null;
+    if(src)calc.p2Custom=JSON.parse(JSON.stringify(src));
+  }
+}
 
 function renderCalc(){
   if(!team.length){
@@ -3378,16 +3383,17 @@ function renderCalc(){
   // P1 picker (your team)
   document.getElementById('calc-p1-btns').innerHTML=team.map((p,i)=>`<div class="calc-poke-btn${calc.p1Idx===i?' sel':''}" onclick="calc.p1Idx=${i};calc.r1MoveIdx=0;renderCalc()">${p.sprite?`<img src="${p.sprite}">`:''}${p.displayName}</div>`).join('');
 
-  // P2 picker (team + search)
-  let p2html=team.map((p,i)=>`<div class="calc-poke-btn${!calc.p2Custom&&calc.p2Idx===i?' sel':''}" onclick="calcSelectTeamP2(${i})">${p.sprite?`<img src="${p.sprite}">`:''}${p.displayName}</div>`).join('');
-  p2html+=`<div style="margin-top:6px;display:flex;gap:6px;align-items:center">
-    <input id="calc-p2-search" placeholder="Search opponent…" style="flex:1;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);outline:none" onkeydown="if(event.key==='Enter')calcSearchP2(this.value)" autocomplete="off"/>
-    <button style="padding:6px 10px;font-size:11px;font-weight:600;border-radius:6px;border:1px solid var(--border);background:var(--bg4);color:var(--muted);cursor:pointer" onclick="calcSearchP2(document.getElementById('calc-p2-search').value)">Load</button>
+  // P2 picker — search only, always editable
+  const curP2Name=p2?p2.displayName:'';
+  let p2html=`<div style="display:flex;gap:6px;align-items:center">
+    ${p2&&p2.sprite?`<img src="${p2.sprite}" width="40" height="40" style="image-rendering:pixelated">`:''}
+    <input id="calc-p2-search" value="${curP2Name.replace(/-/g,' ')}" placeholder="Search opponent…" style="flex:1;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);outline:none" onkeydown="if(event.key==='Enter')calcSearchP2(this.value)" onfocus="this.select()" autocomplete="off"/>
+    <button style="padding:8px 12px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid var(--border);background:var(--bg4);color:var(--muted);cursor:pointer" onclick="calcSearchP2(document.getElementById('calc-p2-search').value)">Load</button>
   </div>`;
   document.getElementById('calc-p2-btns').innerHTML=p2html;
 
   if(!p2){
-    document.getElementById('calc-p2-summary').innerHTML='<span style="color:var(--muted);font-size:12px">Select or search for an opponent</span>';
+    document.getElementById('calc-p2-summary').innerHTML='<span style="color:var(--muted);font-size:12px">Search for any Pokémon to calc against</span>';
     document.getElementById('calc-r1-result').innerHTML='';document.getElementById('calc-r2-result').innerHTML='';
     document.getElementById('calc-r1-moves').innerHTML='';document.getElementById('calc-r2-moves').innerHTML='';
     document.getElementById('calc-r1-mods').innerHTML='';document.getElementById('calc-r2-mods').innerHTML='';
@@ -3395,24 +3401,30 @@ function renderCalc(){
   }
 
   const s1=computedStats(p1),s2=computedStats(p2);
+  const iStyle='font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:2px 4px';
 
   document.getElementById('calc-p1-summary').innerHTML=`<strong>${p1.displayName}</strong> · ${p1.nature} · ${p1.item||'No item'}<br>HP: <strong>${s1.hp}</strong> Atk: <strong>${s1.atk}</strong> Def: <strong>${s1.def}</strong> SpA: <strong>${s1.spa}</strong> SpD: <strong>${s1.spd}</strong> Spe: <strong>${s1.spe}</strong>`;
 
-  let p2Summary=`<strong>${p2.displayName}</strong> · ${p2.nature} · ${p2.item||'No item'}<br>HP: <strong>${s2.hp}</strong> Atk: <strong>${s2.atk}</strong> Def: <strong>${s2.def}</strong> SpA: <strong>${s2.spa}</strong> SpD: <strong>${s2.spd}</strong> Spe: <strong>${s2.spe}</strong>`;
-  if(calc.p2Custom){
-    p2Summary+=`<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;font-size:11px">
-      <label>Nature: <select onchange="calc.p2Custom.nature=this.value;renderCalc()" style="font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:2px">${Object.keys(NM).map(n=>`<option${n===p2.nature?' selected':''}>${n}</option>`).join('')}</select></label>
-      <label>Item: <input value="${p2.item}" onchange="calc.p2Custom.item=this.value;renderCalc()" style="width:100px;font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:2px 4px" placeholder="e.g. Assault Vest"/></label>
-      <label>EVs: <select onchange="var s=this.value.split(',');STAT_KEYS.forEach((k,i)=>{calc.p2Custom.evs[k]=+s[i]||0;});renderCalc()" style="font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:2px">
-        <option value="252,0,0,0,0,0"${p2.evs.hp===252&&!p2.evs.atk?' selected':''}>252 HP</option>
-        <option value="0,252,0,0,0,252"${p2.evs.atk===252?' selected':''}>252 Atk / 252 Spe</option>
-        <option value="0,0,0,252,0,252"${p2.evs.spa===252?' selected':''}>252 SpA / 252 Spe</option>
-        <option value="252,0,252,0,4,0">252 HP / 252 Def / 4 SpD</option>
-        <option value="252,0,4,0,252,0">252 HP / 252 SpD / 4 Def</option>
-        <option value="0,0,0,0,0,0">No EVs</option>
-      </select></label>
-    </div>`;
-  }
+  // P2 always has full edit controls
+  const p2c=calc.p2Custom||p2;
+  let p2Summary=`<div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;margin-bottom:6px">
+    <label>Nature: <select onchange="ensureP2Custom();calc.p2Custom.nature=this.value;renderCalc()" style="${iStyle}">${Object.keys(NM).map(n=>`<option${n===p2.nature?' selected':''}>${n}</option>`).join('')}</select></label>
+    <label>Ability: <select onchange="ensureP2Custom();calc.p2Custom.ability=this.value;renderCalc()" style="${iStyle}">${p2.abilities.map(a=>`<option${a===p2.ability?' selected':''}>${a}</option>`).join('')}</select></label>
+    <label>Item: <input value="${p2.item}" onchange="ensureP2Custom();calc.p2Custom.item=this.value;renderCalc()" style="width:110px;${iStyle}" placeholder="e.g. Assault Vest"/></label>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;margin-bottom:4px">
+    <label>EVs: <select onchange="ensureP2Custom();var s=this.value.split(',');STAT_KEYS.forEach((k,i)=>{calc.p2Custom.evs[k]=+s[i]||0;});renderCalc()" style="${iStyle}">
+      <option value="252,0,0,0,0,0"${p2.evs.hp===252&&!p2.evs.atk?' selected':''}>252 HP</option>
+      <option value="0,252,0,0,0,252"${p2.evs.atk===252&&p2.evs.spe===252?' selected':''}>252 Atk / 252 Spe</option>
+      <option value="0,0,0,252,0,252"${p2.evs.spa===252&&p2.evs.spe===252?' selected':''}>252 SpA / 252 Spe</option>
+      <option value="252,0,252,0,4,0">252 HP / 252 Def / 4 SpD</option>
+      <option value="252,0,4,0,252,0">252 HP / 252 SpD / 4 Def</option>
+      <option value="4,252,0,0,0,252">4 HP / 252 Atk / 252 Spe</option>
+      <option value="4,0,0,252,0,252">4 HP / 252 SpA / 252 Spe</option>
+      <option value="0,0,0,0,0,0">No EVs</option>
+    </select></label>
+  </div>
+  <div style="font-size:11px;color:var(--muted)">HP: <strong>${s2.hp}</strong> Atk: <strong>${s2.atk}</strong> Def: <strong>${s2.def}</strong> SpA: <strong>${s2.spa}</strong> SpD: <strong>${s2.spd}</strong> Spe: <strong>${s2.spe}</strong></div>`;
   document.getElementById('calc-p2-summary').innerHTML=p2Summary;
 
   // Shared mods
