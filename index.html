@@ -957,6 +957,47 @@ const POPULAR_MOVES=new Set([
 ]);
 
 let allPokemon=[],team=[],editIdx=null,pokeCache={},abilityCache={},itemCache={},moveCache={};
+let showdownLearnsets=null,showdownDex=null,showdownMoves=null;
+
+async function loadShowdownData(){
+  if(showdownLearnsets)return;
+  try{
+    const [lr,dr,mr]=await Promise.all([
+      fetch('https://play.pokemonshowdown.com/data/learnsets.json'),
+      fetch('https://play.pokemonshowdown.com/data/pokedex.json'),
+      fetch('https://play.pokemonshowdown.com/data/moves.json')
+    ]);
+    showdownLearnsets=await lr.json();
+    showdownDex=await dr.json();
+    showdownMoves=await mr.json();
+  }catch(e){console.log('Showdown data unavailable');}
+}
+
+function getShowdownMovePool(pokeName){
+  if(!showdownLearnsets||!showdownDex||!showdownMoves)return null;
+  const key=pokeName.toLowerCase().replace(/[^a-z0-9]/g,'');
+  const moveIds=new Set();
+  let current=key;
+  const visited=new Set();
+  while(current&&!visited.has(current)){
+    visited.add(current);
+    const data=showdownLearnsets[current];
+    if(data&&data.learnset)Object.keys(data.learnset).forEach(m=>moveIds.add(m));
+    const dexEntry=showdownDex[current];
+    if(dexEntry?.prevo){
+      current=dexEntry.prevo.toLowerCase().replace(/[^a-z0-9]/g,'');
+    } else if(dexEntry?.baseSpecies){
+      const base=dexEntry.baseSpecies.toLowerCase().replace(/[^a-z0-9]/g,'');
+      if(base!==current&&!visited.has(base))current=base;
+      else break;
+    } else break;
+  }
+  if(!moveIds.size)return null;
+  return[...moveIds].map(id=>{
+    const m=showdownMoves[id];
+    return m?m.name.replace(/\s+/g,'-'):id;
+  }).filter(Boolean);
+}
 let selectedMoveSlot=0,moveFilterType=null,moveFilterCat=null,moveAbort=null;
 
 function fmt(n){return n.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join('-')}
@@ -1646,6 +1687,19 @@ function openEdit(i){
   renderMoveFilters();
   renderMoveSlots();
   renderMoveList();
+  // Load Showdown data for complete move pools, then refresh
+  if(!showdownLearnsets){
+    loadShowdownData().then(()=>{
+      if(editIdx===i){
+        const sdPool=getShowdownMovePool(p.name);
+        if(sdPool&&sdPool.length>p.movePool.length)p.movePool=sdPool;
+        renderMoveList();
+      }
+    });
+  } else {
+    const sdPool=getShowdownMovePool(p.name);
+    if(sdPool&&sdPool.length>p.movePool.length)p.movePool=sdPool;
+  }
   startMoveFetch(p);
 }
 
