@@ -983,7 +983,7 @@ searchEl.addEventListener('input',()=>{
   clearTimeout(st);st=setTimeout(()=>{
     const q=searchEl.value.toLowerCase().trim();
     if(!q){ddEl.style.display='none';return;}
-    const m=allPokemon.filter(p=>p.name.includes(q)&&(!championsMode||CHAMPIONS_POKEMON.has(p.name))).slice(0,14);
+    const m=allPokemon.filter(p=>p.name.includes(q)&&(!championsMode||isChampionsLegal(p.name))).slice(0,14);
     if(!m.length){ddEl.style.display='none';return;}
     ddEl.innerHTML=m.map(p=>`<div class="ddi" onclick="addPoke('${p.name}')"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" width="32" height="32" style="image-rendering:pixelated" loading="lazy"/>${fmt(p.name)}</div>`).join('');
     ddEl.style.display='block';
@@ -1038,7 +1038,7 @@ async function runAdvSearch(){
   el.innerHTML='<div style="padding:10px;color:var(--muted)">Searching…</div>';
 
   // Start with all pokemon (Champions filtered)
-  let pool=championsMode?allPokemon.filter(p=>CHAMPIONS_POKEMON.has(p.name)):allPokemon.slice();
+  let pool=championsMode?allPokemon.filter(p=>isChampionsLegal(p.name)):allPokemon.slice();
 
   // Filter by type
   if(advType){
@@ -2261,7 +2261,7 @@ function runAI(){
   if(problemTypes.length&&team.length<6){
     out.push('');out.push(`<strong>Recommended Pokémon to Cover Weaknesses</strong>`);
     // Score each VGC mon by how many problem types they resist/are immune to
-    const recs=VGC_POKEMON.filter(v=>!teamNames.has(v.name)&&(!championsMode||CHAMPIONS_POKEMON.has(v.name.toLowerCase().replace(/\s+/g,'-')))).map(v=>{
+    const recs=VGC_POKEMON.filter(v=>!teamNames.has(v.name)&&(!championsMode||isChampionsLegal(v.name.toLowerCase().replace(/\s+/g,'-')))).map(v=>{
       let score=0;const covers=[];
       problemTypes.forEach(t=>{
         let mult=1;
@@ -2356,7 +2356,7 @@ function runAI(){
     {name:'Hydreigon',api:'hydreigon',spe:98},{name:'Kingambit',api:'kingambit',spe:50},
     {name:'Hatterene',api:'hatterene',spe:29},{name:'Torkoal',api:'torkoal',spe:20}
   ];
-  const THREATS=championsMode?ALL_THREATS.filter(t=>CHAMPIONS_POKEMON.has(t.api)):ALL_THREATS;
+  const THREATS=championsMode?ALL_THREATS.filter(t=>isChampionsLegal(t.api)):ALL_THREATS;
   const fastest=speedEntries[0];const slowest=speedEntries[speedEntries.length-1];
   const outsped=THREATS.filter(t=>t.spe>fastest.spe);
   const undersped=THREATS.filter(t=>t.spe<slowest.spe);
@@ -2788,7 +2788,7 @@ function renderThreats(){
   });
 
   // Each threat
-  const threats=championsMode?VGC_THREATS.filter(t=>CHAMPIONS_POKEMON.has(t.name.toLowerCase().replace(/\s+/g,'-'))):VGC_THREATS;
+  const threats=championsMode?VGC_THREATS.filter(t=>isChampionsLegal(t.name.toLowerCase().replace(/\s+/g,'-'))):VGC_THREATS;
   threats.forEach(threat=>{
     // Threat name cell
     html+=`<div class="threat-name">
@@ -2856,7 +2856,7 @@ async function renderMeta(){
   const stats=await loadUsageStats();
   if(!stats||!stats.pokemon){el.innerHTML='<span style="color:var(--red)">Could not load usage data.</span>';return;}
 
-  const isChamp=n=>CHAMPIONS_POKEMON.has(n.toLowerCase().replace(/\s+/g,'-'));
+  const isChamp=n=>isChampionsLegal(n.toLowerCase().replace(/\s+/g,'-'));
   const sorted=Object.entries(stats.pokemon)
     .map(([name,d])=>({name,d,usage:d.usage?.weighted||0}))
     .filter(p=>p.usage>0&&(!championsMode||isChamp(p.name)))
@@ -2935,7 +2935,7 @@ async function renderMeta(){
   const threatTypes={};
   VGC_THREATS.forEach(t=>{threatTypes[t.name]={types:t.types,stab:t.stab};});
 
-  const candidates=VGC_POKEMON.filter(v=>!championsMode||CHAMPIONS_POKEMON.has(v.name.toLowerCase().replace(/\s+/g,'-')));
+  const candidates=VGC_POKEMON.filter(v=>!championsMode||isChampionsLegal(v.name.toLowerCase().replace(/\s+/g,'-')));
   const candidateUsage={};
   sorted.forEach(p=>{candidateUsage[p.name]=p.usage;});
 
@@ -3284,7 +3284,7 @@ async function showUsageTierList(){
   // Sort by usage rate
   const sorted=Object.entries(stats.pokemon)
     .map(([name,d])=>({name,usage:d.usage?.weighted||d.usage?.raw||0}))
-    .filter(p=>p.usage>0&&(!championsMode||CHAMPIONS_POKEMON.has(p.name.toLowerCase().replace(/\s+/g,'-'))))
+    .filter(p=>p.usage>0&&(!championsMode||isChampionsLegal(p.name.toLowerCase().replace(/\s+/g,'-'))))
     .sort((a,b)=>b.usage-a.usage)
     .slice(0,100);
 
@@ -3332,6 +3332,14 @@ function updateModeToggle(){
   if(championsMode){el.className='mode-toggle on';el.textContent='Champions';}
   else{el.className='mode-toggle off';el.textContent='All Pokémon';}
   updateSearchPlaceholder();
+}
+function isChampionsLegal(apiName){
+  if(CHAMPIONS_POKEMON.has(apiName))return true;
+  // Check if base form is legal (handles aegislash-shield, rotom-wash, lycanroc-midnight, etc.)
+  for(const legal of CHAMPIONS_POKEMON){
+    if(apiName.startsWith(legal+'-'))return true;
+  }
+  return false;
 }
 function updateSearchPlaceholder(){
   const el=document.getElementById('psearch');
