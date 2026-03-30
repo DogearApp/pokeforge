@@ -3419,23 +3419,33 @@ function renderCalc(){
   document.getElementById('calc-p1-summary').innerHTML=`<strong>${p1.displayName}</strong> · ${p1.nature} · ${p1.item||'No item'}<br>HP: <strong>${s1.hp}</strong> Atk: <strong>${s1.atk}</strong> Def: <strong>${s1.def}</strong> SpA: <strong>${s1.spa}</strong> SpD: <strong>${s1.spd}</strong> Spe: <strong>${s1.spe}</strong>`;
 
   // P2 always has full edit controls
-  const p2c=calc.p2Custom||p2;
+  // Nature with stat colors
+  const p2nm=NM[p2.nature]||{};const p2nk=Object.keys(p2nm);
+  let natLabel=p2.nature;
+  if(p2nk.length){const u=p2nk.find(k=>p2nm[k]>1),d=p2nk.find(k=>p2nm[k]<1);natLabel=`${p2.nature} <span class="nat-up">+${STAT_NAMES[u]}</span> <span class="nat-down">-${STAT_NAMES[d]}</span>`;}
+
+  const nOpts=Object.keys(NM).map(n=>{
+    const nm=NM[n];const ks=Object.keys(nm);
+    let lbl=n;
+    if(ks.length){const u=ks.find(k=>nm[k]>1),d=ks.find(k=>nm[k]<1);lbl=`${n} (+${STAT_NAMES[u]} / -${STAT_NAMES[d]})`;}
+    return`<option value="${n}"${n===p2.nature?' selected':''}>${lbl}</option>`;
+  }).join('');
+
+  const evInput=(stat,label)=>`<label style="display:flex;align-items:center;gap:3px">${label}: <input type="number" min="0" max="252" step="4" value="${p2.evs[stat]||0}" onchange="ensureP2Custom();calc.p2Custom.evs.${stat}=Math.min(252,+this.value||0);renderCalc()" style="width:48px;${iStyle}"/></label>`;
+  const ivInput=(stat,label)=>`<label style="display:flex;align-items:center;gap:3px">${label}: <input type="number" min="0" max="31" value="${p2.ivs[stat]!==undefined?p2.ivs[stat]:31}" onchange="ensureP2Custom();calc.p2Custom.ivs.${stat}=Math.min(31,+this.value||0);renderCalc()" style="width:38px;${iStyle}"/></label>`;
+
   let p2Summary=`<div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;margin-bottom:6px">
-    <label>Nature: <select onchange="ensureP2Custom();calc.p2Custom.nature=this.value;renderCalc()" style="${iStyle}">${Object.keys(NM).map(n=>`<option${n===p2.nature?' selected':''}>${n}</option>`).join('')}</select></label>
+    <label>Nature: <select onchange="ensureP2Custom();calc.p2Custom.nature=this.value;renderCalc()" style="${iStyle}">${nOpts}</select></label>
     <label>Ability: <select onchange="ensureP2Custom();calc.p2Custom.ability=this.value;renderCalc()" style="${iStyle}">${p2.abilities.map(a=>`<option${a===p2.ability?' selected':''}>${a}</option>`).join('')}</select></label>
     <label>Item: <input value="${p2.item}" onchange="ensureP2Custom();calc.p2Custom.item=this.value;renderCalc()" style="width:110px;${iStyle}" placeholder="e.g. Assault Vest"/></label>
   </div>
   <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;margin-bottom:4px">
-    <label>EVs: <select onchange="ensureP2Custom();var s=this.value.split(',');STAT_KEYS.forEach((k,i)=>{calc.p2Custom.evs[k]=+s[i]||0;});renderCalc()" style="${iStyle}">
-      <option value="252,0,0,0,0,0"${p2.evs.hp===252&&!p2.evs.atk?' selected':''}>252 HP</option>
-      <option value="0,252,0,0,0,252"${p2.evs.atk===252&&p2.evs.spe===252?' selected':''}>252 Atk / 252 Spe</option>
-      <option value="0,0,0,252,0,252"${p2.evs.spa===252&&p2.evs.spe===252?' selected':''}>252 SpA / 252 Spe</option>
-      <option value="252,0,252,0,4,0">252 HP / 252 Def / 4 SpD</option>
-      <option value="252,0,4,0,252,0">252 HP / 252 SpD / 4 Def</option>
-      <option value="4,252,0,0,0,252">4 HP / 252 Atk / 252 Spe</option>
-      <option value="4,0,0,252,0,252">4 HP / 252 SpA / 252 Spe</option>
-      <option value="0,0,0,0,0,0">No EVs</option>
-    </select></label>
+    <span style="font-weight:600;color:var(--muted)">EVs:</span>
+    ${evInput('hp','HP')} ${evInput('def','Def')} ${evInput('spd','SpD')} ${evInput('atk','Atk')} ${evInput('spa','SpA')} ${evInput('spe','Spe')}
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;margin-bottom:6px">
+    <span style="font-weight:600;color:var(--muted)">IVs:</span>
+    ${ivInput('hp','HP')} ${ivInput('atk','Atk')} ${ivInput('def','Def')} ${ivInput('spa','SpA')} ${ivInput('spd','SpD')} ${ivInput('spe','Spe')}
   </div>
   <div style="font-size:11px;color:var(--muted)">HP: <strong>${s2.hp}</strong> Atk: <strong>${s2.atk}</strong> Def: <strong>${s2.def}</strong> SpA: <strong>${s2.spa}</strong> SpD: <strong>${s2.spd}</strong> Spe: <strong>${s2.spe}</strong></div>`;
   document.getElementById('calc-p2-summary').innerHTML=p2Summary;
