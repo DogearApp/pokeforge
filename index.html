@@ -2151,7 +2151,7 @@ async function addCustomMove(){
 
 function clearMoveSearch(){
   const el=document.getElementById('move-search-input');
-  if(el){el.value='';el.dispatchEvent(new Event('input'));}
+  if(el){el.value='';el.dispatchEvent(new Event('input'));el.focus();}
   const cb=document.getElementById('clear-moves');if(cb)cb.classList.remove('show');
   const hint=document.getElementById('custom-move-hint');if(hint)hint.style.display='none';
 }
