@@ -576,7 +576,7 @@ footer a:hover{color:var(--text)}
           <div class="build-field">
             <label>Nature</label>
             <div class="nature-wrap">
-              <input class="nature-selected" id="nature-input" placeholder="Search nature…" autocomplete="off" onfocus="openNatureDD()" oninput="filterNatureDD()"/>
+              <input class="nature-selected" id="nature-input" placeholder="Search nature…" autocomplete="off" onfocus="this.select();openNatureDD()" oninput="filterNatureDD()" onblur="restoreNatureDisplay()"/>
               <div class="nature-dd" id="nature-dd"></div>
             </div>
           </div>
@@ -1865,8 +1865,14 @@ function renderItemSelect(p){
 let natureUsageMap={};
 function openNatureDD(){
   const dd=document.getElementById('nature-dd');
+  const inp=document.getElementById('nature-input');
+  inp.value=''; // Clear so all natures show
   dd.classList.add('open');
   filterNatureDD();
+}
+function restoreNatureDisplay(){
+  if(editIdx===null)return;
+  setTimeout(()=>{updateNatureInput(team[editIdx].nature);},150);
 }
 function filterNatureDD(){
   const dd=document.getElementById('nature-dd');
