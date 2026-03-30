@@ -2995,7 +2995,8 @@ let calc={
   r1MoveIdx:0,r2MoveIdx:0,
   weather:'none',terrain:'none',
   r1:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0},
-  r2:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0}
+  r2:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0},
+  p2Custom:null // custom opponent (not on team)
 };
 
 function applyStage(stat,stage){
@@ -3122,9 +3123,25 @@ function renderMoveButtons(poke,moveIdx,side){
   }).join('');
 }
 
+function makeCalcBuild(data){
+  return{...data,nick:'',item:'',nature:'Hardy',tera:data.types[0],ability:data.abilities[0]||'',
+    moves:['','','',''],evs:{hp:252,atk:0,def:0,spa:0,spd:0,spe:0},ivs:{hp:31,atk:31,def:31,spa:31,spd:31,spe:31},
+    isMega:false,megaForm:null,basePoke:null,movePool:data.movePool||[]};
+}
+async function calcSearchP2(q){
+  if(!q||q.length<2)return;
+  const name=q.toLowerCase().replace(/\s+/g,'-');
+  const data=await fetchPoke(name);
+  if(!data)return;
+  calc.p2Custom=makeCalcBuild(data);
+  calc.p2Idx=-1;calc.r2MoveIdx=0;
+  renderCalc();
+}
+function calcSelectTeamP2(i){calc.p2Idx=i;calc.p2Custom=null;calc.r2MoveIdx=0;renderCalc();}
+
 function renderCalc(){
-  if(team.length<2){
-    document.getElementById('calc-r1-result').innerHTML='<span style="color:var(--muted);font-size:12px">Add at least 2 Pokémon to use the calculator.</span>';
+  if(!team.length){
+    document.getElementById('calc-r1-result').innerHTML='<span style="color:var(--muted);font-size:12px">Add at least 1 Pokémon to use the calculator.</span>';
     document.getElementById('calc-r2-result').innerHTML='';
     document.getElementById('calc-r1-moves').innerHTML='';document.getElementById('calc-r2-moves').innerHTML='';
     document.getElementById('calc-r1-mods').innerHTML='';document.getElementById('calc-r2-mods').innerHTML='';
@@ -3134,18 +3151,49 @@ function renderCalc(){
     return;
   }
   if(calc.p1Idx>=team.length)calc.p1Idx=0;
-  if(calc.p2Idx>=team.length)calc.p2Idx=1;
-  if(calc.p1Idx===calc.p2Idx)calc.p2Idx=(calc.p1Idx+1)%team.length;
 
-  const p1=team[calc.p1Idx],p2=team[calc.p2Idx];
+  const p1=team[calc.p1Idx];
+  const p2=calc.p2Custom||(calc.p2Idx>=0&&calc.p2Idx<team.length?team[calc.p2Idx]:null);
+
+  // P1 picker (your team)
+  document.getElementById('calc-p1-btns').innerHTML=team.map((p,i)=>`<div class="calc-poke-btn${calc.p1Idx===i?' sel':''}" onclick="calc.p1Idx=${i};calc.r1MoveIdx=0;renderCalc()">${p.sprite?`<img src="${p.sprite}">`:''}${p.displayName}</div>`).join('');
+
+  // P2 picker (team + search)
+  let p2html=team.map((p,i)=>`<div class="calc-poke-btn${!calc.p2Custom&&calc.p2Idx===i?' sel':''}" onclick="calcSelectTeamP2(${i})">${p.sprite?`<img src="${p.sprite}">`:''}${p.displayName}</div>`).join('');
+  p2html+=`<div style="margin-top:6px;display:flex;gap:6px;align-items:center">
+    <input id="calc-p2-search" placeholder="Search opponent…" style="flex:1;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);outline:none" onkeydown="if(event.key==='Enter')calcSearchP2(this.value)" autocomplete="off"/>
+    <button style="padding:6px 10px;font-size:11px;font-weight:600;border-radius:6px;border:1px solid var(--border);background:var(--bg4);color:var(--muted);cursor:pointer" onclick="calcSearchP2(document.getElementById('calc-p2-search').value)">Load</button>
+  </div>`;
+  document.getElementById('calc-p2-btns').innerHTML=p2html;
+
+  if(!p2){
+    document.getElementById('calc-p2-summary').innerHTML='<span style="color:var(--muted);font-size:12px">Select or search for an opponent</span>';
+    document.getElementById('calc-r1-result').innerHTML='';document.getElementById('calc-r2-result').innerHTML='';
+    document.getElementById('calc-r1-moves').innerHTML='';document.getElementById('calc-r2-moves').innerHTML='';
+    document.getElementById('calc-r1-mods').innerHTML='';document.getElementById('calc-r2-mods').innerHTML='';
+    return;
+  }
+
   const s1=computedStats(p1),s2=computedStats(p2);
 
-  // Pokemon pickers
-  document.getElementById('calc-p1-btns').innerHTML=team.map((p,i)=>`<div class="calc-poke-btn${calc.p1Idx===i?' sel':''}" onclick="calc.p1Idx=${i};calc.r1MoveIdx=0;renderCalc()">${p.sprite?`<img src="${p.sprite}">`:''}${p.displayName}</div>`).join('');
-  document.getElementById('calc-p2-btns').innerHTML=team.map((p,i)=>`<div class="calc-poke-btn${calc.p2Idx===i?' sel':''}" onclick="calc.p2Idx=${i};calc.r2MoveIdx=0;renderCalc()">${p.sprite?`<img src="${p.sprite}">`:''}${p.displayName}</div>`).join('');
-
   document.getElementById('calc-p1-summary').innerHTML=`<strong>${p1.displayName}</strong> · ${p1.nature} · ${p1.item||'No item'}<br>HP: <strong>${s1.hp}</strong> Atk: <strong>${s1.atk}</strong> Def: <strong>${s1.def}</strong> SpA: <strong>${s1.spa}</strong> SpD: <strong>${s1.spd}</strong> Spe: <strong>${s1.spe}</strong>`;
-  document.getElementById('calc-p2-summary').innerHTML=`<strong>${p2.displayName}</strong> · ${p2.nature} · ${p2.item||'No item'}<br>HP: <strong>${s2.hp}</strong> Atk: <strong>${s2.atk}</strong> Def: <strong>${s2.def}</strong> SpA: <strong>${s2.spa}</strong> SpD: <strong>${s2.spd}</strong> Spe: <strong>${s2.spe}</strong>`;
+
+  let p2Summary=`<strong>${p2.displayName}</strong> · ${p2.nature} · ${p2.item||'No item'}<br>HP: <strong>${s2.hp}</strong> Atk: <strong>${s2.atk}</strong> Def: <strong>${s2.def}</strong> SpA: <strong>${s2.spa}</strong> SpD: <strong>${s2.spd}</strong> Spe: <strong>${s2.spe}</strong>`;
+  if(calc.p2Custom){
+    p2Summary+=`<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;font-size:11px">
+      <label>Nature: <select onchange="calc.p2Custom.nature=this.value;renderCalc()" style="font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:2px">${Object.keys(NM).map(n=>`<option${n===p2.nature?' selected':''}>${n}</option>`).join('')}</select></label>
+      <label>Item: <input value="${p2.item}" onchange="calc.p2Custom.item=this.value;renderCalc()" style="width:100px;font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:2px 4px" placeholder="e.g. Assault Vest"/></label>
+      <label>EVs: <select onchange="var s=this.value.split(',');STAT_KEYS.forEach((k,i)=>{calc.p2Custom.evs[k]=+s[i]||0;});renderCalc()" style="font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:2px">
+        <option value="252,0,0,0,0,0"${p2.evs.hp===252&&!p2.evs.atk?' selected':''}>252 HP</option>
+        <option value="0,252,0,0,0,252"${p2.evs.atk===252?' selected':''}>252 Atk / 252 Spe</option>
+        <option value="0,0,0,252,0,252"${p2.evs.spa===252?' selected':''}>252 SpA / 252 Spe</option>
+        <option value="252,0,252,0,4,0">252 HP / 252 Def / 4 SpD</option>
+        <option value="252,0,4,0,252,0">252 HP / 252 SpD / 4 Def</option>
+        <option value="0,0,0,0,0,0">No EVs</option>
+      </select></label>
+    </div>`;
+  }
+  document.getElementById('calc-p2-summary').innerHTML=p2Summary;
 
   // Shared mods
   const weathers=['none','sun','rain','sand','snow'];
