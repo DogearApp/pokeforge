@@ -1200,6 +1200,7 @@ async function runAdvSearch(){
 document.addEventListener('click',e=>{
   if(!document.getElementById('sw').contains(e.target))ddEl.style.display='none';
   document.querySelectorAll('.ac-dd').forEach(d=>{if(!d.parentElement.contains(e.target))d.style.display='none';});
+  const cdd=document.getElementById('calc-p2-dd');if(cdd&&!cdd.parentElement.contains(e.target))cdd.style.display='none';
 });
 
 async function addPoke(name){
@@ -3348,6 +3349,16 @@ function makeCalcBuild(data){
     moves:['','','',''],evs:{hp:252,atk:0,def:0,spa:0,spd:0,spe:0},ivs:{hp:31,atk:31,def:31,spa:31,spd:31,spe:31},
     isMega:false,megaForm:null,basePoke:null,movePool:data.movePool||[]};
 }
+function calcP2Autocomplete(){
+  const inp=document.getElementById('calc-p2-search');
+  const dd=document.getElementById('calc-p2-dd');
+  const q=(inp.value||'').toLowerCase().trim();
+  if(!q||q.length<2){dd.style.display='none';return;}
+  const m=allPokemon.filter(p=>p.name.includes(q)&&(!championsMode||isChampionsLegal(p.name))).slice(0,8);
+  if(!m.length){dd.style.display='none';return;}
+  dd.innerHTML=m.map(p=>`<div class="ddi" onmousedown="event.preventDefault();calcSearchP2('${p.name}');document.getElementById('calc-p2-dd').style.display='none'"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" width="28" height="28" style="image-rendering:pixelated" loading="lazy"/>${fmt(p.name)}</div>`).join('');
+  dd.style.display='block';
+}
 async function calcSearchP2(q){
   if(!q||q.length<2)return;
   const name=q.toLowerCase().replace(/\s+/g,'-');
@@ -3387,8 +3398,10 @@ function renderCalc(){
   const curP2Name=p2?p2.displayName:'';
   let p2html=`<div style="display:flex;gap:6px;align-items:center">
     ${p2&&p2.sprite?`<img src="${p2.sprite}" width="40" height="40" style="image-rendering:pixelated">`:''}
-    <input id="calc-p2-search" value="${curP2Name.replace(/-/g,' ')}" placeholder="Search opponent…" style="flex:1;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);outline:none" onkeydown="if(event.key==='Enter')calcSearchP2(this.value)" onfocus="this.select()" autocomplete="off"/>
-    <button style="padding:8px 12px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid var(--border);background:var(--bg4);color:var(--muted);cursor:pointer" onclick="calcSearchP2(document.getElementById('calc-p2-search').value)">Load</button>
+    <div style="flex:1;position:relative">
+      <input id="calc-p2-search" value="${curP2Name.replace(/-/g,' ')}" placeholder="Search opponent…" style="width:100%;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);outline:none" oninput="calcP2Autocomplete()" onkeydown="if(event.key==='Enter'){calcSearchP2(this.value);document.getElementById('calc-p2-dd').style.display='none';}" onfocus="this.select();calcP2Autocomplete()" autocomplete="off"/>
+      <div class="dropdown" id="calc-p2-dd" style="display:none"></div>
+    </div>
   </div>`;
   document.getElementById('calc-p2-btns').innerHTML=p2html;
 
