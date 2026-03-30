@@ -457,6 +457,120 @@ footer a:hover{color:var(--text)}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+
+/* MOBILE RESPONSIVENESS */
+@media(max-width:600px){
+  /* Nav — stack or shrink */
+  nav{padding:0 .75rem;height:auto;flex-wrap:wrap;gap:4px;padding-top:8px;padding-bottom:8px}
+  .nav-logo{font-size:17px}
+  .nav-links{gap:.6rem;font-size:11px}
+  .nav-links a{font-size:11px}
+  .mode-toggle{font-size:10px;padding:3px 8px}
+
+  /* Hero */
+  .hero{padding:2.5rem 1rem 1.5rem}
+  .hero h1{font-size:1.8rem}
+  .hero p{font-size:.9rem}
+  .hero-pills{gap:4px}
+  .pill{font-size:11px;padding:3px 10px}
+
+  /* App container */
+  .app-wrap{padding:0 .75rem 2rem}
+  .app-wrap.focused{padding-top:.5rem}
+
+  /* Team manager */
+  .team-mgr-row{flex-direction:column}
+  .team-notes-inline{max-width:100%;flex:1}
+  .tm-name-input{width:90px}
+
+  /* Team bar — 3 columns */
+  .team-bar{grid-template-columns:repeat(3,1fr);gap:4px}
+  .tslot{padding:6px}
+  .tslot-name{font-size:11px}
+  .tslot-sprite{width:36px;height:36px}
+
+  /* Search */
+  .search-box input{padding:10px 14px 10px 38px;font-size:14px}
+  .search-icon{left:10px}
+  .adv-search-btn{padding:8px 10px;font-size:12px}
+  .adv-row{flex-direction:column;gap:8px}
+  .adv-field{min-width:0}
+
+  /* Edit panel */
+  .build-row{grid-template-columns:1fr;gap:8px}
+  .edit-head{padding:10px;flex-wrap:wrap;gap:6px}
+  .edit-sprite{width:40px;height:40px}
+  .edit-mon-name{font-size:14px}
+  .close-btn{width:36px;height:36px}
+
+  /* EV sliders — 3 cols on mobile */
+  .ev-sliders{grid-template-columns:repeat(3,1fr);gap:6px}
+  .ev-sl-num{width:48px}
+  .ev-sl input[type=range]::-webkit-slider-thumb{width:20px;height:20px}
+  .ev-sl input[type=range]::-moz-range-thumb{width:20px;height:20px}
+
+  /* Move slots — stack */
+  .move-slots{grid-template-columns:1fr;gap:4px}
+
+  /* Move list — hide PP and Use columns */
+  .move-list-header{grid-template-columns:52px 28px 1fr 34px 34px;font-size:8px}
+  .move-list-header span:nth-child(6),.move-list-header span:nth-child(7){display:none}
+  .move-row{grid-template-columns:52px 28px 1fr 34px 34px}
+  .mr-pp,.mr-use{display:none}
+  .mr-type{font-size:7px;padding:2px 4px}
+  .mr-name{font-size:12px}
+  .mr-effect{padding:0 10px 6px 80px;font-size:11px}
+
+  /* Coverage grids — horizontal scroll */
+  .weak-grid,.resist-grid{overflow-x:auto;display:block}
+  .weak-grid>*,.resist-grid>*{display:inline-block;vertical-align:middle}
+  .w-mon-sprite{width:28px;height:28px}
+  .w-col{min-width:60px}
+
+  /* Threat grid — scroll horizontally */
+  .threat-grid{overflow-x:auto;display:block;white-space:nowrap}
+  .threat-name{min-width:140px;white-space:normal}
+
+  /* Coverage type matchup grid */
+  .cov-grid{overflow-x:auto}
+
+  /* Calc */
+  .calc-row{grid-template-columns:1fr}
+  .calc-poke-btn{padding:3px 6px;font-size:11px}
+  .calc-poke-btn img{width:24px;height:24px}
+  .calc-stage button{width:28px;height:28px}
+  .calc-pill{font-size:10px;padding:4px 7px}
+
+  /* Tier list */
+  .tierlist-row{grid-template-columns:30px 32px 1fr 50px 50px;gap:4px;padding:6px 12px}
+  .tierlist-sprite{width:28px;height:28px}
+  .tierlist-name{font-size:12px}
+
+  /* Tabs — smaller */
+  .tab{font-size:9px;padding:8px 2px;letter-spacing:.02em}
+
+  /* Info trigger bigger for touch */
+  .info-trigger{width:28px;height:28px;font-size:14px}
+
+  /* Speed mods */
+  .speed-mods{gap:3px}
+  .speed-mods .calc-pill{font-size:10px;padding:4px 6px}
+
+  /* Meta */
+  .meta-face{flex-wrap:wrap}
+  .meta-core{padding:4px 8px}
+  .meta-core img{width:24px;height:24px}
+}
+
+/* Extra small screens (320px) */
+@media(max-width:380px){
+  nav{padding:0 .5rem}
+  .nav-links{gap:.4rem}
+  .app-wrap{padding:0 .5rem 2rem}
+  .team-bar{grid-template-columns:repeat(2,1fr)}
+  .tab{font-size:8px;padding:7px 1px}
+  .ev-sliders{grid-template-columns:repeat(2,1fr)}
+}
 </style>
 </head>
 <body>
