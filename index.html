@@ -2145,6 +2145,9 @@ function selectMove(name){
   p.moves[selectedMoveSlot]=name;
   // Advance to next empty slot
   for(let i=0;i<4;i++){const next=(selectedMoveSlot+1+i)%4;if(!p.moves[next]){selectedMoveSlot=next;break;}}
+  // Clear search so full list shows again
+  const msi=document.getElementById('move-search-input');if(msi)msi.value='';
+  const cmb=document.getElementById('clear-moves');if(cmb)cmb.classList.remove('show');
   renderMoveSlots();renderMoveList();saveEdit();
 }
 
