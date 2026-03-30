@@ -3213,7 +3213,7 @@ let calc={
   p1Idx:0,p2Idx:1,
   r1MoveIdx:0,r2MoveIdx:0,
   weather:'none',terrain:'none',
-  r1:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0},
+  r1:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0,helpinghand:false,charge:false,battery:false},
   r2:{spread:true,crit:false,burn:false,tera:false,atkStage:0,spaStage:0},
   defBuff:{reflect:false,lightscreen:false,auroraveil:false,defStage:0,spdStage:0,friendguard:false},
   p2Custom:null // custom opponent (not on team)
@@ -3276,6 +3276,11 @@ function runCalcSide(atk,def,moveName,mods){
   if(calc.terrain==='misty'&&md.type==='Dragon')other*=0.5;
   if(atk.ability==='Guts'&&mods.burn&&md.cat==='physical')other*=1.5;
 
+  // Offensive buffs
+  if(mods.helpinghand)other*=1.5;
+  if(mods.charge&&md.type==='Electric')other*=2;
+  if(mods.battery&&md.cat==='special')other*=1.3;
+
   // Defensive buffs
   if(db.auroraveil)other*=0.5;
   else if(db.reflect&&md.cat==='physical')other*=0.5;
@@ -3306,6 +3311,9 @@ function runCalcSide(atk,def,moveName,mods){
   if(mods.crit)tags.push('Crit');
   if(mods.burn&&burn<1)tags.push('Burn');
   if(mods.tera)tags.push('Tera');
+  if(mods.helpinghand)tags.push('Helping Hand');
+  if(mods.charge&&md.type==='Electric')tags.push('Charge');
+  if(mods.battery&&md.cat==='special')tags.push('Battery');
   if(db.auroraveil)tags.push('Aurora Veil');
   else{if(db.reflect&&md.cat==='physical')tags.push('Reflect');if(db.lightscreen&&md.cat==='special')tags.push('Light Screen');}
   if(db.friendguard)tags.push('Friend Guard');
@@ -3331,12 +3339,17 @@ function renderCalcResult(r,elId){
 function renderSideMods(side,prefix){
   const s=calc[side];
   let h='';
-  h+=`<span class="calc-pill${s.spread?' sel':''}" onclick="calc.${side}.spread=!calc.${side}.spread;renderCalc()">Spread</span>`;
-  h+=`<span class="calc-pill${s.crit?' sel':''}" onclick="calc.${side}.crit=!calc.${side}.crit;renderCalc()">Crit</span>`;
-  h+=`<span class="calc-pill${s.burn?' sel':''}" onclick="calc.${side}.burn=!calc.${side}.burn;renderCalc()">Burned</span>`;
-  h+=`<span class="calc-pill${s.tera?' sel':''}" onclick="calc.${side}.tera=!calc.${side}.tera;renderCalc()">Tera</span>`;
+  h+=`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">`;
+  h+=`<span class="calc-pill${s.spread?' sel':''}" onclick="calc.${side}.spread=!calc.${side}.spread;renderCalc()">Spread (0.75x)</span>`;
+  h+=`<span class="calc-pill${s.crit?' sel':''}" onclick="calc.${side}.crit=!calc.${side}.crit;renderCalc()">Crit (1.5x)</span>`;
+  h+=`<span class="calc-pill${s.burn?' sel':''}" onclick="calc.${side}.burn=!calc.${side}.burn;renderCalc()">Burned (Phys 0.5x)</span>`;
+  h+=`<span class="calc-pill${s.tera?' sel':''}" onclick="calc.${side}.tera=!calc.${side}.tera;renderCalc()">Tera Active</span>`;
+  h+=`<span class="calc-pill${s.helpinghand?' sel':''}" onclick="calc.${side}.helpinghand=!calc.${side}.helpinghand;renderCalc()">Helping Hand (1.5x)</span>`;
+  h+=`<span class="calc-pill${s.charge?' sel':''}" onclick="calc.${side}.charge=!calc.${side}.charge;renderCalc()">Charge (Elec 2x)</span>`;
+  h+=`<span class="calc-pill${s.battery?' sel':''}" onclick="calc.${side}.battery=!calc.${side}.battery;renderCalc()">Battery (Spec 1.3x)</span>`;
+  h+=`</div>`;
+  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap">`;
   const stages=[['atkStage','Atk'],['spaStage','SpA']];
-  h+=`<div style="display:flex;gap:6px;margin-top:6px">`
   stages.forEach(([k,lbl])=>{
     h+=`<div class="calc-stage-wrap"><div class="calc-stage-label">${lbl}</div><div class="calc-stage"><button onclick="calc.${side}.${k}=Math.max(-6,calc.${side}.${k}-1);renderCalc()">-</button><span>${s[k]>=0?'+':''}${s[k]}</span><button onclick="calc.${side}.${k}=Math.min(6,calc.${side}.${k}+1);renderCalc()">+</button></div></div>`;
   });
