@@ -750,7 +750,22 @@ const STAT_KEYS=['hp','atk','def','spa','spd','spe'];
 const STAT_NAMES={hp:'HP',atk:'Atk',def:'Def',spa:'SpA',spd:'SpD',spe:'Spe'};
 const STAT_COLS={hp:'#4ade80',atk:'#F08030',def:'#6890F0',spa:'#F85888',spd:'#98D8D8',spe:'#F8D030'};
 const NM={Hardy:{},Lonely:{atk:1.1,def:.9},Brave:{atk:1.1,spe:.9},Adamant:{atk:1.1,spa:.9},Naughty:{atk:1.1,spd:.9},Bold:{def:1.1,atk:.9},Docile:{},Relaxed:{def:1.1,spe:.9},Impish:{def:1.1,spa:.9},Lax:{def:1.1,spd:.9},Timid:{spe:1.1,atk:.9},Hasty:{spe:1.1,def:.9},Serious:{},Jolly:{spe:1.1,spa:.9},Naive:{spe:1.1,spd:.9},Modest:{spa:1.1,atk:.9},Mild:{spa:1.1,def:.9},Quiet:{spa:1.1,spe:.9},Bashful:{},Rash:{spa:1.1,spd:.9},Calm:{spd:1.1,atk:.9},Gentle:{spd:1.1,def:.9},Sassy:{spd:1.1,spe:.9},Careful:{spd:1.1,spa:.9},Quirky:{}};
-const BENCHMARKS=[{name:'Regieleki',spe:200},{name:'Electrode',spe:150},{name:'Calyrex-S',spe:150},{name:'Dragapult',spe:142},{name:'Zacian',spe:148},{name:'Iron Bundle',spe:136},{name:'Miraidon',spe:135},{name:'Flutter Mane',spe:135},{name:'Chien-Pao',spe:135},{name:'Koraidon',spe:135},{name:'Garchomp',spe:102},{name:'Chi-Yu',spe:100},{name:'Landorus-T',spe:91},{name:'Incineroar',spe:60},{name:'Amoonguss',spe:30},{name:'Torkoal',spe:20}];
+const BENCHMARKS=[
+  {name:'Regieleki',api:'regieleki',spe:200},{name:'Electrode',api:'electrode',spe:150},
+  {name:'Calyrex-S',api:'calyrex-shadow',spe:150},{name:'Dragapult',api:'dragapult',spe:142},
+  {name:'Zacian',api:'zacian',spe:148},{name:'Iron Bundle',api:'iron-bundle',spe:136},
+  {name:'Miraidon',api:'miraidon',spe:135},{name:'Flutter Mane',api:'flutter-mane',spe:135},
+  {name:'Chien-Pao',api:'chien-pao',spe:135},{name:'Koraidon',api:'koraidon',spe:135},
+  {name:'Garchomp',api:'garchomp',spe:102},{name:'Chi-Yu',api:'chi-yu',spe:100},
+  {name:'Landorus-T',api:'landorus',spe:91},{name:'Incineroar',api:'incineroar',spe:60},
+  {name:'Amoonguss',api:'amoonguss',spe:30},{name:'Torkoal',api:'torkoal',spe:20},
+  {name:'Weavile',api:'weavile',spe:125},{name:'Noivern',api:'noivern',spe:123},
+  {name:'Talonflame',api:'talonflame',spe:126},{name:'Meowscarada',api:'meowscarada',spe:123},
+  {name:'Greninja',api:'greninja',spe:122},{name:'Hydreigon',api:'hydreigon',spe:98},
+  {name:'Kingambit',api:'kingambit',spe:50},{name:'Hatterene',api:'hatterene',spe:29},
+  {name:'Milotic',api:'milotic',spe:81},{name:'Kommo-o',api:'kommo-o',spe:85},
+  {name:'Grimmsnarl',api:'grimmsnarl',spe:60},{name:'Arcanine',api:'arcanine',spe:95}
+];
 const MEGA_DATA={
   venusaur:[{suffix:'mega',stone:'Venusaurite',label:'Mega Venusaur'}],
   charizard:[{suffix:'mega-x',stone:'Charizardite X',label:'Mega Charizard X'},{suffix:'mega-y',stone:'Charizardite Y',label:'Mega Charizard Y'}],
@@ -1505,7 +1520,8 @@ function renderSpeedTiers(){
     if(speedMods.paralysis)tags.push('Para');if(speedMods.icywind)tags.push('IW');
     return{name:p.nick||p.displayName,spe:modSpe,baseSpe,mine:true,note:`${p.nature} | ${p.evs.spe||0} EVs${tags.length?' | '+tags.join('+'):''}`};
   });
-  const refE=BENCHMARKS.map(b=>({name:b.name,spe:Math.floor(Math.floor((.01*(2*b.spe+31)*50)+5)*1),baseSpe:0,mine:false}));
+  const filteredBench=championsMode?BENCHMARKS.filter(b=>isChampionsLegal(b.api)):BENCHMARKS;
+  const refE=filteredBench.map(b=>({name:b.name,spe:Math.floor(Math.floor((.01*(2*b.spe+31)*50)+5)*1),baseSpe:0,mine:false}));
   const seen=new Set();let all=[...teamE,...refE].filter(e=>{if(seen.has(e.name))return false;seen.add(e.name);return true;});
   if(filterQ)all=all.filter(e=>e.name.toLowerCase().includes(filterQ));
   if(speedMods.trickroom)all.sort((a,b)=>a.spe-b.spe);
