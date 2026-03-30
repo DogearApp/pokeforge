@@ -168,6 +168,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .nature-wrap{position:relative}
 .nature-selected{width:100%;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;transition:border-color .2s}
 .nature-selected:hover{border-color:var(--border2)}
+.nature-overlay{position:absolute;top:0;left:0;right:0;bottom:0;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);cursor:pointer;pointer-events:auto;z-index:1;background:var(--bg3);border-radius:var(--radius-sm)}
 .nature-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);z-index:300;max-height:240px;overflow-y:auto;box-shadow:0 12px 32px rgba(0,0,0,.5);display:none}
 .nature-dd.open{display:block}
 .nature-opt{padding:7px 12px;font-size:13px;cursor:pointer;color:var(--text);transition:background .15s;display:flex;align-items:center;gap:6px}
@@ -576,7 +577,8 @@ footer a:hover{color:var(--text)}
           <div class="build-field">
             <label>Nature</label>
             <div class="nature-wrap">
-              <input class="nature-selected" id="nature-input" placeholder="Search nature…" autocomplete="off" onfocus="this.select();openNatureDD()" oninput="filterNatureDD()" onblur="restoreNatureDisplay()"/>
+              <input class="nature-selected" id="nature-input" placeholder="Search nature…" autocomplete="off" onfocus="document.getElementById('nature-overlay').style.display='none';openNatureDD()" oninput="filterNatureDD()" onblur="restoreNatureDisplay()"/>
+              <div class="nature-overlay" id="nature-overlay" onclick="document.getElementById('nature-input').focus()"></div>
               <div class="nature-dd" id="nature-dd"></div>
             </div>
           </div>
@@ -1872,7 +1874,10 @@ function openNatureDD(){
 }
 function restoreNatureDisplay(){
   if(editIdx===null)return;
-  setTimeout(()=>{updateNatureInput(team[editIdx].nature);},150);
+  setTimeout(()=>{
+    updateNatureInput(team[editIdx].nature);
+    document.getElementById('nature-overlay').style.display='block';
+  },150);
 }
 function filterNatureDD(){
   const dd=document.getElementById('nature-dd');
@@ -1911,14 +1916,17 @@ function selectNature(n){
 }
 function updateNatureInput(n){
   const inp=document.getElementById('nature-input');
-  if(!inp)return;
+  const overlay=document.getElementById('nature-overlay');
+  if(!inp||!overlay)return;
+  inp.value='';
   const nm=NM[n]||{};const keys=Object.keys(nm);
   if(keys.length){
     const up=keys.find(k=>nm[k]>1),dn=keys.find(k=>nm[k]<1);
-    inp.value=`${n} (+${STAT_NAMES[up]} / -${STAT_NAMES[dn]})`;
+    overlay.innerHTML=`${n} <span class="nat-up">+${STAT_NAMES[up]}</span> / <span class="nat-down">-${STAT_NAMES[dn]}</span>`;
   } else {
-    inp.value=n;
+    overlay.innerHTML=n;
   }
+  overlay.style.display='block';
 }
 // Close nature DD on blur
 document.addEventListener('click',e=>{
