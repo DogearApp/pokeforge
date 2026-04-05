@@ -549,7 +549,7 @@ footer a:hover{color:var(--text)}
 .edit-compact .edit-mon-name{font-size:14px}
 .edit-body-cols{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 170px);overflow:hidden}
 .edit-col-left{overflow-y:auto;border-right:1px solid var(--border);padding:0}
-.edit-col-right{display:flex;flex-direction:column;overflow:hidden}
+.edit-col-right{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .edit-compact .build-row{padding:10px 12px;gap:8px}
 .edit-compact .bf-desc{display:none}
 .edit-compact .tera-row{padding:6px 12px}
@@ -569,7 +569,7 @@ footer a:hover{color:var(--text)}
 .edit-compact .mslot-desc{display:none}
 .edit-compact .mslot-stats{font-size:10px}
 .edit-compact .move-search{padding:6px 10px}
-.edit-compact .move-list-wrap{flex:1;max-height:none;min-height:0;overflow-y:auto}
+.edit-compact .move-list-wrap{flex:1;max-height:none;min-height:0;overflow-y:scroll}
 .edit-compact .move-row{padding:4px 12px 1px}
 .edit-compact .move-row-wrap{border-bottom:1px solid rgba(255,255,255,0.02)}
 .edit-compact .mr-name{font-size:12px}
@@ -577,7 +577,7 @@ footer a:hover{color:var(--text)}
 .edit-compact .mr-pow,.edit-compact .mr-acc,.edit-compact .mr-pp,.edit-compact .mr-use{font-size:11px}
 .edit-compact .move-divider{padding:4px 12px;font-size:9px}
 .edit-compact .move-list-header{padding:4px 12px;font-size:8px}
-.edit-compact .move-section{border-top:none}
+.edit-compact .move-section{border-top:none;display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
 .edit-compact .move-section-head{padding:6px 10px}
 .edit-compact .mr-effect{display:none}
 .compact-team-bar{display:flex;gap:4px;align-items:center;margin-bottom:6px;flex-wrap:nowrap;overflow-x:auto}
