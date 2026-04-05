@@ -543,6 +543,51 @@ footer a:hover{color:var(--text)}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
 
+/* COMPACT EDIT MODE — fits on one screen */
+.edit-compact .edit-head{padding:8px 12px}
+.edit-compact .edit-sprite{width:36px;height:36px}
+.edit-compact .edit-mon-name{font-size:14px}
+.edit-body-cols{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 170px);overflow:hidden}
+.edit-col-left{overflow-y:auto;border-right:1px solid var(--border);padding:0}
+.edit-col-right{display:flex;flex-direction:column;overflow:hidden}
+.edit-compact .build-row{padding:10px 12px;gap:8px}
+.edit-compact .bf-desc{display:none}
+.edit-compact .tera-row{padding:6px 12px}
+.edit-compact .tera-opt{font-size:8px;padding:2px 5px}
+.edit-compact .ev-section{padding:8px 12px}
+.edit-compact .ev-sliders{grid-template-columns:repeat(3,1fr);gap:4px}
+.edit-compact .ev-sl input[type=range]{display:none}
+.edit-compact .ev-sl-computed{font-size:10px}
+.edit-compact .ev-sl-num{width:48px;font-size:12px}
+.edit-compact .ev-sl-iv{display:none}
+.edit-compact .ev-spread-btn{font-size:10px;padding:3px 8px}
+.edit-compact .move-slots{grid-template-columns:1fr 1fr;gap:3px;padding:6px 10px}
+.edit-compact .mslot{min-height:auto;padding:5px 8px;border-radius:6px}
+.edit-compact .mslot-desc{display:none}
+.edit-compact .mslot-stats{font-size:10px}
+.edit-compact .move-search{padding:6px 10px}
+.edit-compact .move-list-wrap{flex:1;max-height:none;min-height:0;overflow-y:auto}
+.edit-compact .move-section{border-top:none}
+.edit-compact .move-section-head{padding:6px 10px}
+.edit-compact .mr-effect{display:none}
+.compact-team-bar{display:flex;gap:4px;align-items:center;margin-bottom:6px;flex-wrap:nowrap;overflow-x:auto}
+.compact-team-bar .tslot{padding:3px;min-height:auto;width:auto;display:flex;align-items:center;gap:3px}
+.compact-team-bar .tslot-name{font-size:9px;margin-bottom:0;max-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.compact-team-bar .tslot-body{display:none}
+.compact-team-bar .tslot-sprite{width:30px;height:30px}
+.compact-team-bar .tslot.empty{min-height:auto;width:36px;height:36px;font-size:10px}
+.compact-team-bar .tslot-copy,.compact-team-bar .tslot-xbtn{display:none}
+.compact-team-bar .mega-badge{display:none}
+.compact-search{flex:1;min-width:150px}
+.compact-search .search-label{display:none}
+.compact-search .search-box input{padding:8px 14px 8px 36px;font-size:13px}
+.analysis-bottom{position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--bg2);border-top:1px solid var(--border)}
+.analysis-bottom .tabs{border-bottom:none}
+.analysis-bottom .tab{padding:6px 2px;font-size:9px}
+.analysis-bottom .tab-body{display:none}
+.analysis-expanded .tab-body{display:block;position:fixed;bottom:38px;left:0;right:0;max-height:50vh;overflow-y:auto;background:var(--bg2);border-top:1px solid var(--border);padding:1rem;z-index:49}
+@media(max-width:900px){.edit-body-cols{grid-template-columns:1fr;height:auto;overflow:visible}.edit-col-left{border-right:none;overflow:visible}.edit-col-right{overflow:visible}.edit-compact .move-list-wrap{max-height:300px;flex:none}}
+
 /* MOBILE RESPONSIVENESS */
 @media(max-width:600px){
   /* Nav — stack or shrink */
@@ -764,7 +809,10 @@ footer a:hover{color:var(--text)}
           <button class="close-btn" onclick="closeEdit()">✕</button>
         </div>
 
-        <!-- Build fields — horizontal -->
+        <!-- Two-column edit body -->
+        <div class="edit-body-cols">
+        <!-- LEFT: Build + EVs -->
+        <div class="edit-col-left">
         <div class="build-row">
           <div class="build-field">
             <label>Ability</label>
@@ -802,7 +850,10 @@ footer a:hover{color:var(--text)}
           <div id="ev-suggestions" style="margin-top:10px"></div>
         </div>
 
-        <!-- Moves section -->
+        </div><!-- /edit-col-left -->
+
+        <!-- RIGHT: Moves -->
+        <div class="edit-col-right">
         <div class="move-section">
           <div class="move-section-head">
             <div class="move-section-title" style="display:flex;align-items:center;gap:6px">Moves <span class="info-trigger" onclick="document.getElementById('move-legend').classList.toggle('open')">ℹ</span></div>
@@ -839,7 +890,9 @@ footer a:hover{color:var(--text)}
 
           <!-- Scrollable move list -->
           <div class="move-list-wrap" id="move-list"></div>
-        </div>
+        </div><!-- /move-section -->
+        </div><!-- /edit-col-right -->
+        </div><!-- /edit-body-cols -->
       </div>
     </div>
 
@@ -2035,6 +2088,7 @@ function openEdit(i){
   editIdx=i;selectedMoveSlot=0;moveFilterType=null;moveFilterCat=null;
   const p=team[i];
   document.getElementById('edit-mode').style.display='block';
+  document.querySelector('.edit-panel').classList.add('edit-compact');
 
   document.getElementById('etitle').textContent=p.displayName;
   const sp=document.getElementById('edit-sprite');
@@ -2072,6 +2126,7 @@ function openEdit(i){
 function closeEdit(){
   editIdx=null;
   document.getElementById('edit-mode').style.display='none';
+  document.querySelector('.edit-panel').classList.remove('edit-compact');
   if(moveAbort){moveAbort.abort();moveAbort=null;}
   renderTeamBar();
 }
