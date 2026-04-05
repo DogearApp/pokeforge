@@ -547,7 +547,7 @@ footer a:hover{color:var(--text)}
 .edit-compact .edit-head{padding:8px 12px}
 .edit-compact .edit-sprite{width:36px;height:36px}
 .edit-compact .edit-mon-name{font-size:14px}
-.edit-body-cols{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 170px);overflow:hidden}
+.edit-body-cols{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 220px);overflow:hidden}
 .edit-col-left{overflow-y:auto;border-right:1px solid var(--border);padding:0}
 .edit-col-right{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .edit-compact .build-row{padding:10px 12px;gap:8px}
@@ -756,7 +756,8 @@ footer a:hover{color:var(--text)}
       <button class="adv-search-btn" onclick="toggleAdvSearch()">Advanced</button>
     </div>
     <!-- Advanced search panel -->
-    <div class="adv-panel" id="adv-panel" style="display:none">
+    <div class="adv-panel" id="adv-panel" style="display:none;position:relative">
+      <button onclick="toggleAdvSearch()" style="position:absolute;top:8px;right:8px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-size:14px;width:28px;height:28px;display:flex;align-items:center;justify-content:center">✕</button>
       <div class="adv-row">
         <div class="adv-field">
           <label>By Move</label>
