@@ -258,9 +258,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .ev-sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg2)}
 .ev-sl input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg2)}
 .ev-sl-computed{font-size:13px;font-weight:600;color:var(--muted);margin-top:4px}
-.ev-sl-iv{margin-top:4px}
-.ev-sl-iv input{width:40px;padding:2px 4px;font-size:11px;font-family:'DM Sans',sans-serif;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);outline:none;text-align:center}
-.ev-sl-iv input:focus{border-color:var(--accent)}
+.ev-sl-iv{display:none}/* IVs removed in Pokemon Champions */
 .ev-spread-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;font-size:11px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;transition:all .15s;margin:2px}
 .ev-spread-btn:hover{border-color:var(--accent);color:var(--accent)}
 .ev-spread-btn .ev-spread-pct{color:var(--accent);font-weight:600}
@@ -551,7 +549,7 @@ footer a:hover{color:var(--text)}
 .edit-col-left{overflow-y:auto;border-right:1px solid var(--border);padding:0}
 .edit-col-right{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .edit-compact .build-row{padding:10px 12px;gap:8px}
-.edit-compact .bf-desc{display:none}
+.edit-compact .bf-desc{font-size:11px;margin-top:3px;max-height:36px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .edit-compact .tera-row{padding:6px 12px}
 .edit-compact .tera-opt{font-size:8px;padding:2px 5px}
 .edit-compact .ev-section{padding:8px 12px}
@@ -1310,29 +1308,46 @@ const POPULAR_ITEMS=[
 ];
 // Pokemon Champions legal roster (API names)
 const CHAMPIONS_POKEMON=new Set([
-  'venusaur','charizard','blastoise','beedrill','pikachu','raichu','raichu-alola',
-  'clefable','ninetales','ninetales-alola','arcanine','arcanine-hisui','alakazam',
-  'victreebel','slowbro','slowbro-galar','gengar','kangaskhan','starmie','pinsir',
-  'gyarados','ditto','vaporeon','jolteon','flareon','aerodactyl','snorlax','dragonite',
-  'meganium','typhlosion','typhlosion-hisui','feraligatr','ampharos','azumarill',
-  'politoed','espeon','umbreon','slowking','steelix','scizor','heracross','skarmory',
-  'houndoom','tyranitar','pelipper','gardevoir','sableye','aggron','torkoal','altaria',
-  'milotic','absol','metagross','torterra','infernape','empoleon','lopunny','spiritomb',
-  'garchomp','lucario','hippowdon','abomasnow','weavile','rhyperior','leafeon','glaceon',
-  'gliscor','mamoswine','gallade','froslass','rotom','serperior','emboar','samurott',
-  'samurott-hisui','excadrill','audino','conkeldurr','whimsicott','krookodile',
-  'garbodor','zoroark','zoroark-hisui','vanilluxe','emolga','chandelure','stunfisk-galar',
-  'golurk','hydreigon','volcarona','chesnaught','delphox','greninja','diggersby',
-  'talonflame','vivillon','floette','furfrou','meowstic','aegislash','clawitzer',
-  'tyrantrum','aurorus','sylveon','hawlucha','goodra','klefki','trevenant','gourgeist',
-  'noivern','decidueye','decidueye-hisui','incineroar','primarina','toucannon',
-  'crabominable','lycanroc','toxapex','mudsdale','araquanid','tsareena','oranguru',
-  'mimikyu','drampa','kommo-o','corviknight','appletun','sandaconda','polteageist',
-  'hatterene','grimmsnarl','mr-rime','runerigus','alcremie','morpeko','dragapult',
-  'kleavor','ursaluna','basculegion','sneasler','meowscarada','skeledirge','quaquaval',
-  'pawmot','maushold','garganacl','armarouge','ceruledge','scovillain','tinkaton',
-  'palafin','orthworm','glimmora','dondozo','tatsugiri','farigiraf','kingambit',
-  'sinistcha','archaludon','hydrapple'
+  // Gen 1
+  'venusaur','charizard','blastoise','beedrill','pidgeot','arbok','pikachu','raichu',
+  'raichu-alola','clefable','ninetales','ninetales-alola','arcanine','arcanine-hisui',
+  'alakazam','machamp','victreebel','slowbro','slowbro-galar','gengar','kangaskhan',
+  'starmie','pinsir','tauros','tauros-paldea','gyarados','ditto','vaporeon','jolteon',
+  'flareon','aerodactyl','snorlax','dragonite',
+  // Gen 2
+  'meganium','typhlosion','typhlosion-hisui','feraligatr','ariados','ampharos','azumarill',
+  'politoed','espeon','umbreon','slowking','slowking-galar','forretress','steelix',
+  'scizor','heracross','skarmory','houndoom','tyranitar',
+  // Gen 3
+  'pelipper','gardevoir','sableye','aggron','medicham','manectric','sharpedo','camerupt',
+  'torkoal','altaria','milotic','castform','banette','chimecho','absol','glalie',
+  // Gen 4
+  'torterra','infernape','empoleon','luxray','roserade','rampardos','bastiodon','lopunny',
+  'spiritomb','garchomp','lucario','hippowdon','toxicroak','abomasnow','weavile',
+  'rhyperior','leafeon','glaceon','gliscor','mamoswine','gallade','froslass','rotom',
+  // Gen 5
+  'serperior','emboar','samurott','samurott-hisui','watchog','liepard','simisage',
+  'simisear','simipour','excadrill','audino','conkeldurr','whimsicott','krookodile',
+  'cofagrigus','garbodor','zoroark','zoroark-hisui','reuniclus','vanilluxe','emolga',
+  'chandelure','beartic','stunfisk','stunfisk-galar','golurk','hydreigon','volcarona',
+  // Gen 6
+  'chesnaught','delphox','greninja','diggersby','talonflame','vivillon','floette',
+  'florges','pangoro','furfrou','meowstic','aegislash','aromatisse','slurpuff',
+  'clawitzer','heliolisk','tyrantrum','aurorus','sylveon','hawlucha','dedenne','goodra',
+  'goodra-hisui','klefki','trevenant','gourgeist','avalugg','avalugg-hisui','noivern',
+  // Gen 7
+  'decidueye','decidueye-hisui','incineroar','primarina','toucannon','crabominable',
+  'lycanroc','toxapex','mudsdale','araquanid','salazzle','tsareena','oranguru',
+  'passimian','mimikyu','drampa','kommo-o',
+  // Gen 8
+  'corviknight','flapple','appletun','sandaconda','polteageist','hatterene',
+  'mr-rime','runerigus','alcremie','morpeko','dragapult',
+  // Hisui
+  'wyrdeer','kleavor','ursaluna','basculegion','sneasler',
+  // Gen 9
+  'meowscarada','skeledirge','quaquaval','maushold','garganacl','armarouge','ceruledge',
+  'bellibolt','scovillain','espathra','tinkaton','palafin','orthworm','glimmora',
+  'farigiraf','kingambit','sinistcha','archaludon','hydrapple'
 ]);
 let championsMode=true; // Default to Champions mode
 
@@ -2222,6 +2237,21 @@ const ABILITY_FALLBACK={
   'competitive':'Raises Sp.Atk by 2 stages when any stat is lowered.',
   'queenly-majesty':'Blocks opposing Pokémon\'s priority moves.',
   'unseen-fist':'Contact moves can hit through Protect.',
+  // Champions Mega abilities
+  'magic-bounce':'Reflects status moves back at the user.',
+  'innards-out':'Damages the attacker equal to remaining HP when this Pokemon faints.',
+  'huge-power':'Doubles the Pokemon\'s Attack stat.',
+  'multiscale':'Reduces damage taken by 50% when HP is full.',
+  'mega-sol':'Moves act as if the weather is harsh sunlight (personal Sun, doesn\'t set field weather).',
+  'dragonize':'Normal-type moves become Dragon-type and gain a 20% power boost.',
+  'stalwart':'Prevents opponents from redirecting this Pokemon\'s moves.',
+  'piercing-drill':'Moves bypass Protect and similar protective moves.',
+  'infiltrator':'Bypasses Light Screen, Reflect, Safeguard, and Substitute.',
+  'no-guard':'All moves by and against this Pokemon always hit.',
+  'iron-fist':'Boosts the power of punching moves by 20%.',
+  'berserk':'Raises Special Attack by one stage when HP drops below half.',
+  'spicy-spray':'Any opponent that attacks this Pokemon gets burned.',
+  'fairy-aura':'Boosts Fairy-type moves for all Pokemon on the field by 33%.',
 };
 async function fetchAbilityDesc(name){
   const key=name.toLowerCase().replace(/\s+/g,'-');
@@ -3905,10 +3935,7 @@ function renderCalc(){
     <span style="font-weight:600;color:var(--muted)">EVs:</span>
     ${evInput('hp','HP')} ${evInput('def','Def')} ${evInput('spd','SpD')} ${evInput('atk','Atk')} ${evInput('spa','SpA')} ${evInput('spe','Spe')}
   </div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;margin-bottom:6px">
-    <span style="font-weight:600;color:var(--muted)">IVs:</span>
-    ${ivInput('hp','HP')} ${ivInput('atk','Atk')} ${ivInput('def','Def')} ${ivInput('spa','SpA')} ${ivInput('spd','SpD')} ${ivInput('spe','Spe')}
-  </div>
+  <!-- IVs removed in Pokemon Champions -->
   <div style="font-size:11px;color:var(--muted)">HP: <strong>${s2.hp}</strong> Atk: <strong>${s2.atk}</strong> Def: <strong>${s2.def}</strong> SpA: <strong>${s2.spa}</strong> SpD: <strong>${s2.spd}</strong> Spe: <strong>${s2.spe}</strong></div>`;
   document.getElementById('calc-p2-summary').innerHTML=p2Summary;
 
