@@ -1526,7 +1526,7 @@ searchEl.addEventListener('input',()=>{
   clearTimeout(st);st=setTimeout(()=>{
     const q=searchEl.value.toLowerCase().trim();
     if(!q){ddEl.style.display='none';return;}
-    const m=allPokemon.filter(p=>p.name.includes(q)&&!p.name.includes('-mega')&&(!championsMode||isChampionsLegal(p.name))).slice(0,12);
+    const m=allPokemon.filter(p=>p.name.includes(q)&&!/-mega/.test(p.name)&&!/-gmax/.test(p.name)&&(!championsMode||isChampionsLegal(p.name))).slice(0,12);
     // Add mega results from MEGA_DATA
     const megaResults=[];
     const qClean=q.replace('mega ','').replace('mega-','');
@@ -3903,7 +3903,7 @@ function calcP2Autocomplete(){
   const dd=document.getElementById('calc-p2-dd');
   const q=(inp.value||'').toLowerCase().trim();
   if(!q||q.length<2){dd.style.display='none';return;}
-  const m=allPokemon.filter(p=>p.name.includes(q)&&(!championsMode||isChampionsLegal(p.name))).slice(0,8);
+  const m=allPokemon.filter(p=>p.name.includes(q)&&!/-mega/.test(p.name)&&!/-gmax/.test(p.name)&&(!championsMode||isChampionsLegal(p.name))).slice(0,8);
   if(!m.length){dd.style.display='none';return;}
   dd.innerHTML=m.map(p=>`<div class="ddi" onmousedown="event.preventDefault();calcSearchP2('${p.name}');document.getElementById('calc-p2-dd').style.display='none'"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" width="28" height="28" style="image-rendering:pixelated" loading="lazy"/>${fmt(p.name)}</div>`).join('');
   dd.style.display='block';
