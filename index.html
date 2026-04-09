@@ -543,6 +543,11 @@ footer a:hover{color:var(--text)}
 
 /* COMPACT EDIT MODE — fits on one screen */
 .edit-compact .edit-head{padding:8px 12px}
+.build-inline{display:flex;gap:6px;align-items:flex-end;flex:1;min-width:0}
+.build-field-sm{display:flex;flex-direction:column;min-width:0;flex:1}
+.build-field-sm label{font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.build-field-sm select,.build-field-sm input,.build-field-sm .nature-selected{width:100%;padding:4px 6px;font-size:11px;font-family:'DM Sans',sans-serif;background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text);outline:none}
+.build-field-sm .nature-overlay{padding:4px 6px;font-size:11px;border-radius:5px}
 .edit-compact .edit-sprite{width:36px;height:36px}
 .edit-compact .edit-mon-name{font-size:14px}
 .edit-body-cols{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 280px);max-height:500px;overflow:hidden}
@@ -803,7 +808,7 @@ footer a:hover{color:var(--text)}
     <div id="edit-mode" style="display:none">
       <div class="edit-panel">
         <!-- Header -->
-        <div class="edit-head">
+        <div class="edit-head" style="flex-wrap:wrap;gap:6px">
           <div class="edit-mon-info">
             <img id="edit-sprite" class="edit-sprite" style="display:none"/>
             <div>
@@ -811,37 +816,26 @@ footer a:hover{color:var(--text)}
               <div class="types-line" id="edit-types"></div>
             </div>
           </div>
+          <div class="build-inline">
+            <div class="build-field-sm"><label>Ability</label><select id="e-ability" onchange="onAbilityChange()"><option>—</option></select></div>
+            <div class="build-field-sm"><label>Item</label><select id="e-item" onchange="onItemChange()"></select></div>
+            <div class="build-field-sm"><label>Nature</label><div class="nature-wrap"><input class="nature-selected" id="nature-input" placeholder="Nature…" autocomplete="off" onfocus="document.getElementById('nature-overlay').style.display='none';openNatureDD()" oninput="filterNatureDD()" onblur="restoreNatureDisplay()"/><div class="nature-overlay" id="nature-overlay" onclick="document.getElementById('nature-input').focus()"></div><div class="nature-dd" id="nature-dd"></div></div></div>
+          </div>
           <div class="mega-controls" id="mega-controls" style="display:none">
             <button class="mega-toggle" id="mega-btn" onclick="toggleMega()">⬡ Mega</button>
             <div class="mega-select" id="mega-select" style="display:none"></div>
           </div>
           <button class="close-btn" onclick="closeEdit()">✕</button>
         </div>
+        <div id="desc-row" style="padding:0 12px 4px;font-size:11px;color:#b0b8d0;display:flex;gap:12px;border-bottom:1px solid var(--border)">
+          <div class="bf-desc" id="desc-ability" style="flex:1;margin:0;min-height:0"></div>
+          <div class="bf-desc" id="desc-item" style="flex:1;margin:0;min-height:0"></div>
+        </div>
 
         <!-- Two-column edit body -->
         <div class="edit-body-cols">
         <!-- LEFT: Build + EVs -->
         <div class="edit-col-left">
-        <div class="build-row">
-          <div class="build-field">
-            <label>Ability</label>
-            <select id="e-ability" onchange="onAbilityChange()"><option>—</option></select>
-            <div class="bf-desc" id="desc-ability"></div>
-          </div>
-          <div class="build-field">
-            <label>Item</label>
-            <select id="e-item" onchange="onItemChange()"></select>
-            <div class="bf-desc" id="desc-item"></div>
-          </div>
-          <div class="build-field">
-            <label>Nature</label>
-            <div class="nature-wrap">
-              <input class="nature-selected" id="nature-input" placeholder="Search nature…" autocomplete="off" onfocus="document.getElementById('nature-overlay').style.display='none';openNatureDD()" oninput="filterNatureDD()" onblur="restoreNatureDisplay()"/>
-              <div class="nature-overlay" id="nature-overlay" onclick="document.getElementById('nature-input').focus()"></div>
-              <div class="nature-dd" id="nature-dd"></div>
-            </div>
-          </div>
-        </div>
 
         <!-- Tera -->
         <div class="tera-row">
