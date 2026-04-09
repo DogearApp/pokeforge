@@ -395,6 +395,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .tier-pill{font-size:9px;font-weight:700;letter-spacing:.04em;padding:2px 6px;border-radius:5px;text-transform:uppercase}
 .tier-pill.mine{background:rgba(240,96,48,0.2);color:var(--accent)}
 .tier-pill.ref{background:var(--bg4);color:var(--muted2)}
+.tier-pill.mega{background:rgba(245,197,66,0.15);color:var(--gold)}
 .tier-speed{font-size:13px;font-weight:700;color:var(--text);min-width:32px;text-align:right}
 /* DAMAGE CALC */
 .calc-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
@@ -1154,7 +1155,25 @@ const BENCHMARKS=[
   {name:'Greninja',api:'greninja',spe:122},{name:'Hydreigon',api:'hydreigon',spe:98},
   {name:'Kingambit',api:'kingambit',spe:50},{name:'Hatterene',api:'hatterene',spe:29},
   {name:'Milotic',api:'milotic',spe:81},{name:'Kommo-o',api:'kommo-o',spe:85},
-  {name:'Grimmsnarl',api:'grimmsnarl',spe:60},{name:'Arcanine',api:'arcanine',spe:95}
+  {name:'Grimmsnarl',api:'grimmsnarl',spe:60},{name:'Arcanine',api:'arcanine',spe:95},
+  // Mega speed benchmarks
+  {name:'M-Alakazam',api:'alakazam',spe:150,mega:true},
+  {name:'M-Metagross',api:'metagross',spe:110,mega:true},
+  {name:'M-Garchomp',api:'garchomp',spe:92,mega:true},
+  {name:'M-Kangaskhan',api:'kangaskhan',spe:100,mega:true},
+  {name:'M-Gengar',api:'gengar',spe:130,mega:true},
+  {name:'M-Lopunny',api:'lopunny',spe:135,mega:true},
+  {name:'M-Lucario',api:'lucario',spe:112,mega:true},
+  {name:'M-Charizard Y',api:'charizard',spe:100,mega:true},
+  {name:'M-Pinsir',api:'pinsir',spe:105,mega:true},
+  {name:'M-Gardevoir',api:'gardevoir',spe:100,mega:true},
+  {name:'M-Gyarados',api:'gyarados',spe:81,mega:true},
+  {name:'M-Tyranitar',api:'tyranitar',spe:71,mega:true},
+  {name:'M-Salamence',api:'salamence',spe:120,mega:true},
+  {name:'M-Blastoise',api:'blastoise',spe:78,mega:true},
+  {name:'M-Venusaur',api:'venusaur',spe:80,mega:true},
+  {name:'M-Scizor',api:'scizor',spe:75,mega:true},
+  {name:'M-Heracross',api:'heracross',spe:75,mega:true}
 ];
 const MEGA_DATA={
   venusaur:[{suffix:'mega',stone:'Venusaurite',label:'Mega Venusaur'}],
@@ -2072,7 +2091,7 @@ function renderSpeedTiers(){
     return{name:p.nick||p.displayName,spe:modSpe,baseSpe,mine:true,note:`${p.nature} | ${p.evs.spe||0} EVs${tags.length?' | '+tags.join('+'):''}`};
   });
   const filteredBench=championsMode?BENCHMARKS.filter(b=>isChampionsLegal(b.api)):BENCHMARKS;
-  const refE=filteredBench.map(b=>({name:b.name,spe:Math.floor(Math.floor((.01*(2*b.spe+31)*50)+5)*1),baseSpe:0,mine:false}));
+  const refE=filteredBench.map(b=>({name:b.name,spe:Math.floor(Math.floor((.01*(2*b.spe+31)*50)+5)*1),baseSpe:0,mine:false,mega:b.mega||false}));
   const seen=new Set();let all=[...teamE,...refE].filter(e=>{if(seen.has(e.name))return false;seen.add(e.name);return true;});
   if(filterQ)all=all.filter(e=>e.name.toLowerCase().includes(filterQ));
   if(speedMods.trickroom)all.sort((a,b)=>a.spe-b.spe);
@@ -2091,7 +2110,7 @@ function renderSpeedTiers(){
     const changed=e.mine&&hasMods&&e.spe!==e.baseSpe;
     return`<div class="tier-row${e.mine?' mine':''}">
       <span class="tier-name">${e.name}${e.note?' <span style="font-size:10px;color:var(--muted)">'+e.note+'</span>':''}</span>
-      <span class="tier-pill ${e.mine?'mine':'ref'}">${e.mine?'yours':'ref'}</span>
+      <span class="tier-pill ${e.mine?'mine':'ref'}">${e.mine?'yours':e.mega?'mega':'ref'}</span>
       <span class="tier-speed">${changed?'<span style="text-decoration:line-through;color:var(--muted2);font-size:11px">'+e.baseSpe+'</span> ':''}${e.spe}</span>
     </div>`;
   }).join('');
