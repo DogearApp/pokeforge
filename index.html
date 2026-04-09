@@ -821,6 +821,7 @@ footer a:hover{color:var(--text)}
             <div class="build-field-sm"><label>Ability</label><select id="e-ability" onchange="onAbilityChange()"><option>—</option></select><div class="bf-desc-inline" id="desc-ability"></div></div>
             <div class="build-field-sm"><label>Item</label><select id="e-item" onchange="onItemChange()"></select><div class="bf-desc-inline" id="desc-item"></div></div>
             <div class="build-field-sm"><label>Nature</label><div class="nature-wrap"><input class="nature-selected" id="nature-input" placeholder="Nature…" autocomplete="off" onfocus="document.getElementById('nature-overlay').style.display='none';openNatureDD()" oninput="filterNatureDD()" onblur="restoreNatureDisplay()"/><div class="nature-overlay" id="nature-overlay" onclick="document.getElementById('nature-input').focus()"></div><div class="nature-dd" id="nature-dd"></div></div></div>
+            <div class="build-field-sm" style="max-width:80px"><label>Tera</label><select id="e-tera" onchange="setTera(this.value)"></select></div>
           </div>
           <div class="mega-controls" id="mega-controls" style="display:none">
             <button class="mega-toggle" id="mega-btn" onclick="toggleMega()">⬡ Mega</button>
@@ -834,12 +835,6 @@ footer a:hover{color:var(--text)}
         <div class="edit-body-cols">
         <!-- LEFT: Build + EVs -->
         <div class="edit-col-left">
-
-        <!-- Tera -->
-        <div class="tera-row">
-          <div class="tera-row-label">Tera Type</div>
-          <div id="tera-opts" style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center"></div>
-        </div>
 
         <!-- EV Sliders -->
         <div class="ev-section">
@@ -2162,7 +2157,7 @@ function openEdit(i){
   renderItemSelect(p);
   renderAbilityWithUsage(p);
   renderNatureWithUsage(p);
-  document.getElementById('tera-opts').innerHTML=TYPES.map(t=>`<span class="tera-opt${p.tera===t?' sel':''}" style="background:${TCOL[t]}" onclick="setTera('${t}')">${t}</span>`).join('');
+  document.getElementById('e-tera').innerHTML=TYPES.map(t=>`<option value="${t}"${p.tera===t?' selected':''}>${t}</option>`).join('');
 
   showMegaControls(p);renderTeamBar();renderEVSliders();
   showAbilityDesc();showItemDesc();
@@ -2196,7 +2191,7 @@ function closeEdit(){
   renderTeamBar();
 }
 
-function setTera(t){if(editIdx===null)return;team[editIdx].tera=t;document.querySelectorAll('.tera-opt').forEach(el=>el.classList.toggle('sel',el.textContent===t));saveEdit();}
+function setTera(t){if(editIdx===null)return;team[editIdx].tera=t;saveEdit();}
 
 function saveEdit(){
   if(editIdx===null)return;const p=team[editIdx];
