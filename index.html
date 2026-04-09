@@ -583,7 +583,7 @@ footer a:hover{color:var(--text)}
 .edit-compact .move-list-header{padding:4px 12px;font-size:8px}
 .edit-compact .move-section{border-top:none;display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
 .edit-compact .move-section-head{padding:6px 10px}
-.edit-compact .mr-effect{padding:0 12px 4px 80px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.edit-compact .mr-effect{padding:0 12px 6px 80px;font-size:10px;white-space:normal;line-height:1.4}
 .compact-team-bar{display:flex;gap:4px;align-items:center;margin-bottom:6px;flex-wrap:nowrap;overflow-x:auto}
 .compact-team-bar .tslot{padding:3px;min-height:auto;width:auto;display:flex;align-items:center;gap:3px}
 .compact-team-bar .tslot-name{font-size:9px;margin-bottom:0;max-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2335,7 +2335,7 @@ async function showAbilityDesc(){
   const desc=await fetchAbilityDesc(name);
   const key=name.toLowerCase().replace(/\s+/g,'-');
   const field=FIELD_EFFECTS[key];
-  el.innerHTML=(desc||'')+(field?`<div style="margin-top:4px;padding:4px 8px;background:var(--bg);border-radius:6px;font-size:12px">${field}</div>`:'');
+  el.innerHTML=(desc||'')+(field?' '+field:'');
 }
 async function showItemDesc(){
   const el=document.getElementById('desc-item');
@@ -3195,10 +3195,7 @@ function renderAbilityWithUsage(p){
   el.innerHTML=p.abilities.map(a=>{
     const usage=stats?.abilities?.[a]||0;
     const pctStr=usage?` (${pct(usage)})`:''
-    const key=a.toLowerCase().replace(/\s+/g,'-');
-    const desc=ABILITY_FALLBACK[key]||abilityCache[key]||'';
-    const shortDesc=desc?` — ${desc.slice(0,60)}${desc.length>60?'…':''}`:''
-    return `<option value="${a}"${a===p.ability?' selected':''}>${a}${pctStr}${shortDesc}</option>`;
+    return `<option value="${a}"${a===p.ability?' selected':''}>${a}${pctStr}</option>`;
   }).join('');
   // Store clean value
   el.onchange=()=>{
