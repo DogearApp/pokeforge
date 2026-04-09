@@ -1526,7 +1526,7 @@ searchEl.addEventListener('input',()=>{
   clearTimeout(st);st=setTimeout(()=>{
     const q=searchEl.value.toLowerCase().trim();
     if(!q){ddEl.style.display='none';return;}
-    const m=allPokemon.filter(p=>p.name.includes(q)&&(!championsMode||isChampionsLegal(p.name))).slice(0,12);
+    const m=allPokemon.filter(p=>p.name.includes(q)&&!p.name.includes('-mega')&&(!championsMode||isChampionsLegal(p.name))).slice(0,12);
     // Add mega results from MEGA_DATA
     const megaResults=[];
     const qClean=q.replace('mega ','').replace('mega-','');
