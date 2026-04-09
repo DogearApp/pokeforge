@@ -1493,9 +1493,26 @@ searchEl.addEventListener('input',()=>{
   clearTimeout(st);st=setTimeout(()=>{
     const q=searchEl.value.toLowerCase().trim();
     if(!q){ddEl.style.display='none';return;}
-    const m=allPokemon.filter(p=>p.name.includes(q)&&(!championsMode||isChampionsLegal(p.name))).slice(0,14);
-    if(!m.length){ddEl.style.display='none';return;}
-    ddEl.innerHTML=m.map(p=>`<div class="ddi" onclick="addPoke('${p.name}')" onmouseenter="showPokePreview('${p.name}',event)" onmouseleave="hidePokePreview()"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" width="32" height="32" style="image-rendering:pixelated" loading="lazy"/>${fmt(p.name)}</div>`).join('');
+    const m=allPokemon.filter(p=>p.name.includes(q)&&(!championsMode||isChampionsLegal(p.name))).slice(0,12);
+    // Add mega results from MEGA_DATA
+    const megaResults=[];
+    const qClean=q.replace('mega ','').replace('mega-','');
+    Object.entries(MEGA_DATA).forEach(([base,forms])=>{
+      if(!championsMode||isChampionsLegal(base)){
+        forms.forEach(f=>{
+          if(f.label.toLowerCase().includes(q)||base.includes(qClean)){
+            const found=allPokemon.find(ap=>ap.name===base||ap.name.startsWith(base));
+            if(found&&!megaResults.find(r=>r.label===f.label))megaResults.push({base,id:found.id,label:f.label,suffix:f.suffix});
+          }
+        });
+      }
+    });
+    if(!m.length&&!megaResults.length){ddEl.style.display='none';return;}
+    let html=m.map(p=>`<div class="ddi" onclick="addPoke('${p.name}')" onmouseenter="showPokePreview('${p.name}',event)" onmouseleave="hidePokePreview()"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" width="32" height="32" style="image-rendering:pixelated" loading="lazy"/>${fmt(p.name)}</div>`).join('');
+    if(megaResults.length){
+      html+=megaResults.slice(0,6).map(r=>`<div class="ddi" onclick="addPokeAndMega('${r.base}','${r.suffix}')" style="border-left:2px solid var(--gold)"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${r.id}.png" width="32" height="32" style="image-rendering:pixelated" loading="lazy"/><span style="color:var(--gold);font-weight:600">${r.label}</span></div>`).join('');
+    }
+    ddEl.innerHTML=html;
     ddEl.style.display='block';
   },100);
 });
@@ -1642,6 +1659,14 @@ document.addEventListener('click',e=>{
   const cdd=document.getElementById('calc-p2-dd');if(cdd&&!cdd.parentElement.contains(e.target))cdd.style.display='none';
 });
 
+async function addPokeAndMega(baseName,megaSuffix){
+  await addPoke(baseName);
+  // Auto-trigger mega evolution on the just-added Pokemon
+  const idx=team.length-1;
+  if(idx>=0&&editIdx===idx){
+    await toggleMega(megaSuffix);
+  }
+}
 async function addPoke(name){
   if(team.length>=6)return;
   searchEl.value='';ddEl.style.display='none';
