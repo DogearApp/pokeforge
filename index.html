@@ -459,38 +459,15 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .tierlist-panel{background:var(--bg2);border:1px solid var(--border);border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:0}
 .tierlist-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
 .tierlist-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
-.tierlist-row{display:grid;grid-template-columns:40px 40px 1fr 70px 60px;gap:8px;align-items:center;padding:8px 20px;border-bottom:1px solid rgba(255,255,255,0.03);transition:background .1s}
+.tierlist-row{display:grid;grid-template-columns:40px 1fr 70px;gap:8px;align-items:center;padding:8px 20px;border-bottom:1px solid rgba(255,255,255,0.03);transition:background .1s}
 .tierlist-row:hover{background:var(--bg3)}
-.tierlist-rank{font-size:14px;font-weight:700;color:var(--muted);text-align:center}
 .tierlist-sprite{width:36px;height:36px;image-rendering:pixelated}
 .tierlist-name{font-size:14px;font-weight:500}
-.tierlist-types{display:flex;gap:3px;margin-top:2px}
-.tierlist-usage{font-size:13px;font-weight:700;color:var(--accent);text-align:right}
-.tierlist-bar{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
-.tierlist-bar-fill{height:100%;border-radius:2px;background:var(--accent)}
+.tierlist-section{padding:12px 20px 6px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg3);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1}
 .tierlist-add{padding:3px 8px;font-size:11px;font-weight:600;border-radius:5px;border:1px solid var(--border);background:var(--bg4);color:var(--muted);cursor:pointer;transition:all .15s}
 .tierlist-add:hover{border-color:var(--accent);color:var(--accent)}
 
 /* META TAB */
-.meta-section{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
-.meta-section:last-child{border-bottom:none}
-.meta-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-.meta-face{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
-.meta-face-rank{font-size:12px;font-weight:700;color:var(--muted2);min-width:20px;text-align:center}
-.meta-face img{width:32px;height:32px;image-rendering:pixelated}
-.meta-face-info{flex:1;min-width:0}
-.meta-face-name{font-size:13px;font-weight:600}
-.meta-face-detail{font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap}
-.meta-face-usage{font-size:12px;font-weight:700;color:var(--accent);min-width:45px;text-align:right}
-.meta-pill{font-size:10px;padding:1px 6px;border-radius:4px;background:var(--bg4);color:var(--muted);border:1px solid var(--border)}
-.meta-core{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin:3px}
-.meta-core img{width:28px;height:28px;image-rendering:pixelated}
-.meta-core-pct{font-size:10px;color:var(--accent);font-weight:600}
-.meta-counter{padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin:4px 0;display:flex;align-items:center;gap:8px}
-.meta-counter img{width:32px;height:32px;image-rendering:pixelated}
-.meta-counter-info{flex:1;font-size:12px}
-.meta-offmeta{border-color:var(--gold);background:rgba(245,197,66,0.05)}
-.meta-gem{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(245,197,66,0.2);color:var(--gold);border:1px solid rgba(245,197,66,0.3)}
 
 /* BLOG */
 .blog-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:none;overflow-y:auto;padding:20px}
@@ -683,9 +660,10 @@ footer a:hover{color:var(--text)}
   .calc-pill{font-size:10px;padding:4px 7px}
 
   /* Tier list */
-  .tierlist-row{grid-template-columns:30px 32px 1fr 50px 50px;gap:4px;padding:6px 12px}
+  .tierlist-row{grid-template-columns:32px 1fr 58px;gap:4px;padding:6px 12px}
   .tierlist-sprite{width:28px;height:28px}
   .tierlist-name{font-size:12px}
+  .tierlist-section{padding:8px 12px 4px;font-size:11px}
 
   /* Tabs — smaller */
   .tab{font-size:9px;padding:8px 2px;letter-spacing:.02em}
@@ -698,9 +676,6 @@ footer a:hover{color:var(--text)}
   .speed-mods .calc-pill{font-size:10px;padding:4px 6px}
 
   /* Meta */
-  .meta-face{flex-wrap:wrap}
-  .meta-core{padding:4px 8px}
-  .meta-core img{width:24px;height:24px}
 }
 
 /* Extra small screens (320px) */
@@ -721,7 +696,7 @@ footer a:hover{color:var(--text)}
   <div class="nav-links">
     <a href="#builder" onclick="enterBuilder()">Builder</a>
     <a href="#" onclick="event.preventDefault();showTypeCalc()">Type Calc</a>
-    <a href="#" onclick="event.preventDefault();showUsageTierList()">Usage Tier List</a>
+    <a href="#" onclick="event.preventDefault();showLegalList()">Legal Pokémon</a>
     <a href="/guides">Guides</a>
     <a href="https://www.pokemon.com/us/pokemon-vg-championships" target="_blank">VGC Rules</a>
     <span style="font-size:12px;color:var(--muted)">Free <span class="nav-badge">BETA</span></span>
@@ -901,7 +876,6 @@ footer a:hover{color:var(--text)}
           <div class="tab" onclick="tab('threats')">Threats</div>
           <div class="tab" onclick="tab('ai')">Analyze</div>
           <div class="tab" onclick="tab('calc')">Dmg Calc</div>
-          <div class="tab" onclick="tab('meta')">Meta</div>
           <div class="tab" onclick="tab('export')">Import/Export</div>
         </div>
         <div class="tab-body" id="t-def">
@@ -921,9 +895,6 @@ footer a:hover{color:var(--text)}
           </div>
           <div class="speed-ctx" id="speed-ctx">Add Pokémon to compare speed tiers.</div>
           <div class="tier-list" id="tier-list"><span style="font-size:13px;color:var(--muted)">Add Pokémon to see speed tiers.</span></div>
-        </div>
-        <div class="tab-body" id="t-meta" style="display:none">
-          <div id="meta-content"><span style="font-size:13px;color:var(--muted)">Click to load meta analysis.</span></div>
         </div>
         <div class="tab-body" id="t-export" style="display:none">
           <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Export</div>
@@ -986,7 +957,7 @@ footer a:hover{color:var(--text)}
 <div class="tierlist-overlay" id="tierlist-overlay" onclick="if(event.target===this)closeTierList()">
   <div class="tierlist-panel">
     <div class="tierlist-head">
-      <div class="tierlist-title">VGC Usage Tier List</div>
+      <div class="tierlist-title">Legal Pokémon</div>
       <button class="close-btn" onclick="closeTierList()">✕</button>
     </div>
     <div id="tierlist-body" style="padding:0"></div>
@@ -2143,14 +2114,13 @@ function copyPaste(){
 }
 
 function tab(id){
-  const tabs=['def','off','speed','threats','ai','calc','meta','export'];
+  const tabs=['def','off','speed','threats','ai','calc','export'];
   tabs.forEach(t=>{const el=document.getElementById('t-'+t);if(el)el.style.display=t===id?'block':'none';});
   document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',tabs[i]===id));
   if(id==='speed')renderSpeedTiers();
   if(id==='calc')renderCalc();
   if(id==='off')renderOffensiveCoverage();
   if(id==='threats')renderThreats();
-  if(id==='meta')renderMeta();
 }
 
 // --- Edit panel ---
@@ -3845,184 +3815,6 @@ function renderThreats(){
   el.innerHTML=html;
 }
 
-// --- Meta Tab ---
-async function renderMeta(){
-  const el=document.getElementById('meta-content');
-  const stats=await loadUsageStats();
-  if(!stats||!stats.pokemon){el.innerHTML='<span style="color:var(--red)">Could not load usage data.</span>';return;}
-
-  const isChamp=n=>isLegalPoke(n.toLowerCase().replace(/\s+/g,'-'));
-  const sorted=Object.entries(stats.pokemon)
-    .map(([name,d])=>({name,d,usage:d.usage?.weighted||0}))
-    .filter(p=>p.usage>0&&isChamp(p.name))
-    .sort((a,b)=>b.usage-a.usage);
-
-  const spriteFor=name=>{const api=name.toLowerCase().replace(/\s+/g,'-');const f=allPokemon.find(ap=>ap.name===api||ap.name.startsWith(api));return f?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${f.id}.png`:'';};
-  const topMoves=d=>Object.entries(d.moves||{}).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([m])=>m);
-  const topItem=d=>{const e=Object.entries(d.items||{}).sort((a,b)=>b[1]-a[1]);return e[0]?e[0][0]:null;};
-  const topAbil=d=>{const e=Object.entries(d.abilities||{}).sort((a,b)=>b[1]-a[1]);return e[0]?e[0][0]:null;};
-
-  let html='';
-
-  // === 1. What You'll Face ===
-  html+=`<div class="meta-section"><div class="meta-title">What You'll Face — Top 15</div>`;
-  sorted.slice(0,15).forEach((p,i)=>{
-    const sp=spriteFor(p.name);
-    const moves=topMoves(p.d);
-    const item=topItem(p.d);
-    const abil=topAbil(p.d);
-    const tera=Object.entries(p.d.teraTypes||{}).sort((a,b)=>b[1]-a[1]);
-    const topTera=tera[0]?tera[0][0]:null;
-    html+=`<div class="meta-face">
-      <div class="meta-face-rank">${i+1}</div>
-      ${sp?`<img src="${sp}">`:''}
-      <div class="meta-face-info">
-        <div class="meta-face-name">${p.name}</div>
-        <div class="meta-face-detail">
-          ${abil?`<span class="meta-pill">${abil}</span>`:''}
-          ${item?`<span class="meta-pill">@ ${item}</span>`:''}
-          ${topTera?`<span class="meta-pill">Tera: ${topTera}</span>`:''}
-          ${moves.map(m=>`<span class="meta-pill">${m}</span>`).join('')}
-        </div>
-      </div>
-      <div class="meta-face-usage">${(p.usage*100).toFixed(1)}%</div>
-    </div>`;
-  });
-  html+=`</div>`;
-
-  // === 2. Popular Cores ===
-  html+=`<div class="meta-section"><div class="meta-title">Popular Cores</div>`;
-  const top30=sorted.slice(0,30);
-  const cores=[];const seenCores=new Set();
-  top30.forEach(a=>{
-    const teammates=a.d.teammates||{};
-    Object.entries(teammates).forEach(([bName,pct])=>{
-      if(pct<=0)return;
-      const key=[a.name,bName].sort().join('|');
-      if(seenCores.has(key))return;
-      // Check if B is also in top and has A as teammate
-      const bEntry=sorted.find(x=>x.name===bName);
-      if(!bEntry)return;
-      const bTeammates=bEntry.d.teammates||{};
-      const bPct=bTeammates[a.name]||0;
-      if(bPct<=0)return;
-      seenCores.add(key);
-      cores.push({a:a.name,b:bName,score:(pct+bPct)*Math.min(a.usage,bEntry.usage),pctA:pct,pctB:bPct});
-    });
-  });
-  cores.sort((a,b)=>b.score-a.score);
-  cores.slice(0,10).forEach(c=>{
-    html+=`<div class="meta-core">
-      ${spriteFor(c.a)?`<img src="${spriteFor(c.a)}">`:''}
-      <strong style="font-size:12px">${c.a}</strong>
-      <span style="color:var(--muted);font-size:11px">+</span>
-      ${spriteFor(c.b)?`<img src="${spriteFor(c.b)}">`:''}
-      <strong style="font-size:12px">${c.b}</strong>
-      <span class="meta-core-pct">${(Math.max(c.pctA,c.pctB)*100).toFixed(0)}%</span>
-    </div>`;
-  });
-  html+=`</div>`;
-
-  // === 3. Counter Suggestions ===
-  html+=`<div class="meta-section"><div class="meta-title">Counter Suggestions</div>`;
-  const topThreats=sorted.slice(0,10);
-  // Use VGC_THREATS for type data, and VGC_POKEMON for counter candidates
-  const threatTypes={};
-  VGC_THREATS.forEach(t=>{threatTypes[t.name]={types:t.types,stab:t.stab};});
-
-  const candidates=VGC_POKEMON.filter(v=>isLegalPoke(v.name.toLowerCase().replace(/\s+/g,'-')));
-  const candidateUsage={};
-  sorted.forEach(p=>{candidateUsage[p.name]=p.usage;});
-
-  topThreats.forEach(threat=>{
-    const tData=threatTypes[threat.name];
-    if(!tData)return;
-
-    const counters=candidates.map(c=>{
-      // Check if candidate resists threat's STAB
-      let resists=0;
-      tData.stab.forEach(atkType=>{
-        let mult=1;
-        c.types.forEach(defType=>{const ch=TC[atkType]||{};if(ch[defType]!==undefined)mult*=ch[defType];});
-        if(mult<1)resists++;
-      });
-      // Check if candidate hits threat SE
-      let hitsSE=false;
-      c.types.forEach(atkType=>{
-        let eff=1;
-        tData.types.forEach(defType=>{const ch=TC[atkType]||{};if(ch[defType]!==undefined)eff*=ch[defType];});
-        if(eff>1)hitsSE=true;
-      });
-      if(!resists&&!hitsSE)return null;
-      const usage=candidateUsage[c.name]||0;
-      const offMeta=usage<0.05;
-      return{...c,resists,hitsSE,usage,offMeta,score:resists*2+(hitsSE?1:0)+(offMeta?1:0)};
-    }).filter(Boolean).sort((a,b)=>b.score-a.score).slice(0,3);
-
-    if(!counters.length)return;
-    html+=`<div style="margin:8px 0 4px;font-size:13px;font-weight:600">${spriteFor(threat.name)?`<img src="${spriteFor(threat.name)}" width="24" height="24" style="image-rendering:pixelated;vertical-align:middle">`:''}${threat.name} <span style="font-size:11px;color:var(--muted)">(${(threat.usage*100).toFixed(1)}%)</span></div>`;
-    counters.forEach(c=>{
-      const reasons=[];
-      if(c.resists)reasons.push('Resists STAB');
-      if(c.hitsSE)reasons.push('Hits SE with '+c.types.join('/'));
-      html+=`<div class="meta-counter${c.offMeta?' meta-offmeta':''}">
-        ${spriteFor(c.name)?`<img src="${spriteFor(c.name)}">`:''}
-        <div class="meta-counter-info">
-          <strong>${c.name}</strong> ${c.offMeta?'<span class="meta-gem">OFF-META</span>':''}
-          <div style="color:var(--muted);font-size:11px">${c.types.join('/')} · ${reasons.join(' · ')}${c.usage?` · ${(c.usage*100).toFixed(1)}% usage`:''}</div>
-        </div>
-      </div>`;
-    });
-  });
-  html+=`</div>`;
-
-  // === 4. Meta Gaps (Hidden Gems) ===
-  html+=`<div class="meta-section"><div class="meta-title">Hidden Gems — Low Usage, High Potential</div>`;
-  const top15Types={};
-  topThreats.slice(0,15).forEach(t=>{
-    const td=threatTypes[t.name];
-    if(td)td.stab.forEach(s=>{top15Types[s]=(top15Types[s]||0)+1;});
-  });
-
-  const gems=candidates.map(c=>{
-    const usage=candidateUsage[c.name]||0;
-    if(usage>0.08)return null; // not off-meta enough
-    let resistScore=0,seScore=0;
-    Object.entries(top15Types).forEach(([atkType,count])=>{
-      let mult=1;
-      c.types.forEach(defType=>{const ch=TC[atkType]||{};if(ch[defType]!==undefined)mult*=ch[defType];});
-      if(mult<1)resistScore+=count;
-    });
-    topThreats.slice(0,15).forEach(t=>{
-      const td=threatTypes[t.name];if(!td)return;
-      c.types.forEach(atkType=>{
-        let eff=1;td.types.forEach(defType=>{const ch=TC[atkType]||{};if(ch[defType]!==undefined)eff*=ch[defType];});
-        if(eff>1)seScore++;
-      });
-    });
-    const score=resistScore*2+seScore;
-    if(score<4)return null;
-    return{...c,usage,score,resistScore,seScore};
-  }).filter(Boolean).sort((a,b)=>b.score-a.score).slice(0,8);
-
-  if(gems.length){
-    gems.forEach(g=>{
-      html+=`<div class="meta-counter meta-offmeta">
-        ${spriteFor(g.name)?`<img src="${spriteFor(g.name)}">`:''}
-        <div class="meta-counter-info">
-          <strong>${g.name}</strong> <span class="meta-gem">HIDDEN GEM</span>
-          <div style="color:var(--muted);font-size:11px">${g.types.join('/')} · ${g.why} · Resists ${g.resistScore} meta STAB hits · Hits ${g.seScore} top threats SE${g.usage?` · Only ${(g.usage*100).toFixed(1)}% usage`:''}</div>
-        </div>
-      </div>`;
-    });
-  } else {
-    html+=`<div style="color:var(--muted);font-size:12px">No standout hidden gems found for the current meta.</div>`;
-  }
-  html+=`</div>`;
-
-  el.innerHTML=html;
-}
-
 // --- Damage Calculator (two-sided) ---
 let calc={
   p1Idx:0,p2Idx:1,
@@ -4331,55 +4123,56 @@ function renderCalc(){
   }
 }
 
-// --- Usage Tier List ---
-async function showUsageTierList(){
+// --- Legal Pokémon List ---
+function showLegalList(){
   const overlay=document.getElementById('tierlist-overlay');
   const body=document.getElementById('tierlist-body');
   overlay.classList.add('open');
-  body.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted)">Loading usage stats...</div>';
 
-  const stats=await loadUsageStats();
-  if(!stats||!stats.pokemon){body.innerHTML='<div style="padding:20px;color:var(--red)">Could not load usage data.</div>';return;}
+  const sprite=id=>id?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`:'';
+  const spriteFor=apiName=>{
+    const f=allPokemon.find(ap=>ap.name===apiName||ap.name.startsWith(apiName));
+    return f?f.id:null;
+  };
 
-  // Sort by usage rate
-  const sorted=Object.entries(stats.pokemon)
-    .map(([name,d])=>({name,usage:d.usage?.weighted||d.usage?.raw||0}))
-    .filter(p=>p.usage>0&&isLegalPoke(p.name.toLowerCase().replace(/\s+/g,'-')))
-    .sort((a,b)=>b.usage-a.usage)
-    .slice(0,100);
+  const pokes=[...LEGAL_POKEMON].sort().map(api=>({api,id:spriteFor(api),name:fmt(api)}));
+  const megas=[];
+  Object.entries(MEGA_DATA).forEach(([base,forms])=>{
+    const id=spriteFor(base);
+    forms.forEach(f=>megas.push({base,id,label:f.label,suffix:f.suffix}));
+  });
+  megas.sort((a,b)=>a.label.localeCompare(b.label));
 
-  const maxUsage=sorted[0]?.usage||1;
+  const pokeHtml=pokes.map(p=>`<div class="tierlist-row">
+    ${p.id?`<img src="${sprite(p.id)}" class="tierlist-sprite" loading="lazy">`:'<div></div>'}
+    <div class="tierlist-name">${p.name}</div>
+    <button class="tierlist-add" onclick="addFromLegalList('${p.api}')">+ Add</button>
+  </div>`).join('');
 
-  body.innerHTML=sorted.map((p,i)=>{
-    const pctStr=(p.usage*100).toFixed(1)+'%';
-    const barW=Math.round(p.usage/maxUsage*100);
-    // Try to find the pokemon in allPokemon for sprite
-    const apiName=p.name.toLowerCase().replace(/\s+/g,'-');
-    const found=allPokemon.find(ap=>ap.name===apiName||ap.name.startsWith(apiName));
-    const spriteUrl=found?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${found.id}.png`:'';
-    const hasMega=!!(MEGA_DATA[apiName]||MEGA_DATA[apiName.split('-')[0]]);
-    const megaBadge=hasMega?` <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(245,197,66,0.2);color:var(--gold);border:1px solid rgba(245,197,66,0.3)">MEGA</span>`:'';
-    return`<div class="tierlist-row">
-      <div class="tierlist-rank">${i+1}</div>
-      ${spriteUrl?`<img src="${spriteUrl}" class="tierlist-sprite" loading="lazy">`:'<div></div>'}
-      <div>
-        <div class="tierlist-name">${p.name}${megaBadge}</div>
-        <div class="tierlist-bar"><div class="tierlist-bar-fill" style="width:${barW}%"></div></div>
-      </div>
-      <div class="tierlist-usage">${pctStr}</div>
-      <button class="tierlist-add" onclick="addPokeFromTierList('${p.name}')">+ Add</button>
-    </div>`;
-  }).join('');
+  const megaHtml=megas.map(m=>`<div class="tierlist-row">
+    ${m.id?`<img src="${sprite(m.id)}" class="tierlist-sprite" loading="lazy">`:'<div></div>'}
+    <div class="tierlist-name" style="color:var(--gold);font-weight:600">${m.label}</div>
+    <button class="tierlist-add" onclick="addMegaFromLegalList('${m.base}','${m.suffix}')">+ Add</button>
+  </div>`).join('');
+
+  body.innerHTML=
+    `<div class="tierlist-section">Pokémon (${pokes.length})</div>${pokeHtml}`+
+    `<div class="tierlist-section">Mega Evolutions (${megas.length})</div>${megaHtml}`;
 }
 
 function closeTierList(){document.getElementById('tierlist-overlay').classList.remove('open');}
 
-async function addPokeFromTierList(name){
+async function addFromLegalList(apiName){
   if(team.length>=6)return;
-  const apiName=name.toLowerCase().replace(/\s+/g,'-');
   closeTierList();
   enterBuilder();
   await addPoke(apiName);
+}
+async function addMegaFromLegalList(base,suffix){
+  if(team.length>=6)return;
+  closeTierList();
+  enterBuilder();
+  await addPokeAndMega(base,suffix);
 }
 
 function isLegalPoke(apiName){
