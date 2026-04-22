@@ -83,9 +83,6 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,16,0.85);backdrop-fi
 .nav-links a{color:var(--muted);font-size:13px;font-weight:500;text-decoration:none;transition:color .2s}
 .nav-links a:hover{color:var(--text)}
 .nav-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle}
-.mode-toggle{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all .2s;letter-spacing:.02em}
-.mode-toggle.on{background:var(--accent);color:#fff}
-.mode-toggle.off{background:var(--bg4);color:var(--muted);border:1px solid var(--border)}
 
 /* HERO */
 .hero{padding:4rem 2rem 2.5rem;text-align:center;position:relative;overflow:hidden}
@@ -610,7 +607,6 @@ footer a:hover{color:var(--text)}
   .nav-logo{font-size:17px}
   .nav-links{gap:.6rem;font-size:11px}
   .nav-links a{font-size:11px}
-  .mode-toggle{font-size:10px;padding:3px 8px}
 
   /* Hero */
   .hero{padding:2.5rem 1rem 1.5rem}
@@ -728,7 +724,6 @@ footer a:hover{color:var(--text)}
     <a href="#" onclick="event.preventDefault();showUsageTierList()">Usage Tier List</a>
     <a href="/guides">Guides</a>
     <a href="https://www.pokemon.com/us/pokemon-vg-championships" target="_blank">VGC Rules</a>
-    <span class="mode-toggle" id="mode-toggle" onclick="toggleChampionsMode()">Champions</span>
     <span style="font-size:12px;color:var(--muted)">Free <span class="nav-badge">BETA</span></span>
   </div>
 </nav>
@@ -840,7 +835,7 @@ footer a:hover{color:var(--text)}
         <!-- EV Sliders -->
         <div class="ev-section">
           <div class="ev-top">
-            <div class="ev-total"><span id="ev-label">EVs</span>: <strong><span id="ev-used">0</span></strong><span style="color:var(--muted2)" id="ev-max"> / 508</span></div>
+            <div class="ev-total"><span id="ev-label">SP</span>: <strong><span id="ev-used">0</span></strong><span style="color:var(--muted2)" id="ev-max"> / 66</span></div>
             <button class="reset-btn" onclick="resetEVs()">Reset</button>
           </div>
           <div class="ev-sliders" id="ev-sliders"></div>
@@ -1141,128 +1136,101 @@ const STAT_KEYS=['hp','atk','def','spa','spd','spe'];
 const STAT_NAMES={hp:'HP',atk:'Atk',def:'Def',spa:'SpA',spd:'SpD',spe:'Spe'};
 const STAT_COLS={hp:'#4ade80',atk:'#F08030',def:'#6890F0',spa:'#F85888',spd:'#98D8D8',spe:'#F8D030'};
 const NM={Hardy:{},Lonely:{atk:1.1,def:.9},Brave:{atk:1.1,spe:.9},Adamant:{atk:1.1,spa:.9},Naughty:{atk:1.1,spd:.9},Bold:{def:1.1,atk:.9},Docile:{},Relaxed:{def:1.1,spe:.9},Impish:{def:1.1,spa:.9},Lax:{def:1.1,spd:.9},Timid:{spe:1.1,atk:.9},Hasty:{spe:1.1,def:.9},Serious:{},Jolly:{spe:1.1,spa:.9},Naive:{spe:1.1,spd:.9},Modest:{spa:1.1,atk:.9},Mild:{spa:1.1,def:.9},Quiet:{spa:1.1,spe:.9},Bashful:{},Rash:{spa:1.1,spd:.9},Calm:{spd:1.1,atk:.9},Gentle:{spd:1.1,def:.9},Sassy:{spd:1.1,spe:.9},Careful:{spd:1.1,spa:.9},Quirky:{}};
+// Champions-legal speed benchmarks only.
 const BENCHMARKS=[
-  {name:'Regieleki',api:'regieleki',spe:200},{name:'Electrode',api:'electrode',spe:150},
-  {name:'Calyrex-S',api:'calyrex-shadow',spe:150},{name:'Dragapult',api:'dragapult',spe:142},
-  {name:'Zacian',api:'zacian',spe:148},{name:'Iron Bundle',api:'iron-bundle',spe:136},
-  {name:'Miraidon',api:'miraidon',spe:135},{name:'Flutter Mane',api:'flutter-mane',spe:135},
-  {name:'Chien-Pao',api:'chien-pao',spe:135},{name:'Koraidon',api:'koraidon',spe:135},
-  {name:'Garchomp',api:'garchomp',spe:102},{name:'Chi-Yu',api:'chi-yu',spe:100},
-  {name:'Landorus-T',api:'landorus',spe:91},{name:'Incineroar',api:'incineroar',spe:60},
-  {name:'Amoonguss',api:'amoonguss',spe:30},{name:'Torkoal',api:'torkoal',spe:20},
-  {name:'Weavile',api:'weavile',spe:125},{name:'Noivern',api:'noivern',spe:123},
-  {name:'Talonflame',api:'talonflame',spe:126},{name:'Meowscarada',api:'meowscarada',spe:123},
-  {name:'Greninja',api:'greninja',spe:122},{name:'Hydreigon',api:'hydreigon',spe:98},
-  {name:'Kingambit',api:'kingambit',spe:50},{name:'Hatterene',api:'hatterene',spe:29},
-  {name:'Milotic',api:'milotic',spe:81},{name:'Kommo-o',api:'kommo-o',spe:85},
-  {name:'Grimmsnarl',api:'grimmsnarl',spe:60},{name:'Arcanine',api:'arcanine',spe:95},
+  {name:'Dragapult',api:'dragapult',spe:142},
+  {name:'Talonflame',api:'talonflame',spe:126},
+  {name:'Weavile',api:'weavile',spe:125},
+  {name:'Noivern',api:'noivern',spe:123},
+  {name:'Meowscarada',api:'meowscarada',spe:123},
+  {name:'Greninja',api:'greninja',spe:122},
+  {name:'Garchomp',api:'garchomp',spe:102},
+  {name:'Hydreigon',api:'hydreigon',spe:98},
+  {name:'Arcanine',api:'arcanine',spe:95},
+  {name:'Kommo-o',api:'kommo-o',spe:85},
+  {name:'Milotic',api:'milotic',spe:81},
+  {name:'Incineroar',api:'incineroar',spe:60},
+  {name:'Kingambit',api:'kingambit',spe:50},
+  {name:'Hatterene',api:'hatterene',spe:29},
+  {name:'Torkoal',api:'torkoal',spe:20},
   // Mega speed benchmarks
   {name:'M-Alakazam',api:'alakazam',spe:150,mega:true},
-  {name:'M-Metagross',api:'metagross',spe:110,mega:true},
-  {name:'M-Garchomp',api:'garchomp',spe:92,mega:true},
-  {name:'M-Kangaskhan',api:'kangaskhan',spe:100,mega:true},
-  {name:'M-Gengar',api:'gengar',spe:130,mega:true},
   {name:'M-Lopunny',api:'lopunny',spe:135,mega:true},
+  {name:'M-Gengar',api:'gengar',spe:130,mega:true},
   {name:'M-Lucario',api:'lucario',spe:112,mega:true},
-  {name:'M-Charizard Y',api:'charizard',spe:100,mega:true},
   {name:'M-Pinsir',api:'pinsir',spe:105,mega:true},
+  {name:'M-Kangaskhan',api:'kangaskhan',spe:100,mega:true},
+  {name:'M-Charizard Y',api:'charizard',spe:100,mega:true},
   {name:'M-Gardevoir',api:'gardevoir',spe:100,mega:true},
+  {name:'M-Garchomp',api:'garchomp',spe:92,mega:true},
   {name:'M-Gyarados',api:'gyarados',spe:81,mega:true},
-  {name:'M-Tyranitar',api:'tyranitar',spe:71,mega:true},
-  {name:'M-Salamence',api:'salamence',spe:120,mega:true},
-  {name:'M-Blastoise',api:'blastoise',spe:78,mega:true},
   {name:'M-Venusaur',api:'venusaur',spe:80,mega:true},
+  {name:'M-Blastoise',api:'blastoise',spe:78,mega:true},
   {name:'M-Scizor',api:'scizor',spe:75,mega:true},
-  {name:'M-Heracross',api:'heracross',spe:75,mega:true}
+  {name:'M-Heracross',api:'heracross',spe:75,mega:true},
+  {name:'M-Tyranitar',api:'tyranitar',spe:71,mega:true}
 ];
+// Champions-legal megas only (per Serebii: serebii.net/pokemonchampions/items.shtml).
+// Stone names match LEGAL_ITEMS so p.item assignments stay in sync.
 const MEGA_DATA={
   venusaur:[{suffix:'mega',stone:'Venusaurite',label:'Mega Venusaur'}],
   charizard:[{suffix:'mega-x',stone:'Charizardite X',label:'Mega Charizard X'},{suffix:'mega-y',stone:'Charizardite Y',label:'Mega Charizard Y'}],
   blastoise:[{suffix:'mega',stone:'Blastoisinite',label:'Mega Blastoise'}],
+  beedrill:[{suffix:'mega',stone:'Beedrillite',label:'Mega Beedrill'}],
+  pidgeot:[{suffix:'mega',stone:'Pidgeotite',label:'Mega Pidgeot'}],
   alakazam:[{suffix:'mega',stone:'Alakazite',label:'Mega Alakazam'}],
+  starmie:[{suffix:'mega',stone:'Starmiite',label:'Mega Starmie'}],
+  victreebel:[{suffix:'mega',stone:'Victrebelite',label:'Mega Victreebel'}],
+  slowbro:[{suffix:'mega',stone:'Slowbronite',label:'Mega Slowbro'}],
   gengar:[{suffix:'mega',stone:'Gengarite',label:'Mega Gengar'}],
   kangaskhan:[{suffix:'mega',stone:'Kangaskhanite',label:'Mega Kangaskhan'}],
   pinsir:[{suffix:'mega',stone:'Pinsirite',label:'Mega Pinsir'}],
   gyarados:[{suffix:'mega',stone:'Gyaradosite',label:'Mega Gyarados'}],
   aerodactyl:[{suffix:'mega',stone:'Aerodactylite',label:'Mega Aerodactyl'}],
-  mewtwo:[{suffix:'mega-x',stone:'Mewtwonite X',label:'Mega Mewtwo X'},{suffix:'mega-y',stone:'Mewtwonite Y',label:'Mega Mewtwo Y'}],
-  ampharos:[{suffix:'mega',stone:'Ampharosite',label:'Mega Ampharos'}],
-  scizor:[{suffix:'mega',stone:'Scizorite',label:'Mega Scizor'}],
-  heracross:[{suffix:'mega',stone:'Heracronite',label:'Mega Heracross'}],
-  houndoom:[{suffix:'mega',stone:'Houndoominite',label:'Mega Houndoom'}],
-  tyranitar:[{suffix:'mega',stone:'Tyranitarite',label:'Mega Tyranitar'}],
-  blaziken:[{suffix:'mega',stone:'Blazikenite',label:'Mega Blaziken'}],
-  gardevoir:[{suffix:'mega',stone:'Gardevoirite',label:'Mega Gardevoir'}],
-  mawile:[{suffix:'mega',stone:'Mawilite',label:'Mega Mawile'}],
-  aggron:[{suffix:'mega',stone:'Aggronite',label:'Mega Aggron'}],
-  medicham:[{suffix:'mega',stone:'Medichamite',label:'Mega Medicham'}],
-  manectric:[{suffix:'mega',stone:'Manectite',label:'Mega Manectric'}],
-  banette:[{suffix:'mega',stone:'Banettite',label:'Mega Banette'}],
-  absol:[{suffix:'mega',stone:'Absolite',label:'Mega Absol'},{suffix:'mega-z',stone:'Absolite Z',label:'Mega Absol Z'}],
-  garchomp:[{suffix:'mega',stone:'Garchompite',label:'Mega Garchomp'},{suffix:'mega-z',stone:'Garchompite Z',label:'Mega Garchomp Z'}],
-  lucario:[{suffix:'mega',stone:'Lucarionite',label:'Mega Lucario'},{suffix:'mega-z',stone:'Lucarionite Z',label:'Mega Lucario Z'}],
-  abomasnow:[{suffix:'mega',stone:'Abomasite',label:'Mega Abomasnow'}],
-  gallade:[{suffix:'mega',stone:'Galladite',label:'Mega Gallade'}],
-  audino:[{suffix:'mega',stone:'Audinite',label:'Mega Audino'}],
-  sharpedo:[{suffix:'mega',stone:'Sharpedonite',label:'Mega Sharpedo'}],
-  camerupt:[{suffix:'mega',stone:'Cameruptite',label:'Mega Camerupt'}],
-  altaria:[{suffix:'mega',stone:'Altarianite',label:'Mega Altaria'}],
-  glalie:[{suffix:'mega',stone:'Glalitite',label:'Mega Glalie'}],
-  salamence:[{suffix:'mega',stone:'Salamencite',label:'Mega Salamence'}],
-  metagross:[{suffix:'mega',stone:'Metagrossite',label:'Mega Metagross'}],
-  latias:[{suffix:'mega',stone:'Latiasite',label:'Mega Latias'}],
-  latios:[{suffix:'mega',stone:'Latiosite',label:'Mega Latios'}],
-  rayquaza:[{suffix:'mega',stone:'',label:'Mega Rayquaza'}],
-  lopunny:[{suffix:'mega',stone:'Lopunnite',label:'Mega Lopunny'}],
-  slowbro:[{suffix:'mega',stone:'Slowbronite',label:'Mega Slowbro'}],
-  steelix:[{suffix:'mega',stone:'Steelixite',label:'Mega Steelix'}],
-  sceptile:[{suffix:'mega',stone:'Sceptilite',label:'Mega Sceptile'}],
-  swampert:[{suffix:'mega',stone:'Swampertite',label:'Mega Swampert'}],
-  sableye:[{suffix:'mega',stone:'Sablenite',label:'Mega Sableye'}],
-  beedrill:[{suffix:'mega',stone:'Beedrillite',label:'Mega Beedrill'}],
-  pidgeot:[{suffix:'mega',stone:'Pidgeotite',label:'Mega Pidgeot'}],
-  diancie:[{suffix:'mega',stone:'Diancite',label:'Mega Diancie'}],
-  // Legends Z-A new megas
-  raichu:[{suffix:'mega-x',stone:'Raichunite X',label:'Mega Raichu X'},{suffix:'mega-y',stone:'Raichunite Y',label:'Mega Raichu Y'}],
-  clefable:[{suffix:'mega',stone:'Clefablite',label:'Mega Clefable'}],
-  victreebel:[{suffix:'mega',stone:'Victrebelite',label:'Mega Victreebel'}],
-  starmie:[{suffix:'mega',stone:'Starmiite',label:'Mega Starmie'}],
   dragonite:[{suffix:'mega',stone:'Dragonitite',label:'Mega Dragonite'}],
   meganium:[{suffix:'mega',stone:'Meganiumite',label:'Mega Meganium'}],
   feraligatr:[{suffix:'mega',stone:'Feraligite',label:'Mega Feraligatr'}],
+  ampharos:[{suffix:'mega',stone:'Ampharosite',label:'Mega Ampharos'}],
+  steelix:[{suffix:'mega',stone:'Steelixite',label:'Mega Steelix'}],
+  scizor:[{suffix:'mega',stone:'Scizorite',label:'Mega Scizor'}],
+  heracross:[{suffix:'mega',stone:'Heracronite',label:'Mega Heracross'}],
   skarmory:[{suffix:'mega',stone:'Skarmite',label:'Mega Skarmory'}],
+  houndoom:[{suffix:'mega',stone:'Houndoominite',label:'Mega Houndoom'}],
+  tyranitar:[{suffix:'mega',stone:'Tyranitarite',label:'Mega Tyranitar'}],
+  clefable:[{suffix:'mega',stone:'Clefablite',label:'Mega Clefable'}],
+  gardevoir:[{suffix:'mega',stone:'Gardevoirite',label:'Mega Gardevoir'}],
+  sableye:[{suffix:'mega',stone:'Sablenite',label:'Mega Sableye'}],
+  aggron:[{suffix:'mega',stone:'Aggronite',label:'Mega Aggron'}],
+  medicham:[{suffix:'mega',stone:'Medichamite',label:'Mega Medicham'}],
+  manectric:[{suffix:'mega',stone:'Manectite',label:'Mega Manectric'}],
+  sharpedo:[{suffix:'mega',stone:'Sharpedonite',label:'Mega Sharpedo'}],
+  camerupt:[{suffix:'mega',stone:'Cameruptite',label:'Mega Camerupt'}],
+  altaria:[{suffix:'mega',stone:'Altarianite',label:'Mega Altaria'}],
   chimecho:[{suffix:'mega',stone:'Chimechite',label:'Mega Chimecho'}],
-  staraptor:[{suffix:'mega',stone:'Staraptite',label:'Mega Staraptor'}],
+  banette:[{suffix:'mega',stone:'Banettite',label:'Mega Banette'}],
+  absol:[{suffix:'mega',stone:'Absolite',label:'Mega Absol'}],
+  glalie:[{suffix:'mega',stone:'Glalitite',label:'Mega Glalie'}],
   froslass:[{suffix:'mega',stone:'Froslassite',label:'Mega Froslass'}],
-  heatran:[{suffix:'mega',stone:'Heatranite',label:'Mega Heatran'}],
-  darkrai:[{suffix:'mega',stone:'Darkranite',label:'Mega Darkrai'}],
+  garchomp:[{suffix:'mega',stone:'Garchompite',label:'Mega Garchomp'}],
+  lucario:[{suffix:'mega',stone:'Lucarionite',label:'Mega Lucario'}],
+  abomasnow:[{suffix:'mega',stone:'Abomasite',label:'Mega Abomasnow'}],
+  gallade:[{suffix:'mega',stone:'Galladite',label:'Mega Gallade'}],
+  audino:[{suffix:'mega',stone:'Audinite',label:'Mega Audino'}],
+  lopunny:[{suffix:'mega',stone:'Lopunnite',label:'Mega Lopunny'}],
   emboar:[{suffix:'mega',stone:'Emboarite',label:'Mega Emboar'}],
   excadrill:[{suffix:'mega',stone:'Excadrite',label:'Mega Excadrill'}],
-  scolipede:[{suffix:'mega',stone:'Scolipedite',label:'Mega Scolipede'}],
-  scrafty:[{suffix:'mega',stone:'Scraftite',label:'Mega Scrafty'}],
-  eelektross:[{suffix:'mega',stone:'Eelektrite',label:'Mega Eelektross'}],
   chandelure:[{suffix:'mega',stone:'Chandelite',label:'Mega Chandelure'}],
   golurk:[{suffix:'mega',stone:'Golurkite',label:'Mega Golurk'}],
   chesnaught:[{suffix:'mega',stone:'Chesnaughtite',label:'Mega Chesnaught'}],
   delphox:[{suffix:'mega',stone:'Delphoxite',label:'Mega Delphox'}],
   greninja:[{suffix:'mega',stone:'Greninjite',label:'Mega Greninja'}],
-  pyroar:[{suffix:'mega',stone:'Pyroarite',label:'Mega Pyroar'}],
   floette:[{suffix:'mega',stone:'Floettite',label:'Mega Floette'}],
   meowstic:[{suffix:'mega',stone:'Meowsticite',label:'Mega Meowstic'}],
-  malamar:[{suffix:'mega',stone:'Malamarite',label:'Mega Malamar'}],
-  barbaracle:[{suffix:'mega',stone:'Barbaclite',label:'Mega Barbaracle'}],
-  dragalge:[{suffix:'mega',stone:'Dragalgite',label:'Mega Dragalge'}],
   hawlucha:[{suffix:'mega',stone:'Hawluchite',label:'Mega Hawlucha'}],
-  zygarde:[{suffix:'mega',stone:'Zygardite',label:'Mega Zygarde'}],
   crabominable:[{suffix:'mega',stone:'Crabominite',label:'Mega Crabominable'}],
   drampa:[{suffix:'mega',stone:'Drampite',label:'Mega Drampa'}],
-  magearna:[{suffix:'mega',stone:'Magearnite',label:'Mega Magearna'}],
-  zeraora:[{suffix:'mega',stone:'Zeraorite',label:'Mega Zeraora'}],
-  falinks:[{suffix:'mega',stone:'Falinksite',label:'Mega Falinks'}],
   scovillain:[{suffix:'mega',stone:'Scovillainite',label:'Mega Scovillain'}],
-  glimmora:[{suffix:'mega',stone:'Glimmoranite',label:'Mega Glimmora'}],
-  baxcalibur:[{suffix:'mega',stone:'Baxcalibrite',label:'Mega Baxcalibur'}],
-  golisopod:[{suffix:'mega',stone:'Golisopite',label:'Mega Golisopod'}]
+  glimmora:[{suffix:'mega',stone:'Glimmoranite',label:'Mega Glimmora'}]
 };
 const ITEMS=[
   'Assault Vest','Choice Band','Choice Scarf','Choice Specs','Eviolite','Focus Sash','Leftovers',
@@ -1314,7 +1282,7 @@ const POPULAR_ITEMS=[
   'Metal Coat','Silk Scarf','Fairy Feather'
 ];
 // Pokemon Champions legal roster (API names)
-const CHAMPIONS_POKEMON=new Set([
+const LEGAL_POKEMON=new Set([
   // Gen 1
   'venusaur','charizard','blastoise','beedrill','pidgeot','arbok','pikachu','raichu',
   'raichu-alola','clefable','ninetales','ninetales-alola','arcanine','arcanine-hisui',
@@ -1356,13 +1324,25 @@ const CHAMPIONS_POKEMON=new Set([
   'bellibolt','scovillain','espathra','tinkaton','palafin','orthworm','glimmora',
   'farigiraf','kingambit','sinistcha','archaludon','hydrapple'
 ]);
-// Champions-legal held items (from Serebii)
-const CHAMPIONS_ITEMS=new Set([
+// Champions-legal held items (from Serebii: serebii.net/pokemonchampions/items.shtml)
+// Mega stones use MEGA_DATA's internal spelling so p.item assignments stay in sync.
+const LEGAL_ITEMS=new Set([
   'Black Belt','Black Glasses','Bright Powder','Charcoal','Choice Scarf','Dragon Fang',
   'Fairy Feather','Focus Band','Focus Sash','Hard Stone','Kings Rock','Leftovers',
   'Light Ball','Magnet','Mental Herb','Metal Coat','Miracle Seed','Mystic Water',
   'Never Melt Ice','Poison Barb','Quick Claw','Scope Lens','Sharp Beak','Shell Bell',
   'Silk Scarf','Silver Powder','Soft Sand','Spell Tag','Twisted Spoon','White Herb',
+  // Mega Stones
+  'Venusaurite','Charizardite X','Charizardite Y','Blastoisinite','Alakazite','Gengarite',
+  'Kangaskhanite','Pinsirite','Gyaradosite','Aerodactylite','Ampharosite','Scizorite',
+  'Heracronite','Houndoominite','Tyranitarite','Gardevoirite','Aggronite','Medichamite',
+  'Manectite','Banettite','Absolite','Garchompite','Lucarionite','Abomasite','Galladite',
+  'Audinite','Sharpedonite','Cameruptite','Altarianite','Glalitite','Lopunnite',
+  'Slowbronite','Steelixite','Sablenite','Beedrillite','Pidgeotite','Clefablite',
+  'Victrebelite','Starmiite','Dragonitite','Meganiumite','Feraligite','Skarmite',
+  'Chimechite','Froslassite','Emboarite','Excadrite','Chandelite','Golurkite',
+  'Chesnaughtite','Delphoxite','Greninjite','Floettite','Meowsticite','Hawluchite',
+  'Crabominite','Drampite','Scovillainite','Glimmoranite',
   // Berries
   'Aspear Berry','Babiri Berry','Charti Berry','Cheri Berry','Chesto Berry','Chilan Berry',
   'Chople Berry','Coba Berry','Colbur Berry','Haban Berry','Kasib Berry','Kebia Berry',
@@ -1370,7 +1350,6 @@ const CHAMPIONS_ITEMS=new Set([
   'Pecha Berry','Persim Berry','Rawst Berry','Rindo Berry','Roseli Berry','Shuca Berry',
   'Sitrus Berry','Tanga Berry','Wacan Berry','Yache Berry'
 ]);
-let championsMode=true; // Default to Champions mode
 
 const POPULAR_MOVES=new Set([
   'Protect','Fake-Out','Follow-Me','Helping-Hand','Icy-Wind','Tailwind','Trick-Room',
@@ -1459,14 +1438,10 @@ async function fetchPoke(name){
 }
 
 function calcStat(base,ev,iv,nat,isHp){
-  iv=Math.min(31,Math.max(0,iv));const evMax=championsMode?32:252;ev=Math.min(evMax,Math.max(0,ev));
-  if(championsMode){
-    // Champions: SP adds directly to stat. IVs removed (treated as 31).
-    if(isHp)return Math.floor((.01*(2*base+31)*50)+50+10)+ev;
-    return Math.floor((Math.floor((.01*(2*base+31)*50)+5))*nat)+ev;
-  }
-  if(isHp)return Math.floor((.01*(2*base+iv+Math.floor(ev/4))*50)+50+10);
-  return Math.floor(Math.floor((.01*(2*base+iv+Math.floor(ev/4))*50)+5)*nat);
+  // Champions: SP adds directly to stat. IVs treated as 31. Max SP per stat = 32.
+  ev=Math.min(32,Math.max(0,ev));
+  if(isHp)return Math.floor((.01*(2*base+31)*50)+50+10)+ev;
+  return Math.floor((Math.floor((.01*(2*base+31)*50)+5))*nat)+ev;
 }
 function computedStats(p){const nm=NM[p.nature]||{};const r={};STAT_KEYS.forEach(k=>r[k]=calcStat(p.stats[k],p.evs[k]||0,p.ivs[k]!==undefined?p.ivs[k]:31,nm[k]||1,k==='hp'));return r;}
 function actualSpe(p){const nm=NM[p.nature]||{};return calcStat(p.stats.spe,p.evs.spe||0,p.ivs.spe!==undefined?p.ivs.spe:31,nm.spe||1,false);}
@@ -1527,19 +1502,18 @@ searchEl.addEventListener('input',()=>{
   clearTimeout(st);st=setTimeout(()=>{
     const q=searchEl.value.toLowerCase().trim();
     if(!q){ddEl.style.display='none';return;}
-    const m=allPokemon.filter(p=>p.name.includes(q)&&!/-mega/.test(p.name)&&!/-gmax/.test(p.name)&&(!championsMode||isChampionsLegal(p.name))).slice(0,12);
+    const m=allPokemon.filter(p=>p.name.includes(q)&&!/-mega/.test(p.name)&&!/-gmax/.test(p.name)&&isLegalPoke(p.name)).slice(0,12);
     // Add mega results from MEGA_DATA
     const megaResults=[];
     const qClean=q.replace('mega ','').replace('mega-','');
     Object.entries(MEGA_DATA).forEach(([base,forms])=>{
-      if(!championsMode||isChampionsLegal(base)){
-        forms.forEach(f=>{
-          if(f.label.toLowerCase().includes(q)||base.includes(qClean)){
-            const found=allPokemon.find(ap=>ap.name===base||ap.name.startsWith(base));
-            if(found&&!megaResults.find(r=>r.label===f.label))megaResults.push({base,id:found.id,label:f.label,suffix:f.suffix});
-          }
-        });
-      }
+      forms.forEach(f=>{
+        if(!LEGAL_ITEMS.has(f.stone))return;
+        if(f.label.toLowerCase().includes(q)||base.includes(qClean)){
+          const found=allPokemon.find(ap=>ap.name===base||ap.name.startsWith(base));
+          if(found&&!megaResults.find(r=>r.label===f.label))megaResults.push({base,id:found.id,label:f.label,suffix:f.suffix});
+        }
+      });
     });
     if(!m.length&&!megaResults.length){ddEl.style.display='none';return;}
     let html=m.map(p=>`<div class="ddi" onclick="addPoke('${p.name}')" onmouseenter="showPokePreview('${p.name}',event)" onmouseleave="hidePokePreview()"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" width="32" height="32" style="image-rendering:pixelated" loading="lazy"/>${fmt(p.name)}</div>`).join('');
@@ -1599,7 +1573,7 @@ async function runAdvSearch(){
   el.innerHTML='<div style="padding:10px;color:var(--muted)">Searching…</div>';
 
   // Start with all pokemon (Champions filtered)
-  let pool=championsMode?allPokemon.filter(p=>isChampionsLegal(p.name)):allPokemon.slice();
+  let pool=allPokemon.filter(p=>isLegalPoke(p.name));
 
   // Filter by type
   if(advType){
@@ -1698,7 +1672,7 @@ async function runAdvSearch(){
     const badge=rank!==undefined?`<span style="font-size:10px;color:var(--accent);margin-left:4px">#${rank+1}</span>`:'';
     return`<div class="ddi" onclick="addPoke('${p.name}')"><img src="${spriteUrl}" width="32" height="32" style="image-rendering:pixelated" loading="lazy"/> ${fmt(p.name)}${badge}</div>`;
   };
-  el.innerHTML=`<div style="padding:6px 0;font-size:12px;color:var(--muted);margin-bottom:4px">${pool.length} results${championsMode?' (Champions)':''} — sorted by usage</div>`+
+  el.innerHTML=`<div style="padding:6px 0;font-size:12px;color:var(--muted);margin-bottom:4px">${pool.length} results — sorted by usage</div>`+
     pool.slice(0,BATCH).map(renderRow).join('')+
     (pool.length>BATCH?`<div id="advShowMore" style="padding:8px;text-align:center"><button onclick="document.getElementById('advMoreResults').style.display='block';this.parentElement.style.display='none'" style="background:var(--bg3);color:var(--accent);border:1px solid var(--border);border-radius:6px;padding:6px 16px;cursor:pointer;font-size:12px;font-weight:600">Show ${pool.length-BATCH} more</button></div><div id="advMoreResults" style="display:none">${pool.slice(BATCH).map(renderRow).join('')}</div>`:'');
 }
@@ -2107,7 +2081,7 @@ function renderSpeedTiers(){
     if(speedMods.paralysis)tags.push('Para');if(speedMods.icywind)tags.push('IW');
     return{name:p.nick||p.displayName,spe:modSpe,baseSpe,mine:true,note:`${p.nature} | ${p.evs.spe||0} EVs${tags.length?' | '+tags.join('+'):''}`};
   });
-  const filteredBench=championsMode?BENCHMARKS.filter(b=>isChampionsLegal(b.api)):BENCHMARKS;
+  const filteredBench=BENCHMARKS.filter(b=>isLegalPoke(b.api));
   const refE=filteredBench.map(b=>({name:b.name,spe:Math.floor(Math.floor((.01*(2*b.spe+31)*50)+5)*1),baseSpe:0,mine:false,mega:b.mega||false}));
   const seen=new Set();let all=[...teamE,...refE].filter(e=>{if(seen.has(e.name))return false;seen.add(e.name);return true;});
   if(filterQ)all=all.filter(e=>e.name.toLowerCase().includes(filterQ));
@@ -2432,7 +2406,7 @@ function onItemChange(){
 function renderItemSelect(p){
   const el=document.getElementById('e-item');
   const usage=getItemUsage(p);
-  const isLegalItem=name=>!championsMode||CHAMPIONS_ITEMS.has(name)||name.endsWith('ite')||name.endsWith('ite X')||name.endsWith('ite Y'); // mega stones always legal
+  const isLegalItem=name=>LEGAL_ITEMS.has(name);
   // Build sorted item list: items with usage first, then all others
   const withUsage=Object.entries(usage).sort((a,b)=>b[1]-a[1]).map(([name,pct])=>({name,pct})).filter(i=>isLegalItem(i.name));
   const usageNames=new Set(withUsage.map(i=>i.name));
@@ -2786,8 +2760,8 @@ function renderEVSliders(){
     const col=STAT_COLS[k];
     return `<div class="ev-sl">
       <div class="ev-sl-label" style="color:${col}">${STAT_NAMES[k]}</div>
-      <input type="number" class="ev-sl-num" min="0" max="${championsMode?32:252}" step="${championsMode?1:4}" value="${p.evs[k]||0}" id="evnum-${k}" oninput="setEV('${k}',this.value)"/>
-      <input type="range" min="0" max="${championsMode?32:252}" step="${championsMode?1:4}" value="${p.evs[k]||0}" id="evrange-${k}" style="accent-color:${col}" oninput="setEV('${k}',this.value)"/>
+      <input type="number" class="ev-sl-num" min="0" max="32" step="1" value="${p.evs[k]||0}" id="evnum-${k}" oninput="setEV('${k}',this.value)"/>
+      <input type="range" min="0" max="32" step="1" value="${p.evs[k]||0}" id="evrange-${k}" style="accent-color:${col}" oninput="setEV('${k}',this.value)"/>
       <div class="ev-sl-computed" id="evcomp-${k}">Stat: ${comp}</div>
       <div class="ev-sl-iv"><input type="number" min="0" max="31" value="${p.ivs[k]!==undefined?p.ivs[k]:31}" id="eviv-${k}" title="IV" oninput="setIV('${k}',this.value)"/></div>
     </div>`;
@@ -2810,14 +2784,12 @@ function renderEVSuggestions(){
       const parts=spread.split(':');
       const nature=parts[0];
       const evVals=parts[1]?parts[1].split('/').map(Number):[];
-      let dispVals=evVals;
-      if(championsMode){
-        let running=0;dispVals=evVals.map(raw=>{
-          let v=Math.min(32,Math.round((raw||0)/8));
-          if(running+v>66)v=Math.max(0,66-running);
-          running+=v;return v;
-        });
-      }
+      let running=0;
+      const dispVals=evVals.map(raw=>{
+        let v=Math.min(32,Math.round((raw||0)/8));
+        if(running+v>66)v=Math.max(0,66-running);
+        running+=v;return v;
+      });
       const evStr=STAT_KEYS.map((k,i)=>dispVals[i]?`${dispVals[i]} ${STAT_NAMES[k]}`:null).filter(Boolean).join(' / ')||'No EVs';
       const data=JSON.stringify({nature,evs:evVals}).replace(/"/g,'&quot;');
       return`<button class="ev-spread-btn" onclick='applySpread(${JSON.stringify({nature,evs:evVals})})'>
@@ -2830,18 +2802,14 @@ function applySpread(s){
   if(editIdx===null)return;
   const p=team[editIdx];
   p.nature=s.nature;
-  if(championsMode){
-    const evTotal=66;
-    let running=0;
-    STAT_KEYS.forEach((k,i)=>{
-      const raw=s.evs[i]||0;
-      let v=Math.min(32,Math.round(raw/8));
-      if(running+v>evTotal)v=Math.max(0,evTotal-running);
-      p.evs[k]=v;running+=v;
-    });
-  }else{
-    STAT_KEYS.forEach((k,i)=>{p.evs[k]=s.evs[i]||0;});
-  }
+  const evTotal=66;
+  let running=0;
+  STAT_KEYS.forEach((k,i)=>{
+    const raw=s.evs[i]||0;
+    let v=Math.min(32,Math.round(raw/8));
+    if(running+v>evTotal)v=Math.max(0,evTotal-running);
+    p.evs[k]=v;running+=v;
+  });
   openEdit(editIdx);renderAll();
 }
 function updateEVDisplay(){
@@ -2857,8 +2825,8 @@ function updateEVDisplay(){
 function setEV(k,val){
   if(editIdx===null)return;
   const p=team[editIdx];
-  const evMax=championsMode?32:252;
-  const evTotal=championsMode?66:508;
+  const evMax=32;
+  const evTotal=66;
   let v=Math.min(evMax,Math.max(0,parseInt(val)||0));
   const otherTotal=STAT_KEYS.reduce((s,sk)=>s+(sk===k?0:(p.evs[sk]||0)),0);
   v=Math.min(v,evTotal-otherTotal);
@@ -2870,11 +2838,10 @@ function resetEVs(){if(editIdx===null)return;STAT_KEYS.forEach(k=>{team[editIdx]
 function updateEVTotal(){
   if(editIdx===null)return;
   const total=STAT_KEYS.reduce((s,k)=>s+(team[editIdx].evs[k]||0),0);
-  const evTotal=championsMode?66:508;
   const el=document.getElementById('ev-used');el.textContent=total;
-  const maxEl=document.getElementById('ev-max');if(maxEl)maxEl.textContent=' / '+evTotal;
-  const lblEl=document.getElementById('ev-label');if(lblEl)lblEl.textContent=championsMode?'SP':'EVs';
-  el.style.color=total>508?'var(--red)':'var(--text)';
+  const maxEl=document.getElementById('ev-max');if(maxEl)maxEl.textContent=' / 66';
+  const lblEl=document.getElementById('ev-label');if(lblEl)lblEl.textContent='SP';
+  el.style.color=total>66?'var(--red)':'var(--text)';
 }
 
 // --- Mega ---
@@ -2883,7 +2850,7 @@ function showMegaControls(p){
   const btn=document.getElementById('mega-btn');
   const sel=document.getElementById('mega-select');
   const megas=MEGA_DATA[p.name];
-  if(!megas&&!p.isMega){ctrl.style.display='none';return;}
+  if((!megas||!megas.length)&&!p.isMega){ctrl.style.display='none';return;}
   ctrl.style.display='flex';
   if(p.isMega){btn.textContent='✕ Revert';btn.classList.add('active');sel.style.display='none';}
   else{btn.textContent='⬡ Mega';btn.classList.remove('active');
@@ -2905,7 +2872,7 @@ async function toggleMega(formSuffix){
     openEdit(editIdx);renderAll();return;
   }
   if(team.some((m,idx)=>m.isMega&&idx!==editIdx)){alert('Only one Mega Evolution allowed per team!');return;}
-  const megas=MEGA_DATA[p.name];if(!megas)return;
+  const megas=MEGA_DATA[p.name];if(!megas||!megas.length)return;
   let form=megas[0];
   if(megas.length>1){
     if(!formSuffix)return;
@@ -2998,7 +2965,7 @@ function runAI(){
   if(problemTypes.length&&team.length<6){
     out.push('');out.push(`<strong>Recommended Pokémon to Cover Weaknesses</strong>`);
     // Score each VGC mon by how many problem types they resist/are immune to
-    const recs=VGC_POKEMON.filter(v=>!teamNames.has(v.name)&&(!championsMode||isChampionsLegal(v.name.toLowerCase().replace(/\s+/g,'-')))).map(v=>{
+    const recs=VGC_POKEMON.filter(v=>!teamNames.has(v.name)&&isLegalPoke(v.name.toLowerCase().replace(/\s+/g,'-'))).map(v=>{
       let score=0;const covers=[];
       problemTypes.forEach(t=>{
         let mult=1;
@@ -3093,7 +3060,7 @@ function runAI(){
     {name:'Hydreigon',api:'hydreigon',spe:98},{name:'Kingambit',api:'kingambit',spe:50},
     {name:'Hatterene',api:'hatterene',spe:29},{name:'Torkoal',api:'torkoal',spe:20}
   ];
-  const THREATS=championsMode?ALL_THREATS.filter(t=>isChampionsLegal(t.api)):ALL_THREATS;
+  const THREATS=ALL_THREATS.filter(t=>isLegalPoke(t.api));
   const fastest=speedEntries[0];const slowest=speedEntries[speedEntries.length-1];
   const outsped=THREATS.filter(t=>t.spe>fastest.spe);
   const undersped=THREATS.filter(t=>t.spe<slowest.spe);
@@ -3197,8 +3164,8 @@ function runAI(){
 
     // EV check
     const totalEV=STAT_KEYS.reduce((s,k)=>s+(p.evs[k]||0),0);
-    if(totalEV===0&&hasMoves)notes.push('No EVs invested — make sure to distribute EVs');
-    if(totalEV>508)notes.push(`<span style="color:var(--red)">EV total (${totalEV}) exceeds 508 limit</span>`);
+    if(totalEV===0&&hasMoves)notes.push('No SP invested — make sure to distribute stat points');
+    if(totalEV>66)notes.push(`<span style="color:var(--red)">SP total (${totalEV}) exceeds 66 limit</span>`);
 
     if(notes.length)suggestions.push({name:p.displayName,sprite:p.sprite,notes});
   });
@@ -3267,9 +3234,9 @@ const VGC_POKEMON=[
 ];
 
 // --- Champions-legal movepools (source: serebii.net/pokedex-champions/{name}) ---
-// Override main-game learnsets when championsMode is on. Mr. Rime omitted (Serebii 404); falls back to PokeAPI.
+// Champions-legal learnsets override main-game movepools. Mr. Rime omitted (Serebii 404); falls back to PokeAPI.
 const _mp=s=>s.split(',').map(m=>m.replace(/ /g,'-'));
-const CHAMPIONS_LEARNSETS={
+const LEGAL_LEARNSETS={
 'incineroar':_mp("Acrobatics,Aerial Ace,Assurance,Attract,Baton Pass,Bite,Blast Burn,Blaze Kick,Body Slam,Brick Break,Brutal Swing,Bulk Up,Bulldoze,Burning Jealousy,Close Combat,Cross Chop,Crunch,Dark Pulse,Darkest Lariat,Double-Edge,Drain Punch,Earthquake,Endeavor,Endure,Facade,Fake Out,Fire Blast,Fire Fang,Fire Punch,Fire Spin,Flame Charge,Flamethrower,Flare Blitz,Fling,Focus Blast,Focus Punch,Giga Impact,Heat Crash,Heat Wave,Helping Hand,Hyper Beam,Iron Head,Lash Out,Leech Life,Low Kick,Low Sweep,Mega Kick,Nasty Plot,Outrage,Overheat,Parting Shot,Power Trip,Protect,Rest,Reversal,Roar,Round,Scary Face,Scorching Sands,Shadow Claw,Sleep Talk,Snarl,Snore,Stomping Tantrum,Substitute,Sunny Day,Superpower,Swagger,Swords Dance,Taunt,Temper Flare,Thief,Thrash,Throat Chop,Thunder Punch,Trailblaze,Will-O-Wisp"),
 'sneasler':_mp("Acid Spray,Acrobatics,Aerial Ace,Agility,Brick Break,Bulk Up,Calm Mind,Close Combat,Coaching,Counter,Dig,Dire Claw,Double Hit,Endure,Facade,Fake Out,Feint,Fire Punch,Fling,Focus Blast,Focus Punch,Giga Impact,Grass Knot,Gunk Shot,Hyper Beam,Lash Out,Low Kick,Low Sweep,Nasty Plot,Night Slash,Poison Jab,Protect,Quick Attack,Quick Guard,Rain Dance,Rest,Reversal,Rock Slide,Rock Tomb,Screech,Shadow Ball,Shadow Claw,Sleep Talk,Sludge Bomb,Sludge Wave,Spite,Substitute,Sunny Day,Switcheroo,Swords Dance,Taunt,Thief,Throat Chop,Toxic,Toxic Spikes,Trailblaze,U-turn,Upper Hand,Vacuum Wave,Venoshock,X-Scissor"),
 'garchomp':_mp("Aerial Ace,Bite,Body Slam,Breaking Swipe,Brick Break,Brutal Swing,Bulldoze,Crunch,Dig,Double-Edge,Draco Meteor,Dragon Cheer,Dragon Claw,Dragon Pulse,Dragon Rush,Dragon Tail,Earth Power,Earthquake,Endure,Facade,Fire Blast,Fire Fang,Flamethrower,Fling,Giga Impact,Helping Hand,Hyper Beam,Iron Head,Iron Tail,Liquidation,Mud Shot,Outrage,Poison Jab,Power Gem,Protect,Rain Dance,Rest,Rock Slide,Rock Tomb,Round,Sand Tomb,Sandstorm,Scale Shot,Scary Face,Scorching Sands,Shadow Claw,Sleep Talk,Snore,Spikes,Stealth Rock,Stomping Tantrum,Stone Edge,Substitute,Sunny Day,Surf,Swords Dance,Thrash,Thunder Fang"),
@@ -3530,14 +3497,13 @@ const PIKALYTICS_DATA={
 'Sableye':{usage:0.0190,abilities:{'Prankster':0.9558,'Magic Bounce':0.0177,'Keen Eye':0.0177,'Stall':0.0088},moves:{'Encore':0.5221,'Disable':0.4071,'Fake Out':0.3805,'Foul Play':0.3717,'Rain Dance':0.3363,'Light Screen':0.3363,'Reflect':0.2478,'Will-O-Wisp':0.2212,'Quash':0.1947,'Protect':0.1947},items:{'Mental Herb':0.2566,'Roseli Berry':0.2478,'Sitrus Berry':0.1681,'Focus Sash':0.1239,'Leftovers':0.0619,'Sablenite':0.0531,'Lum Berry':0.0266,'Black Glasses':0.0266,'White Herb':0.0177,'Focus Band':0.0088},teammates:{'Basculegion':0.3097,'Incineroar':0.2920,'Sneasler':0.2832,'Pelipper':0.2743,'Archaludon':0.2212,'Garchomp':0.1947}}
 };
 
-// Returns the effective move pool for display. In Champions mode, uses the Serebii-scraped
-// Champions learnset (authoritative for what's legal in Champions), plus any custom moves
-// the user has already added that aren't in the Champions pool. Falls back to the full
-// PokeAPI/Showdown pool for Pokemon we don't have Champions data for (e.g. Mr. Rime).
+// Returns the effective move pool for display. Uses the Serebii-scraped Champions learnset
+// (authoritative for what's legal), plus any custom moves the user has already added that
+// aren't in the Champions pool. Falls back to the full PokeAPI/Showdown pool for Pokemon we
+// don't have Champions data for (e.g. Mr. Rime).
 function getMovePool(p){
   if(!p)return[];
-  if(!championsMode)return p.movePool||[];
-  const champ=CHAMPIONS_LEARNSETS[p.name];
+  const champ=LEGAL_LEARNSETS[p.name];
   if(!champ)return p.movePool||[];
   const champSet=new Set(champ);
   const result=[...champ];
@@ -3818,7 +3784,7 @@ function renderThreats(){
   });
 
   // Each threat
-  const threats=championsMode?VGC_THREATS.filter(t=>isChampionsLegal(t.name.toLowerCase().replace(/\s+/g,'-'))):VGC_THREATS;
+  const threats=VGC_THREATS.filter(t=>isLegalPoke(t.name.toLowerCase().replace(/\s+/g,'-')));
   threats.forEach(threat=>{
     // Threat name cell
     html+=`<div class="threat-name">
@@ -3885,10 +3851,10 @@ async function renderMeta(){
   const stats=await loadUsageStats();
   if(!stats||!stats.pokemon){el.innerHTML='<span style="color:var(--red)">Could not load usage data.</span>';return;}
 
-  const isChamp=n=>isChampionsLegal(n.toLowerCase().replace(/\s+/g,'-'));
+  const isChamp=n=>isLegalPoke(n.toLowerCase().replace(/\s+/g,'-'));
   const sorted=Object.entries(stats.pokemon)
     .map(([name,d])=>({name,d,usage:d.usage?.weighted||0}))
-    .filter(p=>p.usage>0&&(!championsMode||isChamp(p.name)))
+    .filter(p=>p.usage>0&&isChamp(p.name))
     .sort((a,b)=>b.usage-a.usage);
 
   const spriteFor=name=>{const api=name.toLowerCase().replace(/\s+/g,'-');const f=allPokemon.find(ap=>ap.name===api||ap.name.startsWith(api));return f?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${f.id}.png`:'';};
@@ -3964,7 +3930,7 @@ async function renderMeta(){
   const threatTypes={};
   VGC_THREATS.forEach(t=>{threatTypes[t.name]={types:t.types,stab:t.stab};});
 
-  const candidates=VGC_POKEMON.filter(v=>!championsMode||isChampionsLegal(v.name.toLowerCase().replace(/\s+/g,'-')));
+  const candidates=VGC_POKEMON.filter(v=>isLegalPoke(v.name.toLowerCase().replace(/\s+/g,'-')));
   const candidateUsage={};
   sorted.forEach(p=>{candidateUsage[p.name]=p.usage;});
 
@@ -4223,7 +4189,7 @@ function renderMoveButtons(poke,moveIdx,side){
 
 function makeCalcBuild(data){
   return{...data,nick:'',item:'',nature:'Hardy',tera:data.types[0],ability:data.abilities[0]||'',
-    moves:['','','',''],evs:{hp:252,atk:0,def:0,spa:0,spd:0,spe:0},ivs:{hp:31,atk:31,def:31,spa:31,spd:31,spe:31},
+    moves:['','','',''],evs:{hp:32,atk:0,def:0,spa:0,spd:0,spe:0},ivs:{hp:31,atk:31,def:31,spa:31,spd:31,spe:31},
     isMega:false,megaForm:null,basePoke:null,movePool:data.movePool||[]};
 }
 function calcP2Autocomplete(){
@@ -4231,7 +4197,7 @@ function calcP2Autocomplete(){
   const dd=document.getElementById('calc-p2-dd');
   const q=(inp.value||'').toLowerCase().trim();
   if(!q||q.length<2){dd.style.display='none';return;}
-  const m=allPokemon.filter(p=>p.name.includes(q)&&!/-mega/.test(p.name)&&!/-gmax/.test(p.name)&&(!championsMode||isChampionsLegal(p.name))).slice(0,8);
+  const m=allPokemon.filter(p=>p.name.includes(q)&&!/-mega/.test(p.name)&&!/-gmax/.test(p.name)&&isLegalPoke(p.name)).slice(0,8);
   if(!m.length){dd.style.display='none';return;}
   dd.innerHTML=m.map(p=>`<div class="ddi" onmousedown="event.preventDefault();calcSearchP2('${p.name}');document.getElementById('calc-p2-dd').style.display='none'"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png" width="28" height="28" style="image-rendering:pixelated" loading="lazy"/>${fmt(p.name)}</div>`).join('');
   dd.style.display='block';
@@ -4306,7 +4272,7 @@ function renderCalc(){
     return`<option value="${n}"${n===p2.nature?' selected':''}>${lbl}</option>`;
   }).join('');
 
-  const evM=championsMode?32:252;const evS=championsMode?1:4;
+  const evM=32;const evS=1;
   const evInput=(stat,label)=>`<label style="display:flex;align-items:center;gap:3px">${label}: <input type="number" min="0" max="${evM}" step="${evS}" value="${p2.evs[stat]||0}" onchange="ensureP2Custom();calc.p2Custom.evs.${stat}=Math.min(${evM},+this.value||0);renderCalc()" style="width:48px;${iStyle}"/></label>`;
   const ivInput=(stat,label)=>`<label style="display:flex;align-items:center;gap:3px">${label}: <input type="number" min="0" max="31" value="${p2.ivs[stat]!==undefined?p2.ivs[stat]:31}" onchange="ensureP2Custom();calc.p2Custom.ivs.${stat}=Math.min(31,+this.value||0);renderCalc()" style="width:38px;${iStyle}"/></label>`;
 
@@ -4378,7 +4344,7 @@ async function showUsageTierList(){
   // Sort by usage rate
   const sorted=Object.entries(stats.pokemon)
     .map(([name,d])=>({name,usage:d.usage?.weighted||d.usage?.raw||0}))
-    .filter(p=>p.usage>0&&(!championsMode||isChampionsLegal(p.name.toLowerCase().replace(/\s+/g,'-'))))
+    .filter(p=>p.usage>0&&isLegalPoke(p.name.toLowerCase().replace(/\s+/g,'-')))
     .sort((a,b)=>b.usage-a.usage)
     .slice(0,100);
 
@@ -4391,7 +4357,7 @@ async function showUsageTierList(){
     const apiName=p.name.toLowerCase().replace(/\s+/g,'-');
     const found=allPokemon.find(ap=>ap.name===apiName||ap.name.startsWith(apiName));
     const spriteUrl=found?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${found.id}.png`:'';
-    const hasMega=MEGA_DATA[apiName]||MEGA_DATA[apiName.split('-')[0]];
+    const hasMega=!!(MEGA_DATA[apiName]||MEGA_DATA[apiName.split('-')[0]]);
     const megaBadge=hasMega?` <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(245,197,66,0.2);color:var(--gold);border:1px solid rgba(245,197,66,0.3)">MEGA</span>`:'';
     return`<div class="tierlist-row">
       <div class="tierlist-rank">${i+1}</div>
@@ -4416,30 +4382,17 @@ async function addPokeFromTierList(name){
   await addPoke(apiName);
 }
 
-// --- Champions mode ---
-function toggleChampionsMode(){
-  championsMode=!championsMode;
-  updateModeToggle();
-}
-function updateModeToggle(){
-  const el=document.getElementById('mode-toggle');
-  if(championsMode){el.className='mode-toggle on';el.textContent='Champions';}
-  else{el.className='mode-toggle off';el.textContent='All Pokémon';}
-  updateSearchPlaceholder();
-}
-function isChampionsLegal(apiName){
-  if(CHAMPIONS_POKEMON.has(apiName))return true;
-  // Check if base form is legal (handles aegislash-shield, rotom-wash, lycanroc-midnight, etc.)
-  for(const legal of CHAMPIONS_POKEMON){
+function isLegalPoke(apiName){
+  if(LEGAL_POKEMON.has(apiName))return true;
+  // Handle regional/form variants like rotom-wash, aegislash-shield, lycanroc-midnight.
+  for(const legal of LEGAL_POKEMON){
     if(apiName.startsWith(legal+'-'))return true;
   }
   return false;
 }
 function updateSearchPlaceholder(){
   const el=document.getElementById('psearch');
-  if(!el)return;
-  if(championsMode)el.placeholder=`Search ${CHAMPIONS_POKEMON.size} Champions Pokémon…`;
-  else el.placeholder=`Search all ${allPokemon.length} Pokémon…`;
+  if(el)el.placeholder=`Search ${LEGAL_POKEMON.size} Champions Pokémon…`;
 }
 
 // --- Blog/Guides ---
@@ -4554,7 +4507,6 @@ function exitBuilder(){
 
 // --- Init ---
 loadTeamFromStorage();init();loadUsageStats();renderAll();
-updateModeToggle();
 if(team.length)enterBuilder();
 // Check for shared team in URL
 if(window.location.search.includes('team=')){
