@@ -2841,7 +2841,6 @@ async function toggleMega(formSuffix){
     p.isMega=false;p.megaForm=null;p.basePoke=null;
     openEdit(editIdx);renderAll();return;
   }
-  if(team.some((m,idx)=>m.isMega&&idx!==editIdx)){alert('Only one Mega Evolution allowed per team!');return;}
   const megas=MEGA_DATA[p.name];if(!megas||!megas.length)return;
   let form=megas[0];
   if(megas.length>1){
